@@ -16,3 +16,4 @@ List of tools people use to create language flashcards.
 | 10 | Knowt | https://knowt.com/ | AI study tools | No | More general study, not specialized in language sentences |
 | 11 | WaniKani | https://www.wanikani.com/ | Japanese only | No | Only Japanese, not multi-language |
 | 12 | Lingvist | https://lingvist.com/ | Personalized vocabulary | No | Closed system, hard to generate custom cards |
+| 13 | Readlang | https://readlang.com/ | Similar to LingQ – reads real texts and creates vocabulary cards | No | Very close to LingQ, already covered by ALT-02 |
