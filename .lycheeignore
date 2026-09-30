@@ -1,2 +1,2 @@
 # quizlet.com returns 403 to the link checker. Verified manually in a browser on 2026-09-30.
-quizlet.com
+^https://quizlet\.com
