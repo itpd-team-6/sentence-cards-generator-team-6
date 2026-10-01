@@ -212,7 +212,7 @@ Each line carries the start time of the turn it belongs to.
 
 [00:17:50] Customer: If you can find a decent free model, then it's fine that you use it.
 
-[00:17:50] Customer: Otherwise, I can provide an API key for a cheap model, like [inaudible] Flash, for example, or something else.
+[00:17:50] Customer: But in return, if we can provide the API key for a model, like for a cheap one, like [inaudible] Flash, for example, or something else.
 
 [00:18:16] nataliamotand: Sure, thanks for the clarification.
 
