@@ -2,3 +2,5 @@
 ^https://quizlet\.com
 # chatgpt.com returns 403 to the link checker. Verified manually in a browser on 2026-10-01.
 ^https://chatgpt\.com
+# github.com/deemp/songs2anki pages intermittently return 503 to the link checker. Links opened manually in a browser on 2026-10-02.
+^https://github\.com/deemp/songs2anki/

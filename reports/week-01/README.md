@@ -47,7 +47,7 @@ The Customer permitted recording and publishing a sanitized transcript, so we pr
 - Branch protection on `main`: ![Branch protection settings for main](images/branch-protection.jpg)
 - A merged pull request approved by another member: [PR #4](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/4), approved by nataliamotand.
 - The latest green link check on `main`: [link check runs on `main`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/actions/workflows/lychee.yml?query=branch%3Amain).
-- Excluded links, in [.lycheeignore](../../.lycheeignore): `quizlet.com` and `chatgpt.com` return 403 to the link checker; we opened both in a browser on 2026-09-30 and 2026-10-01 and they work.
+- Excluded links, in [.lycheeignore](../../.lycheeignore): `quizlet.com` and `chatgpt.com` return 403 to the link checker, and pages of the `deemp/songs2anki` repository on GitHub intermittently return 503; we opened all of them in a browser on 2026-09-30, 2026-10-01 and 2026-10-02 and they work.
 
 ## Deviations
 
