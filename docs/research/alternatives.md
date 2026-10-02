@@ -13,7 +13,7 @@ We started from a wide list of candidates (kept in `reports/week-01/candidate-li
 
 We fixed the properties below **before** evaluating any product, and used the same set for every alternative.
 
-Screenshots and working notes are on our research board: _link to be added_.
+Screenshots and working notes are on our research board: [Miro board](https://miro.com/app/board/uXjVHgAUe_0=/).
 
 ## Properties
 
