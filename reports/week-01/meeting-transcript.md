@@ -5,7 +5,7 @@
 
 The recording starts during the Customer's answer to question 1 of the [meeting script](meeting-script.md).
 The opening, the three permission questions, our presentation of the problem and question 1 itself were not recorded.
-The transcript was produced with an AI transcription tool from the recording and checked by the team (see [ai-usage.md](ai-usage.md)).
+The transcript was produced with an AI transcription tool from the recording and checked by the team (see `ai-usage.md`)..
 Each line carries the start time of the turn it belongs to.
 
 [00:00:00] Customer: I want to use some text to learn some words earlier in the deck than others.
