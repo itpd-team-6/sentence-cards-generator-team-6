@@ -28,7 +28,6 @@ An editor to check generated sentences before you study them
 
 The learner decides which words come first, without losing progress
 
-<<<<<<< HEAD
 - **Status:** Active
 - **User:** a learner who wants to study some words earlier than others, for example the words of the text they are reading this week.
 - **Problem:** in ALT-01, new songs can only be appended at the end, because reordering them renumbers the words and mixes up the learner's progress; in ALT-03 the system decides the order by difficulty; in ALT-04 the learner can reposition new cards, but only by finding and selecting them by hand in Anki's card browser.
@@ -39,45 +38,3 @@ The learner decides which words come first, without losing progress
   - A learner who already has an Anki deck starts over in our app, because importing from Anki is not required for now.
 - **How a competitor would respond:** Anki already has a "Reposition" command, and an add-on could make it work per text in a short time, so this is not a strong moat on its own.
   Its value is that it works together with VP-01 in the same product: the words the learner picked and checked are the words they can put first.
-
-## Assumptions
-
-| Assumption                                                                                                   | Supports             | How to check, and when                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A free or cheap language model writes good enough sentences in Russian, English and German that regenerating is the exception, not the rule. | VP-01, GAP-01        | Week 2: generate sentences for 20 words in each language with one free model and count how many we would correct.                                                       |
-| Learners will review the generated sentences instead of accepting all of them unchecked.                      | VP-01                | Usability tests (protocol in Week 7, results in Week 9): observe whether participants use edit, flag and regenerate.                                                                                       |
-| Teachers want to correct the sentences in their students' cards (based on the kickoff conversation).        | GAP-01, VP-01        | Week 2: ask one language teacher how her students study vocabulary and whether she checks it.          |
-| Anki's manual "Reposition" is too slow or unknown for most learners to serve GAP-02.                          | GAP-02, VP-02        | Week 2: time how long it takes to move the words of one text to the front of an Anki deck.                                                                              |
-| Learners will accept reviewing inside our app instead of in Anki (based on the kickoff conversation).       | VP-02                | Week 2: look for reports in Anki community forums from learners who moved their reviews to other apps, and why. Usability tests (Week 7–9): observe whether participants are willing to review inside our app.                                                           |
-=======
-**What it costs:**
-
-- The product depends on a language model: either every generation costs money, or a free model writes weaker sentences and the learner regenerates more often.
-  The Customer said that a decent free model is fine and mentioned that an API key for a cheap model might be provided (Customer, [00:17:50]), so we plan to start with a free model.
-- Reviewing adds a step between generating and studying.
-  If it is optional, a wrong sentence can still reach the learner's cards; if it is required, the learner does more work for every word.
-  We will decide which in Week 2.
-- Input is limited to texts the learner pastes or uploads; we do not import from video, streaming or e-books as ALT-02 does.
-
-**How a competitor would respond:** ALT-02 (LingQ) already lets learners pick words in their own texts and could add a "generate a new example sentence" button to its word panel within weeks, with its existing users and content.
-This is our biggest risk.
-What it would not copy easily is being open source, which the Customer wants "so that others can contribute code or use it in their own language setting" (Customer, [00:00:00]).
-
-## VP-02: The learner decides which words come first, without losing progress
-
-**User:** a learner who wants to study some words earlier than others, for example the words of the text they are reading this week.
-
-**Problem:** in ALT-01, new songs can only be appended at the end, because reordering them renumbers the words and mixes up the learner's progress; in ALT-03 the system decides the order by difficulty; in ALT-04 the learner can reposition new cards, but only by finding and selecting them by hand in Anki's card browser.
-
-**What we do that the alternatives do not:** the learner moves a word, or all the words of one text, up or down the study queue, and the review history of the words already studied stays as it was.
-
-**Closes:** [GAP-02](gap-analysis.md#gap-02-choosing-which-words-come-first-without-losing-progress).
-
-**What it costs:**
-
-- Because review happens inside our app (Customer, [00:21:50]), we have to build our own spaced-repetition scheduling instead of reusing Anki's mature one.
-- A learner who already has an Anki deck starts over in our app, because importing from Anki is not required for now.
-
-**How a competitor would respond:** Anki already has a "Reposition" command, and an add-on could make it work per text in a short time, so this is not a strong moat on its own.
-Its value is that it works together with VP-01 in the same product: the words the learner picked and checked are the words they can put first.
->>>>>>> origin/main
