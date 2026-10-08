@@ -1,6 +1,6 @@
 ## Task issue
 
-Closes #<issue-number>
+Closes #123
 
 Each pull request must close exactly one task issue. Replace `<issue-number>` with the linked task issue number.
 
