@@ -1,0 +1,25 @@
+name: Task
+description: One unit of work that one pull request closes.
+labels: ["task"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "What the work is. Give the issue a short imperative title, such as `Hold a slot while the client pays`."
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: Story
+      description: "Optional. A bullet list with one item for each story issue this task works toward, with the story's AC-nn in parentheses. Leave it empty when the task is not work on a story, such as a workflow or a report."
+      placeholder: "- #42 (AC-01, AC-02)"
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: "A checklist, one item per criterion, each observable and pass/fail. The reviewer ticks every box before approving the pull request."
+      value: "- [ ] AC-01: "
+    validations:
+      required: true

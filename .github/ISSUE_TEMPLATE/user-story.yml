@@ -1,0 +1,52 @@
+name: User story
+description: One need of one user, with acceptance criteria and a priority.
+title: "US-nn: "
+labels: ["user-story"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Replace `US-nn` in the title with the next free story number: one above the highest `US-nn` among open and closed story issues.
+        After you submit, apply exactly one `moscow:*` label to this issue.
+  - type: textarea
+    id: story
+    attributes:
+      label: Story
+      description: "As a <user>, I want <need>, so that <reason>. State the need, not the solution."
+    validations:
+      required: true
+  - type: input
+    id: value-proposition
+    attributes:
+      label: Value proposition
+      description: "Exactly one VP-nn, as a link. Pattern: [`VP-01`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/docs/research/value-proposition.md#vp-01)"
+    validations:
+      required: true
+  - type: textarea
+    id: traces-to
+    attributes:
+      label: Traces to
+      description: "Optional. One entry per line: the GAP-nn it closes, the DEC-nnn of a decision, or an action point it carries out. Link each one. Pattern: [`GAP-01`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/docs/research/gap-analysis.md#gap-01)"
+  - type: textarea
+    id: rests-on
+    attributes:
+      label: Rests on
+      description: "Optional. One entry per line: the ASM-nn of each assumption the story rests on. Link each one. Pattern: [`ASM-01`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/docs/assumptions.md#asm-01)"
+  - type: textarea
+    id: priority-reason
+    attributes:
+      label: Priority reason
+      description: "Why this priority and not the one above or below it. Cite and link the CON-nn that drives it, when one does. A Won't Have reason that rests on the boundary cites its BND-nn, linked."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: "At least two for every story except Won't Have. Each one observable and pass/fail, so somebody else can run it and get the same answer."
+      value: "1. AC-01: "
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: "Optional. Notes, and a bullet list of this story's task issues, such as `- #12`."
