@@ -25,10 +25,10 @@ No alternative is strong on every row, so there is no single incumbent that does
 **Across the rows.**
 
 - `Sentence and translation quality`: the two alternatives that write new sentences (ALT-01, ALT-04) give the learner no simple way to check or fix them, and the two that need no setup (ALT-02, ALT-03) do not write new sentences at all.
-  This row is the basis of [GAP-01](gap-analysis.md#gap-01-reviewing-and-fixing-generated-sentences).
+  This row is the basis of [GAP-01](gap-analysis.md#gap-01).
 - `Spaced repetition and prioritization`: in every alternative the order of new words is set by the source or by the system, or changed by hand for new cards only.
-  This row is the basis of [GAP-02](gap-analysis.md#gap-02-choosing-which-words-come-first-without-losing-progress).
+  This row is the basis of [GAP-02](gap-analysis.md#gap-02).
 - `Card creation effort` and `Content source`: picking words in your own text (ALT-02) and getting a new sentence for each (ALT-01, ALT-04) never happen in the same product without manual work.
-  These rows are the basis of [GAP-03](gap-analysis.md#gap-03-picking-words-in-your-own-text-and-getting-a-new-sentence-for-each).
+  These rows are the basis of [GAP-03](gap-analysis.md#gap-03).
 - `Pronunciation` and `Language coverage`: most alternatives cover them, so they are not where our product can differ; see the rejected gaps in [gap-analysis.md](gap-analysis.md#gaps-we-chose-not-to-pursue).
 - `Teacher involvement` and `Deployment and data control`: ALT-03 already serves teachers with classes, and every hosted alternative keeps the learner's texts on its servers; we did not take either as a gap this week.

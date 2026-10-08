@@ -15,7 +15,7 @@ We held a kickoff with the Customer on 2026-09-30, which changed our proposed di
 ## Findings
 
 Products that write new example sentences (songs2anki, ChatGPT) give the learner no simple way to check or fix them, and products that need no setup (LingQ, Quizlet) do not write new sentences at all.
-Before the kickoff we planned to build around picking words in your own text (GAP-03); the Customer put an editor for generated sentences first, so our main proposition is now that editor ([VP-01](../../docs/research/value-proposition.md#vp-01-an-editor-to-check-generated-sentences-before-you-study-them)), with picking words as its first step, plus letting the learner choose which words come first ([VP-02](../../docs/research/value-proposition.md#vp-02-the-learner-decides-which-words-come-first-without-losing-progress)).
+Before the kickoff we planned to build around picking words in your own text (GAP-03); the Customer put an editor for generated sentences first, so our main proposition is now that editor ([VP-01](../../docs/research/value-proposition.md#vp-01)), with picking words as its first step, plus letting the learner choose which words come first ([VP-02](../../docs/research/value-proposition.md#vp-02)).
 What is still open after the kickoff is listed in the meeting report's [open questions](meeting-report.md#open-questions).
 
 ## Coverage
