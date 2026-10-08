@@ -1,3 +1,10 @@
+## Task issue
+
+Closes #<issue-number>
+
+Each pull request must close exactly one task issue. Replace `<issue-number>` with the linked task issue number.
+
+
 ## What changed and why
 
 <!-- Describe the change and the reason for it. Link the related GAP-nn, VP-nn or issue if any. -->
@@ -13,3 +20,5 @@
 - [ ] The change does what the description says.
 - [ ] The linked requirements or acceptance criteria are satisfied.
 - [ ] No private-only material (emails, real names, recordings, secrets) is included.
+
+
