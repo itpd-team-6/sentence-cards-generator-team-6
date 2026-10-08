@@ -44,13 +44,3 @@ What it would not copy easily is being open source, which the Customer wants "so
 
 **How a competitor would respond:** Anki already has a "Reposition" command, and an add-on could make it work per text in a short time, so this is not a strong moat on its own.
 Its value is that it works together with VP-01 in the same product: the words the learner picked and checked are the words they can put first.
-
-## Assumptions
-
-| Assumption                                                                                                   | Supports             | How to check, and when                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A free or cheap language model writes good enough sentences in Russian, English and German that regenerating is the exception, not the rule. | VP-01, GAP-01        | Week 2: generate sentences for 20 words in each language with one free model and count how many we would correct.                                                       |
-| Learners will review the generated sentences instead of accepting all of them unchecked.                      | VP-01                | Usability tests (protocol in Week 7, results in Week 9): observe whether participants use edit, flag and regenerate.                                                                                       |
-| Teachers want to correct the sentences in their students' cards (based on the kickoff conversation).        | GAP-01, VP-01        | Week 2: ask one language teacher how her students study vocabulary and whether she checks it.          |
-| Anki's manual "Reposition" is too slow or unknown for most learners to serve GAP-02.                          | GAP-02, VP-02        | Week 2: time how long it takes to move the words of one text to the front of an Anki deck.                                                                              |
-| Learners will accept reviewing inside our app instead of in Anki (based on the kickoff conversation).       | VP-02                | Week 2: look for reports in Anki community forums from learners who moved their reviews to other apps, and why. Usability tests (Week 7–9): observe whether participants are willing to review inside our app.                                                           |
