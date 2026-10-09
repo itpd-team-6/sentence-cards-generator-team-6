@@ -20,26 +20,26 @@ Questions marked ★ are the ones that would change the project most; we ask the
 
 **End users:**
 
-1. _(open)_ Besides you, has anyone else used songs2anki or a deck made with it? Who were they, and how did it go?
-2. _(open)_ The catalog mentions learners and teachers. In your experience, what does a teacher actually do with a student's vocabulary cards?
+3. _(open)_ Besides you, has anyone else used songs2anki or a deck made with it? Who were they, and how did it go?
+4. _(open)_ The catalog mentions learners and teachers. In your experience, what does a teacher actually do with a student's vocabulary cards?
 
 **Current workflow:**
 
-1. ★ _(open)_ Walk us through the last time you added new words to your deck. What did you do, step by step, and which step took the most time?
-2. _(open)_ How did you produce the audio in the demo deck? We couldn't find it in the scripts.
-3. _(open)_ Your README says `deck.csv` has words without cards, and we counted about 1,500 of the 4,700. For example, "die Krone" is there with no sentence, yet when we sent it to ChatGPT with your prompt, it got a valid sentence on the first try. Why didn't these words get a sentence, and was that a problem for your learning?
+5. ★ _(open)_ Walk us through the last time you added new words to your deck. What did you do, step by step, and which step took the most time?
+6. _(open)_ How did you produce the audio in the demo deck? We couldn't find it in the scripts.
+7. _(open)_ Your README says `deck.csv` has words without cards, and we counted about 1,500 of the 4,700. For example, "die Krone" is there with no sentence, yet when we sent it to ChatGPT with your prompt, it got a valid sentence on the first try. Why didn't these words get a sentence, and was that a problem for your learning?
 
 **Pain points and constraints:**
 
-1. _(open)_ When you reviewed your cards in Anki, what annoyed you most about them? Can you remember a specific card?
-2. _(closed)_ The catalog says the product runs on a VPS or local host. Is that a fixed requirement? What is the reason behind it?
-3. _(closed)_ songs2anki uses a paid OpenAI model. For this project, is it fine to depend on a paid AI service, or should the product work with a free model?
+8. _(open)_ When you reviewed your cards in Anki, what annoyed you most about them? Can you remember a specific card?
+9. _(closed)_ The catalog says the product runs on a VPS or local host. Is that a fixed requirement? What is the reason behind it?
+10. _(closed)_ songs2anki uses a paid OpenAI model. For this project, is it fine to depend on a paid AI service, or should the product work with a free model?
 
 **Scope:**
 
-1. ★ _(open)_ If by the end of the course the product could do only one thing really well, what should it be?
-2. _(closed)_ The catalog lists teacher review, re-prioritizing words, and three interface languages. If one of them had to wait until after the course, which one would you drop first?
-3. ★ _(closed)_ The catalog describes the problem as updating an Anki collection. Should the product add cards to the learner's existing Anki, or can the review happen only inside our app?
+11. ★ _(open)_ If by the end of the course the product could do only one thing really well, what should it be?
+12. _(closed)_ The catalog lists teacher review, re-prioritizing words, and three interface languages. If one of them had to wait until after the course, which one would you drop first?
+13. ★ _(closed)_ The catalog describes the problem as updating an Anki collection. Should the product add cards to the learner's existing Anki, or can the review happen only inside our app?
 
 ## Roles
 
