@@ -18,7 +18,7 @@ Review happens inside our app, and importing from Anki is a nice-to-have, not a 
 - **Date:** 2026-09-30
 - **Made by:** Customer
 - **Source:** [the kickoff meeting](../reports/week-01/meeting-report.md)
-- **Why:** re-prioritizing words is the extra feature the Customer wants most (Customer, [00:20:54]), and it needs the study order and the review history to be in our app instead of in an Anki collection that is tedious to update.
+- **Why:** re-prioritizing words is the extra feature the Customer wants most (Customer, [00:20:54]), and it needs us to control the study order, which we can only do if review happens inside our app (Customer, [00:21:50]).
 
 ## DEC-003
 
