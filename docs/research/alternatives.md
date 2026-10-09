@@ -37,19 +37,21 @@ Screenshots and working notes are on our research board: [Miro board](https://mi
 | ALT-03 | Quizlet                 | Adjacent substitute        |
 | ALT-04 | Anki + ChatGPT (manual) | Adjacent substitute        |
 
-## ALT-01: songs2anki
+## ALT-01
 
-**Kind:** Self-hosted (the course catalog's proof of concept)
-**Link:** https://github.com/deemp/songs2anki
-**Version looked at:** commit `f4a9e9a` (2025-06-02), evaluated on 2026-09-29 with Anki 25.07.5
-**Depth of evaluation:** read the README; imported and studied the demo deck; reproduced the generation step ([README, "Usage"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#usage), step 7) by sending the prompt from [`lib.py` (`make_prompt`)](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/custom/de/script/lib.py#L185) and five words from the author's [`deck.csv`](https://github.com/deemp/songs2anki/tree/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/custom/de/en/deck) to ChatGPT, then imported the output into Anki ([README, "Raw deck"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#raw-deck)).
-The scripts in `custom/de/script/` were searched with an AI assistant; findings that come only from that search are marked _(AI search)_ (see `reports/week-01/ai-usage.md`).
-We did not run the scripts: they need Nix on Linux plus OpenAI and Genius API keys.
+songs2anki
 
-**Problem it solves:** a German learner gets an Anki deck for the unknown words in the lyrics of songs they listen to, with an LLM-generated example sentence and English translations.
-It is a set of scripts run cell by cell in VS Code, with no user interface: lyrics are fetched from Genius, the words are extracted, and `gpt-4o-mini` writes a sentence for each ([README, "Usage"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#usage)).
+- **Status:** Active
+- **Kind:** Self-hosted (the course catalog's proof of concept)
+- **Link:** <https://github.com/deemp/songs2anki>
+- **Version looked at:** commit `f4a9e9a` (2025-06-02), evaluated on 2026-09-29 with Anki 25.07.5
+- **Depth of evaluation:** read the README; imported and studied the demo deck; reproduced the generation step ([README, "Usage"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#usage), step 7) by sending the prompt from [`lib.py` (`make_prompt`)](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/custom/de/script/lib.py#L185) and five words from the author's [`deck.csv`](https://github.com/deemp/songs2anki/tree/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/custom/de/en/deck) to ChatGPT, then imported the output into Anki ([README, "Raw deck"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#raw-deck)).
+  The scripts in `custom/de/script/` were searched with an AI assistant; findings that come only from that search are marked _(AI search)_ (see `reports/week-01/ai-usage.md`).
+  We did not run the scripts: they need Nix on Linux plus OpenAI and Genius API keys.
+- **Problem it solves:** a German learner gets an Anki deck for the unknown words in the lyrics of songs they listen to, with an LLM-generated example sentence and English translations.
+  It is a set of scripts run cell by cell in VS Code, with no user interface: lyrics are fetched from Genius, the words are extracted, and `gpt-4o-mini` writes a sentence for each ([README, "Usage"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#usage)).
 
-**Observations by property**
+**Observations by property:**
 
 | Property                             | Observation                                                                                                                                                          |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -62,13 +64,13 @@ It is a set of scripts run cell by cell in VS Code, with no user interface: lyri
 | Teacher involvement                  | None found.                                                                                                                                                          |
 | Deployment and data control          | Runs locally; words go to the OpenAI API and song titles to Genius.                                                                                                  |
 
-**Strengths**
+**Strengths:**
 
 - Generated sentences are checked against length, rare-word and presence rules ([README, "Constraints"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#constraints)); failing ones are removed and generated again on the next run ([README, "Partitioning the raw deck"](https://github.com/deemp/songs2anki/blob/f4a9e9a52e0e37273f507863acae0dbd9e6284aa/README.md#partitioning-the-raw-deck)).
 - Nouns whose meaning depends on the article get separate cards: "das Laster" (vice) and "der Laster" (truck) (hands-on, demo deck).
 - Each note gives two cards, German → English and English → German, with audio in the demo (hands-on).
 
-**Weaknesses**
+**Weaknesses:**
 
 - Only a developer can produce a deck; a learner or a teacher without programming skills cannot.
 - The learner cannot choose words in a text, the opposite of the catalog's "words selected by the user in texts uploaded by the user".
@@ -78,18 +80,20 @@ It is a set of scripts run cell by cell in VS Code, with no user interface: lyri
 
 **Evidence on the board:** frames `ALT-01 songs2anki` (demo card front and back, ChatGPT output, CSV import, generated card without audio).
 
-## ALT-02: LingQ
+## ALT-02
 
-**Kind:** Direct competitor
-**Link:** https://www.lingq.com/
-**Version looked at:** web app, free account, 2026-09-29
-**Depth of evaluation:** created a free account learning German; imported a paragraph of the German Wikipedia article on Anki with "Import → Lesson → Type or Paste"; saved "Lernkartei" as a LingQ and reviewed it as a flashcard.
-The official pages on the free and Premium plans and on LingQ for Schools were read with an AI assistant; findings that come only from them are marked _(AI search)_ (see `reports/week-01/ai-usage.md`).
-We did not test the browser extension, the streaming imports, the export, the "For schools" offer, or Russian as a target language.
+LingQ
 
-**Problem it solves:** a learner reads or watches content they choose in the target language, clicks unknown words to save them with a meaning, and reviews them later.
+- **Status:** Active
+- **Kind:** Direct competitor
+- **Link:** <https://www.lingq.com/>
+- **Version looked at:** web app, free account, 2026-09-29
+- **Depth of evaluation:** created a free account learning German; imported a paragraph of the German Wikipedia article on Anki with "Import → Lesson → Type or Paste"; saved "Lernkartei" as a LingQ and reviewed it as a flashcard.
+  The official pages on the free and Premium plans and on LingQ for Schools were read with an AI assistant; findings that come only from them are marked _(AI search)_ (see `reports/week-01/ai-usage.md`).
+  We did not test the browser extension, the streaming imports, the export, the "For schools" offer, or Russian as a target language.
+- **Problem it solves:** a learner reads or watches content they choose in the target language, clicks unknown words to save them with a meaning, and reviews them later.
 
-**Observations by property**
+**Observations by property:**
 
 | Property                             | Observation                                                                                                                                                                                                    |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -102,13 +106,13 @@ We did not test the browser extension, the streaming imports, the export, the "F
 | Teacher involvement                  | A separate "LingQ for Schools" offer: a teacher portal and dashboard to "view both individual and group student progress", "upload lessons", "share lessons with your group" and a private classroom forum. The page does not say that a teacher can see or correct a student's saved words, and gives no price, only "Contact us" ([LingQ for Schools](https://www.lingq.com/en/schools/), _(AI search)_). |
 | Deployment and data control          | Hosted service; imported texts are stored in the learner's account. |
 
-**Strengths**
+**Strengths:**
 
 - Getting content in is almost effortless: many sources, one click each (hands-on, import screen).
 - Words are chosen while reading, in context, which is what the course catalog asks for (hands-on).
 - Review keeps the original sentence and its audio on the card (hands-on).
 
-**Weaknesses**
+**Weaknesses:**
 
 - The free plan is a trial, not a tool: 20 saved words in total (hands-on).
 - A word only ever gets the one sentence it appeared in. If that sentence is long, rare or confusing, so is the card; we saw no option to generate a new example sentence (hands-on).
@@ -119,16 +123,18 @@ We did not test the browser extension, the streaming imports, the export, the "F
 
 **Evidence on the board:** frames `ALT-02 LingQ` (import sources, pasted text, reader, word panel, saved word, review menu, flashcard front and back).
 
-## ALT-03: Quizlet
+## ALT-03
 
-**Kind:** Adjacent substitute  
-**Link:** https://quizlet.com/  
-**Version looked at:** web app, 2026-09-30  
-**Depth of evaluation:** Signed up with a free account, created a language study set, tested AI Flashcard Generator / Smart Assist, tried Learn and Flashcards modes, and checked the Classes feature. Did not fully test paid Plus features.
+Quizlet
 
-**Problem it solves:** A popular flashcard platform that helps students and teachers create, share, and study vocabulary sets with AI generation and classroom tools.
+- **Status:** Active
+- **Kind:** Adjacent substitute
+- **Link:** <https://quizlet.com/>
+- **Version looked at:** web app, 2026-09-30
+- **Depth of evaluation:** Signed up with a free account, created a language study set, tested AI Flashcard Generator / Smart Assist, tried Learn and Flashcards modes, and checked the Classes feature. Did not fully test paid Plus features.
+- **Problem it solves:** A popular flashcard platform that helps students and teachers create, share, and study vocabulary sets with AI generation and classroom tools.
 
-**Observations by property**
+**Observations by property:**
 
 | Property                             | Observation                                   |
 | ------------------------------------ | --------------------------------------------- |
@@ -141,13 +147,13 @@ We did not test the browser extension, the streaming imports, the export, the "F
 | Teacher involvement                  | Strong: Classes, shared sets, and Live games. Good support for teachers. (https://quizlet.com) |
 | Deployment and data control          | Fully cloud-based. Data is stored on Quizlet servers. No self-hosting option. (hands-on) |
 
-**Strengths**
+**Strengths:**
 
 - Fast AI card generation from notes or topics. (hands-on)
 - Excellent teacher and classroom features. (https://quizlet.com)
 - Very large existing library of ready-made sets. (hands-on)
 
-**Weaknesses**
+**Weaknesses:**
 
 - AI-generated cards are mostly simple term-definition pairs, not rich sentence-in-context cards. (hands-on)
 - Free tier limits AI features and advanced study modes. (hands-on)
@@ -157,17 +163,18 @@ We did not test the browser extension, the streaming imports, the export, the "F
 
 **Evidence on the board:** ALT-03 Quizlet AI generation, ALT-03 Quizlet Learn mode, ALT-03 Quizlet Classes
 
+## ALT-04
 
-## ALT-04: Anki + ChatGPT workflow
+Anki + ChatGPT workflow
 
-**Kind:** Adjacent substitute  
-**Link:** https://apps.ankiweb.net/ + https://chatgpt.com/  
-**Version looked at:** Anki desktop + ChatGPT web, 2026-09-30  
-**Depth of evaluation:** Installed Anki, asked ChatGPT for example sentences and translations for several words, created cards manually and by copy-paste, and timed the process.
+- **Status:** Active
+- **Kind:** Adjacent substitute
+- **Link:** <https://apps.ankiweb.net/> + <https://chatgpt.com/>
+- **Version looked at:** Anki desktop + ChatGPT web, 2026-09-30
+- **Depth of evaluation:** Installed Anki, asked ChatGPT for example sentences and translations for several words, created cards manually and by copy-paste, and timed the process.
+- **Problem it solves:** Combines the strongest spaced-repetition system (Anki) with an LLM to generate sentence-based language cards.
 
-**Problem it solves:** Combines the strongest spaced-repetition system (Anki) with an LLM to generate sentence-based language cards.
-
-**Observations by property**
+**Observations by property:**
 
 | Property                             | Observation                                   |
 | ------------------------------------ | --------------------------------------------- |
@@ -180,13 +187,13 @@ We did not test the browser extension, the streaming imports, the export, the "F
 | Teacher involvement                  | Almost none. Anki is mainly for individual use. Sharing decks is possible but limited. (hands-on) |
 | Deployment and data control          | Fully local. User owns all data. Optional cloud sync. (https://apps.ankiweb.net/) |
 
-**Strengths**
+**Strengths:**
 
 - Highest quality spaced repetition available. (https://apps.ankiweb.net/)
 - Complete control over card content and data ownership. (hands-on)
 - Can create exactly the sentence-style cards we want. (hands-on)
 
-**Weaknesses**
+**Weaknesses:**
 
 - Creating cards is slow and manual (ChatGPT → copy → Anki). (hands-on)
 - No built-in classroom or teacher features. (hands-on)
