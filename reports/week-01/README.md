@@ -20,27 +20,27 @@ What is still open after the kickoff is listed in the meeting report's [open que
 
 ## Coverage
 
-| Deliverable              | Artifact                                                                                 |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| Candidate list           | [candidate-list.md](candidate-list.md)                                                   |
-| Alternatives search      | [docs/research/alternatives.md](../../docs/research/alternatives.md)                     |
-| Compare the alternatives | [docs/research/comparison.md](../../docs/research/comparison.md)                         |
-| Gap analysis             | [docs/research/gap-analysis.md](../../docs/research/gap-analysis.md)                     |
-| Value proposition        | [docs/research/value-proposition.md](../../docs/research/value-proposition.md)           |
-| Research board           | [Miro board](https://miro.com/app/board/uXjVHgAUe_0=/)                                   |
-| Meeting script           | [meeting-script.md](meeting-script.md)                                                   |
-| Customer kickoff         | [meeting-report.md](meeting-report.md), [meeting-transcript.md](meeting-transcript.md)   |
-| AI usage                 | [ai-usage.md](ai-usage.md)                                                               |
+| Deliverable              | Artifact                                                                               |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| Candidate list           | [candidate-list.md](candidate-list.md)                                                 |
+| Alternatives search      | [docs/research/alternatives.md](../../docs/research/alternatives.md)                   |
+| Compare the alternatives | [docs/research/comparison.md](../../docs/research/comparison.md)                       |
+| Gap analysis             | [docs/research/gap-analysis.md](../../docs/research/gap-analysis.md)                   |
+| Value proposition        | [docs/research/value-proposition.md](../../docs/research/value-proposition.md)         |
+| Research board           | [Miro board](https://miro.com/app/board/uXjVHgAUe_0=/)                                 |
+| Meeting script           | [meeting-script.md](meeting-script.md)                                                 |
+| Customer kickoff         | [meeting-report.md](meeting-report.md), [meeting-transcript.md](meeting-transcript.md) |
+| AI usage                 | [ai-usage.md](ai-usage.md)                                                             |
 
 The Customer permitted recording and publishing a sanitized transcript, so we produced a transcript rather than notes.
 
 ## Contribution
 
-| Member               | Work                                                                                                                       |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Member               | Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | nataliamotand        | Repository setup ([PR #1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/1)), alternatives skeleton ([PR #2](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/2)), meeting script ([PR #3](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/3)), transcript and board link ([PR #7](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/7)), ALT-01, ALT-02, comparison, gap analysis, value proposition, meeting report and this report ([PR #9](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/9)); interviewer at the kickoff; reviewed and approved [PR #4](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/4) and [PR #6](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/6) |
-| AbdelrahmanAbdel-Aal | Candidate list ([PR #4](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/4)), ALT-03 and ALT-04 ([PR #6](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/6)); note taker and observer at the kickoff; reviewed and merged [PR #1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/1), [PR #2](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/2), [PR #3](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/3) |
-| emapfff              | Branch protection screenshot ([PR #8](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/8)); reviewed [PR #7](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/7) |
+| AbdelrahmanAbdel-Aal | Candidate list ([PR #4](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/4)), ALT-03 and ALT-04 ([PR #6](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/6)); note taker and observer at the kickoff; reviewed and merged [PR #1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/1), [PR #2](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/2), [PR #3](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/3)                                                                                                                                                                                                                                                                                                           |
+| emapfff              | Branch protection screenshot ([PR #8](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/8)); reviewed [PR #7](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/7)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Repository evidence
 

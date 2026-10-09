@@ -1,9 +1,10 @@
+# Pull Request
+
 ## Task issue
 
 Closes #123
 
 Each pull request must close exactly one task issue. Replace `<issue-number>` with the linked task issue number.
-
 
 ## What changed and why
 
@@ -20,5 +21,3 @@ Each pull request must close exactly one task issue. Replace `<issue-number>` wi
 - [ ] The change does what the description says.
 - [ ] The linked requirements or acceptance criteria are satisfied.
 - [ ] No private-only material (emails, real names, recordings, secrets) is included.
-
-
