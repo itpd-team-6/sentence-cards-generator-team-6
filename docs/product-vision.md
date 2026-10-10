@@ -70,11 +70,14 @@ The code is open source.
 
 ### CON-07
 
-The product runs on a VPS or on the learner's own machine, and the choice between the two is still open.
+The product must be self-hostable on the learner's own machine or on a VPS, with clear instructions that we check.
 
 - **Status:** Active
 - **Source:** Customer-given
-- **What it costs:** we cannot assume an always-on server or files on the learner's machine until the Customer says which one.
+- **What it costs:** we cannot assume an always-on server of ours, and we must write install instructions and test that they work.
+- **Decision:** [`DEC-008`](decisions.md#dec-008)
+- **Changed:**
+  - Settled the choice between a VPS and the learner's own machine: both must work, and the user decides ([`DEC-008`](decisions.md#dec-008)).
 
 ## Boundary
 
@@ -83,8 +86,10 @@ The product runs on a VPS or on the learner's own machine, and the choice betwee
 Produce audio for the words and sentences.
 
 - **Status:** Active
-- **Handled by:** Nobody
+- **Handled by:** An outside audio source, not yet chosen. The learner still gets the audio, because each card must have it.
 - **Why:** free tools already cover audio, and the Customer uses one of them (Customer, [00:10:59]); the [gap analysis](research/gap-analysis.md#gaps-we-chose-not-to-pursue) records it as an extra rather than a differentiator, and it would compete with the core stories for the seven weeks in [`CON-02`](#con-02).
+- **Changed:**
+  - Was handled by Nobody; the Customer said each card needs audio for the word and for the sentence and the sentence plays automatically in review, so the audio now comes from an outside source ([`DEC-007`](decisions.md#dec-007)). The context diagram does not show this source yet; that is an action point of the [Week 2 meeting report](../reports/week-02/meeting-report.md#action-points) for Week 3.
 
 ### BND-02
 
@@ -117,7 +122,8 @@ Train or host a language model.
 The learner is the actor: they send texts, the words they mark, their edits and their answers, and receive sentences, translations and the study queue.
 The language model service is the external system: the product sends it a word and receives a sentence and a translation.
 The language model service is on the diagram because `BND-04` hands it the job of writing sentences, and the learner is on it because `BND-03` leaves the texts to them.
-Nothing on the diagram does a job that `BND-01` or `BND-02` leaves to nobody.
+Nothing on the diagram does a job that `BND-02` leaves to nobody.
+The outside audio source that `BND-01` now names is not on the diagram yet ([`DEC-007`](decisions.md#dec-007)); adding it is an action point of the [Week 2 meeting report](../reports/week-02/meeting-report.md#action-points), due in Week 3.
 
 ## Where The Detail Lives
 
