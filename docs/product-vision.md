@@ -128,3 +128,4 @@ The outside audio source that `BND-01` now names is not on the diagram yet ([`DE
 ## Where The Detail Lives
 
 - [User stories](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues?q=label%3Auser-story)
+- [Week 2 report](../reports/week-02/README.md)
