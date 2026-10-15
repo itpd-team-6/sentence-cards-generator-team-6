@@ -13,6 +13,7 @@ An app that generates language-learning flashcards: the user uploads a text, sel
 ## Documentation
 
 - [Project documentation](docs/README.md)
+- [Setup and run instructions](docs/setup.md)
 
 ## License
 
