@@ -79,3 +79,13 @@ The product must be self-hostable on a local machine or a VPS, with clear instru
 - **Made by:** Customer
 - **Source:** [the Week 2 validation meeting](../reports/week-02/meeting-report.md)
 - **Why:** it fits the open-source nature of the product and leaves the choice to the user; the Customer wants at least the local option "so that no data is sent anywhere" (Customer, [00:11:09]).
+
+## DEC-009
+
+Build the product with a FastAPI (Python) API, a React (Vite) front end and an SQLite database, with the language model set through `.env`.
+
+- **Status:** Active
+- **Date:** 2026-10-15
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the team works in Python, and FastAPI keeps the API small, so the time goes into the three stories of the minimum usable product; React suits the review table of `US-02`, where the learner edits, regenerates, flags and deletes many cards at once, and one member already has React experience; SQLite is one file with no database server, so a learner can self-host the product on a local machine or a VPS as [`DEC-008`](#dec-008) requires; the model, key and endpoint come from `.env`, so a free or cheap model can be used and changed without code, as [`DEC-003`](#dec-003) allows.
