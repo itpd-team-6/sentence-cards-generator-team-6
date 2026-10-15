@@ -78,7 +78,7 @@ cd backend
 python -m uvicorn app.main:app
 ```
 
-Open <http://localhost:8000>.
+Open `http://localhost:8000`.
 The page shows `API status: ok` when the front end reaches the API.
 Stop the product with `Ctrl+C`.
 
@@ -91,7 +91,7 @@ cd frontend
 npm run dev
 ```
 
-Open <http://localhost:5173>.
+Open `http://localhost:5173`.
 The page passes its `/api` calls to the backend on port 8000.
 
 ## Checks and tests
