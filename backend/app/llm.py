@@ -13,6 +13,8 @@ from app.config import Settings, get_settings
 Language = Literal["ru", "en", "de"]
 LANGUAGE_NAMES = {"ru": "Russian", "en": "English", "de": "German"}
 TIMEOUT_SECONDS = 30.0
+# A status that says the service is overloaded or down for now (a free model does this from time to time).
+UNAVAILABLE_STATUSES = {429, 500, 502, 503, 504}
 
 
 class LlmError(Exception):
@@ -69,6 +71,36 @@ def parse_answer(content: str) -> GeneratedSentence:
     return GeneratedSentence(sentence.strip(), translation.strip())
 
 
+def build_translation_messages(
+    sentence: str, text_language: Language, first_language: Language
+) -> list[dict[str, str]]:
+    lines = [
+        f'Translate this {LANGUAGE_NAMES[text_language]} sentence into {LANGUAGE_NAMES[first_language]}: "{sentence}"',
+        'Answer only with JSON, in this form: {"translation": "..."}',
+    ]
+    return [
+        {"role": "system", "content": "You translate example sentences for people who learn a language."},
+        {"role": "user", "content": "\n".join(lines)},
+    ]
+
+
+def parse_translation(content: str) -> str:
+    """Read the JSON the model was asked for, even when it is wrapped in a code fence or in text."""
+    text = re.sub(r"```(?:json)?", "", content)
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end < start:
+        raise LlmError("The language model gave an answer that could not be read.")
+    try:
+        translation = json.loads(text[start : end + 1])["translation"]
+    except (ValueError, KeyError, TypeError):
+        raise LlmError("The language model gave an answer that could not be read.") from None
+    if not isinstance(translation, str):
+        raise LlmError("The language model gave an answer that could not be read.")
+    if not translation.strip():
+        raise LlmError("The language model gave an answer without a translation.")
+    return translation.strip()
+
+
 class LlmClient:
     def __init__(self, settings: Settings | None = None, http_client: httpx2.Client | None = None) -> None:
         self.settings = settings or get_settings()
@@ -90,13 +122,22 @@ class LlmClient:
         Pass `previous_sentence` to ask for a different one. Raises `LlmError` with a message that is safe
         to show; the key never appears in it.
         """
+        content = self._ask(build_messages(word, text_language, first_language, context, previous_sentence))
+        return parse_answer(content)
+
+    def translate_sentence(self, sentence: str, text_language: Language, first_language: Language) -> str:
+        """Ask the model to translate a sentence the learner wrote or edited. Raises `LlmError` like `write_sentence`."""
+        return parse_translation(self._ask(build_translation_messages(sentence, text_language, first_language)))
+
+    def _ask(self, messages: list[dict[str, str]]) -> str:
+        """Send the messages to the model and return the text of its answer."""
         if not self.settings.llm_api_key or not self.settings.llm_model:
             raise LlmNotConfigured("The language model is not set up: add LLM_API_KEY and LLM_MODEL to .env.")
 
         url = self.settings.llm_base_url.rstrip("/") + "/chat/completions"
         payload = {
             "model": self.settings.llm_model,
-            "messages": build_messages(word, text_language, first_language, context, previous_sentence),
+            "messages": messages,
         }
         try:
             response = self.http_client.post(
@@ -106,6 +147,8 @@ class LlmClient:
             raise LlmError("The language model took too long to answer.") from None
         except httpx2.HTTPError:
             raise LlmError("The language model could not be reached.") from None
+        if response.status_code in UNAVAILABLE_STATUSES:
+            raise LlmError("The language model is not available right now. Try again in a moment.")
         if response.status_code >= 400:
             raise LlmError(f"The language model returned an error (status {response.status_code}).")
         try:
@@ -114,7 +157,7 @@ class LlmClient:
             raise LlmError("The language model gave an answer that could not be read.") from None
         if not isinstance(content, str):
             raise LlmError("The language model gave an answer that could not be read.")
-        return parse_answer(content)
+        return content
 
 
 def get_llm_client() -> Iterator[LlmClient]:

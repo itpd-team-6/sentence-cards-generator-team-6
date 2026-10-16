@@ -55,7 +55,7 @@ def test_a_model_that_does_not_answer_gives_an_error_the_page_can_show() -> None
     response = TestClient(app).post("/api/sentences", json=REQUEST)
 
     assert response.status_code == 502
-    assert response.json() == {"detail": "The language model returned an error (status 500)."}
+    assert response.json() == {"detail": "The language model is not available right now. Try again in a moment."}
 
 
 def test_a_missing_key_gives_an_error_the_page_can_show() -> None:

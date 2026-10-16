@@ -4,7 +4,7 @@ import httpx2
 import pytest
 
 from app.config import Settings
-from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, parse_answer
+from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, parse_answer, parse_translation
 
 API_KEY = "secret-test-key-123"
 GOOD_ANSWER = '{"sentence": "Das Haus ist alt.", "translation": "The house is old."}'
@@ -130,3 +130,56 @@ def test_a_missing_key_or_model_is_reported_and_nothing_is_sent(changes) -> None
 
 def test_parse_answer_keeps_the_text_of_the_model_trimmed() -> None:
     assert parse_answer('{"sentence": " Hallo. ", "translation": " Hello. "}') == GeneratedSentence("Hallo.", "Hello.")
+
+
+def test_a_sentence_is_translated_into_the_first_language() -> None:
+    seen = {}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen["body"] = json.loads(request.content)
+        return httpx2.Response(200, json=reply('```json\n{"translation": " The house is old. "}\n```'))
+
+    translation = client_for(handler).translate_sentence("Das Haus ist alt.", "de", "en")
+
+    assert translation == "The house is old."
+    prompt = seen["body"]["messages"][-1]["content"]
+    assert "Das Haus ist alt." in prompt
+    assert "German" in prompt
+    assert "English" in prompt
+
+
+@pytest.mark.parametrize(
+    "content", ["Sorry.", '{"sentence": "x"}', '{"translation": " "}', '{"translation": 3}'], ids=str
+)
+def test_a_translation_that_cannot_be_read_raises_an_error(content) -> None:
+    with pytest.raises(LlmError):
+        parse_translation(content)
+
+
+def test_translating_without_a_key_is_reported_and_nothing_is_sent() -> None:
+    calls = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        calls.append(request)
+        return httpx2.Response(200, json=reply('{"translation": "x"}'))
+
+    with pytest.raises(LlmNotConfigured):
+        client_for(handler, llm_api_key="").translate_sentence("Das Haus ist alt.", "de", "en")
+
+    assert calls == []
+
+
+@pytest.mark.parametrize("status", [429, 500, 502, 503, 504])
+def test_a_busy_or_down_service_gets_a_message_that_says_to_try_again(status) -> None:
+    with pytest.raises(LlmError) as error:
+        client_for(lambda request: httpx2.Response(status, text="boom")).write_sentence("Haus", "de", "en")
+
+    assert str(error.value) == "The language model is not available right now. Try again in a moment."
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404])
+def test_a_refused_request_keeps_its_status_in_the_message(status) -> None:
+    with pytest.raises(LlmError) as error:
+        client_for(lambda request: httpx2.Response(status, text="no")).write_sentence("Haus", "de", "en")
+
+    assert str(error.value) == f"The language model returned an error (status {status})."

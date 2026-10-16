@@ -13,6 +13,7 @@
   --accent-soft-text: #ff8a9d; /* 5.7:1 on the soft ruby */
   --focus: #ff6b84; /* 5.7:1 on the surface */
   --radius: 12px;
+  color-scheme: dark; /* the browser draws scrollbars and form parts in the dark theme too */
   --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-display: "Segoe UI Variable Display", "Avenir Next", "Segoe UI", system-ui, sans-serif;
 }
@@ -38,7 +39,7 @@ body {
 }
 
 .app {
-  max-width: 46rem;
+  max-width: 56rem;
   margin: 0 auto;
   padding: 2.5rem 1.25rem 3rem;
 }
@@ -321,5 +322,145 @@ textarea {
 @media (max-width: 34rem) {
   .fields {
     grid-template-columns: 1fr;
+  }
+}
+
+/* The cards of a text, in a table the learner reviews. */
+.cards-panel {
+  margin-top: 1.5rem;
+}
+
+.notice.busy::before {
+  content: "\2026";
+}
+
+.cards {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  /* The columns keep their widths whatever a row holds (a flag, an edit, a long sentence). */
+  table-layout: fixed;
+}
+
+.col-word {
+  width: 6.5rem;
+}
+
+.col-actions {
+  width: 15rem;
+}
+
+.cards th,
+.cards td {
+  padding: 0.75rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.cards thead th {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.cards tbody th {
+  overflow-wrap: anywhere;
+}
+
+.cards textarea {
+  min-height: 5rem;
+  field-sizing: content;
+}
+
+.cards .note {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+}
+
+/* A flagged card has a ruby bar and the word "Flagged": the colour is not the only sign. */
+.cards .flagged th:first-child {
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.badge {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--accent-soft-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.row-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.cards .row-note td {
+  padding-top: 0;
+}
+
+.cards .notice {
+  margin: 0;
+}
+
+.secondary {
+  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.secondary:disabled,
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 44rem) {
+  .cards thead {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .cards tbody tr,
+  .cards tbody th,
+  .cards tbody td {
+    display: block;
+  }
+
+  .cards tbody th,
+  .cards tbody td {
+    padding: 0.35rem 0;
+    border: 0;
+  }
+
+  .cards tbody tr:first-child {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .cards td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
   }
 }
