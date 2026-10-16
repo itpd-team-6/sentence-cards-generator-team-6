@@ -89,7 +89,8 @@ Produce audio for the words and sentences.
 - **Handled by:** An outside audio source, not yet chosen. The learner still gets the audio, because each card must have it.
 - **Why:** free tools already cover audio, and the Customer uses one of them (Customer, [00:10:59]); the [gap analysis](research/gap-analysis.md#gaps-we-chose-not-to-pursue) records it as an extra rather than a differentiator, and it would compete with the core stories for the seven weeks in [`CON-02`](#con-02).
 - **Changed:**
-  - Was handled by Nobody; the Customer said each card needs audio for the word and for the sentence and the sentence plays automatically in review, so the audio now comes from an outside source ([`DEC-007`](decisions.md#dec-007)). The context diagram does not show this source yet; that is an action point of the [Week 2 meeting report](../reports/week-02/meeting-report.md#action-points) for Week 3.
+  - Was handled by Nobody; the Customer said each card needs audio for the word and for the sentence and the sentence plays automatically in review, so the audio now comes from an outside source ([`DEC-007`](decisions.md#dec-007)).
+  - The outside audio source is now on the context diagram, as an external system that is not chosen yet, so the diagram and this item agree ([`DEC-007`](decisions.md#dec-007)).
 
 ### BND-02
 
@@ -119,11 +120,12 @@ Train or host a language model.
 
 ![System context diagram](architecture/context.svg)
 
-The learner is the actor: they send texts, the words they mark, their edits and their answers, and receive sentences, translations and the study queue.
-The language model service is the external system: the product sends it a word and receives a sentence and a translation.
-The language model service is on the diagram because `BND-04` hands it the job of writing sentences, and the learner is on it because `BND-03` leaves the texts to them.
+The learner is the actor: they send texts, the words they mark, their edits and their answers, and receive sentences, translations, audio and the study queue.
+The language model service is an external system: the product sends it a word and receives a sentence and a translation.
+The audio source is the other external system: the product sends it a word or a sentence and receives the audio.
+It is not chosen yet ([`DEC-007`](decisions.md#dec-007)), so the diagram names the job and not a service.
+The language model service is on the diagram because `BND-04` hands it the job of writing sentences, the audio source because `BND-01` hands it the job of producing audio, and the learner because `BND-03` leaves the texts to them.
 Nothing on the diagram does a job that `BND-02` leaves to nobody.
-The outside audio source that `BND-01` now names is not on the diagram yet ([`DEC-007`](decisions.md#dec-007)); adding it is an action point of the [Week 2 meeting report](../reports/week-02/meeting-report.md#action-points), due in Week 3.
 
 ## Where The Detail Lives
 
