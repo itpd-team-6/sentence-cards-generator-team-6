@@ -13,6 +13,8 @@ from app.config import Settings, get_settings
 Language = Literal["ru", "en", "de"]
 LANGUAGE_NAMES = {"ru": "Russian", "en": "English", "de": "German"}
 TIMEOUT_SECONDS = 30.0
+# A status that says the service is overloaded or down for now (a free model does this from time to time).
+UNAVAILABLE_STATUSES = {429, 500, 502, 503, 504}
 
 
 class LlmError(Exception):
@@ -145,6 +147,8 @@ class LlmClient:
             raise LlmError("The language model took too long to answer.") from None
         except httpx2.HTTPError:
             raise LlmError("The language model could not be reached.") from None
+        if response.status_code in UNAVAILABLE_STATUSES:
+            raise LlmError("The language model is not available right now. Try again in a moment.")
         if response.status_code >= 400:
             raise LlmError(f"The language model returned an error (status {response.status_code}).")
         try:

@@ -167,3 +167,19 @@ def test_translating_without_a_key_is_reported_and_nothing_is_sent() -> None:
         client_for(handler, llm_api_key="").translate_sentence("Das Haus ist alt.", "de", "en")
 
     assert calls == []
+
+
+@pytest.mark.parametrize("status", [429, 500, 502, 503, 504])
+def test_a_busy_or_down_service_gets_a_message_that_says_to_try_again(status) -> None:
+    with pytest.raises(LlmError) as error:
+        client_for(lambda request: httpx2.Response(status, text="boom")).write_sentence("Haus", "de", "en")
+
+    assert str(error.value) == "The language model is not available right now. Try again in a moment."
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404])
+def test_a_refused_request_keeps_its_status_in_the_message(status) -> None:
+    with pytest.raises(LlmError) as error:
+        client_for(lambda request: httpx2.Response(status, text="no")).write_sentence("Haus", "de", "en")
+
+    assert str(error.value) == f"The language model returned an error (status {status})."
