@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import TextPage from "./TextPage.jsx";
 
 export default function App() {
   const [status, setStatus] = useState("checking");
@@ -13,6 +14,7 @@ export default function App() {
   return (
     <main>
       <h1>Sentence cards generator</h1>
+      <TextPage />
       <p>
         API status: <strong>{status}</strong>
       </p>
