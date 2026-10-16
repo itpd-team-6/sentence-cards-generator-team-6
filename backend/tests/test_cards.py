@@ -302,6 +302,28 @@ def test_deleting_a_card_removes_only_that_card(model) -> None:
         assert [card["word"] for card in restarted.get("/api/texts/1/cards").json()] == ["Bahnhof", "Haus"]
 
 
+def test_all_the_cards_of_all_the_texts_are_listed_with_the_newest_text_first(model) -> None:
+    with TestClient(app) as client:
+        assert client.get("/api/cards").json() == []
+
+        make_cards(client)
+        other = {**TEXT, "text": "Der Hund schläft.", "words": ["Hund", "schläft"]}
+        other_id = client.post("/api/texts", json=other).json()["id"]
+        client.post(f"/api/texts/{other_id}/cards")
+
+        cards = client.get("/api/cards").json()
+
+        assert [(card["text_id"], card["word"]) for card in cards] == [
+            (2, "Hund"),
+            (2, "schläft"),
+            (1, "Bahnhof"),
+            (1, "Zug"),
+            (1, "Haus"),
+        ]
+        client.delete("/api/cards/1")
+        assert "Bahnhof" not in [card["word"] for card in client.get("/api/cards").json()]
+
+
 def test_the_passage_is_the_text_around_the_word_whatever_its_case() -> None:
     text = "a" * 500 + " Bahnhof " + "b" * 500
 

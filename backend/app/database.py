@@ -97,9 +97,7 @@ def get_text(connection: sqlite3.Connection, text_id: int) -> dict | None:
     row = connection.execute("SELECT * FROM texts WHERE id = ?", (text_id,)).fetchone()
     if row is None:
         return None
-    words = connection.execute(
-        "SELECT word FROM marked_words WHERE text_id = ? ORDER BY id", (text_id,)
-    ).fetchall()
+    words = connection.execute("SELECT word FROM marked_words WHERE text_id = ? ORDER BY id", (text_id,)).fetchall()
     return {**dict(row), "words": [word["word"] for word in words]}
 
 
@@ -127,6 +125,25 @@ def get_card(connection: sqlite3.Connection, card_id: int) -> dict | None:
 
 def list_cards(connection: sqlite3.Connection, text_id: int) -> list[dict]:
     rows = connection.execute("SELECT * FROM cards WHERE text_id = ? ORDER BY id", (text_id,)).fetchall()
+    return [dict(row) for row in rows]
+
+
+def list_all_cards(connection: sqlite3.Connection) -> list[dict]:
+    """Every card of every text: the newest text first, and the words of a text in the order they were marked."""
+    rows = connection.execute("SELECT * FROM cards ORDER BY text_id DESC, id").fetchall()
+    return [dict(row) for row in rows]
+
+
+def list_due_cards(connection: sqlite3.Connection, today: date) -> list[dict]:
+    """The cards to study on `today`: due today or earlier, and with a sentence and a translation to show.
+
+    The oldest due date comes first. A card the model could not write a sentence for is left out until it has one.
+    """
+    rows = connection.execute(
+        "SELECT * FROM cards WHERE due_date <= ? AND sentence IS NOT NULL AND translation IS NOT NULL"
+        " ORDER BY due_date, id",
+        (today.isoformat(),),
+    ).fetchall()
     return [dict(row) for row in rows]
 
 
