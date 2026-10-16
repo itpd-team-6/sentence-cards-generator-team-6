@@ -4,7 +4,7 @@ import sqlite3
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from app.database import get_connection, get_text, save_text
 
@@ -21,6 +21,13 @@ class TextRequest(BaseModel):
     text_language: Language
     first_language: Language
     words: list[Word] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def languages_differ(self) -> "TextRequest":
+        """A text is turned into cards in another language than its own."""
+        if self.text_language == self.first_language:
+            raise ValueError("The text language and the first language must be different.")
+        return self
 
     @field_validator("words")
     @classmethod

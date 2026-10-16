@@ -55,3 +55,11 @@ def test_an_unknown_text_is_not_found() -> None:
         response = client.get("/api/texts/99")
 
         assert response.status_code == 404
+
+
+def test_the_text_language_and_the_first_language_must_differ() -> None:
+    with TestClient(app) as client:
+        response = client.post("/api/texts", json={**TEXT, "first_language": "de"})
+
+        assert response.status_code == 422
+        assert client.get("/api/texts/1").status_code == 404
