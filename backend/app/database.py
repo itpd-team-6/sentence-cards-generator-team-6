@@ -29,12 +29,13 @@ CREATE TABLE IF NOT EXISTS cards (
     sentence TEXT,
     translation TEXT,
     flagged INTEGER NOT NULL DEFAULT 0,
-    due_date TEXT NOT NULL
+    due_date TEXT NOT NULL,
+    interval_days INTEGER NOT NULL DEFAULT 0
 );
 """
 
 # The card fields a caller may change with `update_card`.
-CARD_FIELDS = {"sentence", "translation", "flagged", "due_date"}
+CARD_FIELDS = {"sentence", "translation", "flagged", "due_date", "interval_days"}
 
 
 def database_file(path: str | None = None) -> Path:
@@ -55,6 +56,10 @@ def connect(path: str | None = None) -> sqlite3.Connection:
 
 def init_db(connection: sqlite3.Connection) -> None:
     connection.executescript(SCHEMA)
+    # A database made before `interval_days` existed keeps its cards: the column is added, at 0.
+    columns = {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
+    if "interval_days" not in columns:
+        connection.execute("ALTER TABLE cards ADD COLUMN interval_days INTEGER NOT NULL DEFAULT 0")
     connection.commit()
 
 

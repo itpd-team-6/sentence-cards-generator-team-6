@@ -65,6 +65,7 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
         "translation": "The house is old.",
         "flagged": 0,
         "due_date": "2026-10-16",
+        "interval_days": 0,
     }
 
 
