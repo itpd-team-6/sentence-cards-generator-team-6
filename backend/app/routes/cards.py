@@ -5,7 +5,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
 
 from app.database import add_card, delete_card, get_card, get_connection, get_text, list_cards, update_card
 from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, get_llm_client
@@ -36,16 +36,20 @@ class CardResponse(BaseModel):
 
 
 class CardChange(BaseModel):
-    """What the learner changes on a card. Only the fields that are sent are changed."""
+    """What the learner changes on a card. Only the fields that are sent are changed.
+
+    There is no `translation`: it is made by the model from the sentence, so it always matches it.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     sentence: Sentence | None = None
-    translation: Sentence | None = None
     flagged: bool | None = None
 
     @model_validator(mode="after")
     def something_changes(self) -> "CardChange":
         if not self.model_fields_set:
-            raise ValueError("Send at least one of: sentence, translation, flagged.")
+            raise ValueError("Send at least one of: sentence, flagged.")
         return self
 
 
@@ -61,9 +65,7 @@ def passage_around(text: str, word: str) -> str | None:
     return text[max(0, position - PASSAGE_RADIUS) : position + len(word) + PASSAGE_RADIUS].strip()
 
 
-def ask_model(
-    client: LlmClient, text: dict, word: str, previous_sentence: str | None = None
-) -> GeneratedSentence:
+def ask_model(client: LlmClient, text: dict, word: str, previous_sentence: str | None = None) -> GeneratedSentence:
     return client.write_sentence(
         word,
         text["text_language"],
@@ -111,9 +113,7 @@ def create_cards(
 
 
 @router.get("/api/texts/{text_id}/cards")
-def read_cards(
-    text_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
-) -> list[CardResponse]:
+def read_cards(text_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> list[CardResponse]:
     if get_text(connection, text_id) is None:
         raise HTTPException(status_code=404, detail="There is no text with this id.")
     return [card_response(card) for card in list_cards(connection, text_id)]
@@ -121,15 +121,33 @@ def read_cards(
 
 @router.patch("/api/cards/{card_id}")
 def change_card(
-    card_id: int, change: CardChange, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+    card_id: int,
+    change: CardChange,
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+    client: Annotated[LlmClient, Depends(get_llm_client)],
 ) -> CardResponse:
-    """Edit the sentence or the translation, or set the flag. Editing a card clears its flag unless the request sets it."""
-    find_card(connection, card_id)
+    """Edit the sentence or set the flag.
+
+    A new sentence is translated by the model before anything is saved, so the translation always matches it.
+    When the model does not answer, nothing changes. Editing a card clears its flag unless the request sets it.
+    """
+    card = find_card(connection, card_id)
     fields = change.model_dump(exclude_unset=True)
     if "flagged" in fields:
         fields["flagged"] = int(fields["flagged"])
-    elif "sentence" in fields or "translation" in fields:
-        fields["flagged"] = 0
+    if fields.get("sentence") == card["sentence"]:
+        del fields["sentence"]
+    if "sentence" in fields:
+        text = get_text(connection, card["text_id"])
+        try:
+            fields["translation"] = client.translate_sentence(
+                fields["sentence"], text["text_language"], text["first_language"]
+            )
+        except LlmNotConfigured as error:
+            raise HTTPException(status_code=503, detail=str(error)) from None
+        except LlmError as error:
+            raise HTTPException(status_code=502, detail=str(error)) from None
+        fields.setdefault("flagged", 0)
     update_card(connection, card_id, **fields)
     return card_response(get_card(connection, card_id))
 

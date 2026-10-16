@@ -3,60 +3,58 @@ import { changeCard, deleteCard, newSentence } from "./api.js";
 
 // The cards of one text, as a table the learner reviews: edit a sentence, flag it, ask for a new one or delete the card.
 export default function CardsTable({ cards, onCardsChange }) {
-  const [editing, setEditing] = useState(null); // { id, sentence, translation } of the card being edited
-  const [busy, setBusy] = useState(false); // true while the product answers; every button waits
+  const [editing, setEditing] = useState(null); // { id, sentence } of the card being edited
+  const [busy, setBusy] = useState(null); // { id, what } while the product answers; every button waits
   const [notes, setNotes] = useState({}); // card id -> the message shown under that card
 
   const setNote = (id, message) => setNotes((current) => ({ ...current, [id]: message }));
   const replace = (card) => onCardsChange(cards.map((item) => (item.id === card.id ? card : item)));
+  const working = (card, what) => busy?.id === card.id && busy.what === what;
 
   // Runs one action on a card. A failure leaves the card as it was and shows the message under it.
-  async function act(card, work) {
-    setBusy(true);
+  async function act(card, what, work) {
+    setBusy({ id: card.id, what });
     setNote(card.id, "");
     try {
       await work();
     } catch (error) {
       setNote(card.id, error.message);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  const toggleFlag = (card) => act(card, async () => replace(await changeCard(card.id, { flagged: !card.flagged })));
+  const toggleFlag = (card) =>
+    act(card, "flag", async () => replace(await changeCard(card.id, { flagged: !card.flagged })));
 
   const askForNewSentence = (card) =>
-    act(card, async () => {
+    act(card, "new", async () => {
       replace(await newSentence(card.id));
       setEditing(null);
     });
 
   const remove = (card) =>
-    act(card, async () => {
+    act(card, "delete", async () => {
       await deleteCard(card.id);
       onCardsChange(cards.filter((item) => item.id !== card.id));
       setEditing(null);
     });
 
-  const startEditing = (card) =>
-    setEditing({ id: card.id, sentence: card.sentence ?? "", translation: card.translation ?? "" });
+  const startEditing = (card) => setEditing({ id: card.id, sentence: card.sentence ?? "" });
 
+  // The translation is not edited by hand: the product translates the new sentence, so the two always match.
   function save(card) {
     const sentence = editing.sentence.trim();
-    const translation = editing.translation.trim();
-    if (!sentence || !translation) {
-      setNote(card.id, "Write the sentence and its translation.");
+    if (!sentence) {
+      setNote(card.id, "Write the sentence.");
       return;
     }
-    const changes = {};
-    if (sentence !== card.sentence) changes.sentence = sentence;
-    if (translation !== card.translation) changes.translation = translation;
-    if (Object.keys(changes).length === 0) {
+    if (sentence === card.sentence) {
       setEditing(null);
       return;
     }
-    act(card, async () => {
-      replace(await changeCard(card.id, changes));
+    act(card, "save", async () => {
+      replace(await changeCard(card.id, { sentence }));
       setEditing(null);
     });
   }
@@ -67,6 +65,12 @@ export default function CardsTable({ cards, onCardsChange }) {
 
   return (
     <table className="cards">
+      <colgroup>
+        <col className="col-word" />
+        <col />
+        <col />
+        <col className="col-actions" />
+      </colgroup>
       <thead>
         <tr>
           <th scope="col">Word</th>
@@ -88,7 +92,6 @@ export default function CardsTable({ cards, onCardsChange }) {
               <td data-label="Sentence">
                 {isEditing ? (
                   <textarea
-                    rows={2}
                     aria-label={`Sentence for ${card.word}`}
                     value={editing.sentence}
                     onChange={(event) => setEditing({ ...editing, sentence: event.target.value })}
@@ -98,23 +101,15 @@ export default function CardsTable({ cards, onCardsChange }) {
                 )}
               </td>
               <td data-label="Translation">
-                {isEditing ? (
-                  <textarea
-                    rows={2}
-                    aria-label={`Translation for ${card.word}`}
-                    value={editing.translation}
-                    onChange={(event) => setEditing({ ...editing, translation: event.target.value })}
-                  />
-                ) : (
-                  (card.translation ?? <span className="empty">No translation yet.</span>)
-                )}
+                {card.translation ?? <span className="empty">No translation yet.</span>}
+                {isEditing && <span className="empty note">The translation is made again when you save.</span>}
               </td>
               <td>
                 <div className="row-actions">
                   {isEditing ? (
                     <>
                       <button type="button" className="secondary" disabled={busy} onClick={() => save(card)}>
-                        Save
+                        {working(card, "save") ? "Saving..." : "Save"}
                       </button>
                       <button type="button" className="secondary" disabled={busy} onClick={() => setEditing(null)}>
                         Cancel
@@ -126,7 +121,7 @@ export default function CardsTable({ cards, onCardsChange }) {
                         Edit
                       </button>
                       <button type="button" className="secondary" disabled={busy} onClick={() => toggleFlag(card)}>
-                        {card.flagged ? "Clear flag" : "Flag"}
+                        {card.flagged ? "Unflag" : "Flag"}
                       </button>
                       <button
                         type="button"
@@ -134,7 +129,7 @@ export default function CardsTable({ cards, onCardsChange }) {
                         disabled={busy}
                         onClick={() => askForNewSentence(card)}
                       >
-                        {card.sentence ? "New sentence" : "Ask for a sentence"}
+                        {working(card, "new") ? "Asking..." : "New sentence"}
                       </button>
                       <button type="button" className="secondary" disabled={busy} onClick={() => remove(card)}>
                         Delete
@@ -145,7 +140,7 @@ export default function CardsTable({ cards, onCardsChange }) {
               </td>
             </tr>
             {message && (
-              <tr>
+              <tr className="row-note">
                 <td colSpan={4}>
                   <p className="notice" role="alert">
                     {message}

@@ -13,6 +13,7 @@
   --accent-soft-text: #ff8a9d; /* 5.7:1 on the soft ruby */
   --focus: #ff6b84; /* 5.7:1 on the surface */
   --radius: 12px;
+  color-scheme: dark; /* the browser draws scrollbars and form parts in the dark theme too */
   --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-display: "Segoe UI Variable Display", "Avenir Next", "Segoe UI", system-ui, sans-serif;
 }
@@ -337,6 +338,16 @@ textarea {
   width: 100%;
   margin-top: 1rem;
   border-collapse: collapse;
+  /* The columns keep their widths whatever a row holds (a flag, an edit, a long sentence). */
+  table-layout: fixed;
+}
+
+.col-word {
+  width: 6.5rem;
+}
+
+.col-actions {
+  width: 15rem;
 }
 
 .cards th,
@@ -353,11 +364,18 @@ textarea {
 }
 
 .cards tbody th {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .cards textarea {
-  min-width: 10rem;
+  min-height: 5rem;
+  field-sizing: content;
+}
+
+.cards .note {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
 }
 
 /* A flagged card has a ruby bar and the word "Flagged": the colour is not the only sign. */
@@ -379,10 +397,9 @@ textarea {
 }
 
 .row-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
-  min-width: 9.5rem;
 }
 
 .cards .row-note td {
@@ -394,7 +411,8 @@ textarea {
 }
 
 .secondary {
-  padding: 0.3rem 0.7rem;
+  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
   border: 1px solid var(--field-border);
   border-radius: 8px;
   background: transparent;

@@ -21,7 +21,9 @@ class FakeModel:
 
     def __init__(self, failing: dict[str, Exception] | None = None) -> None:
         self.failing = failing or {}
+        self.failing_translation: Exception | None = None
         self.calls: list[dict] = []
+        self.translated: list[str] = []
 
     def write_sentence(self, word, text_language, first_language, context=None, previous_sentence=None):
         self.calls.append({"word": word, "context": context, "previous_sentence": previous_sentence})
@@ -29,6 +31,12 @@ class FakeModel:
             raise self.failing[word]
         number = len(self.calls)
         return GeneratedSentence(f"Sentence {number} with {word}.", f"Translation {number} of {word}.")
+
+    def translate_sentence(self, sentence, text_language, first_language):
+        self.translated.append(sentence)
+        if self.failing_translation:
+            raise self.failing_translation
+        return f"Translation of: {sentence}"
 
 
 @pytest.fixture
@@ -131,23 +139,58 @@ def test_editing_a_sentence_changes_only_that_card_and_it_survives_a_restart(mod
 
         assert response.status_code == 200
         assert response.json()["sentence"] == "Der Zug kommt bald."
-        assert response.json()["translation"] == before[1]["translation"]
 
     with TestClient(app) as restarted:
         after = {card["id"]: card for card in restarted.get("/api/texts/1/cards").json()}
 
         assert after[2]["sentence"] == "Der Zug kommt bald."
-        assert after[1]["sentence"] == before[0]["sentence"]
-        assert after[3]["sentence"] == before[2]["sentence"]
+        assert after[1] == before[0]
+        assert after[3] == before[2]
 
 
-def test_the_translation_can_be_edited_too(model) -> None:
+def test_a_new_translation_is_made_for_an_edited_sentence(model) -> None:
     with TestClient(app) as client:
-        make_cards(client)
+        before = make_cards(client)
 
-        response = client.patch("/api/cards/1", json={"translation": "The station."})
+        response = client.patch("/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof."})
 
-        assert response.json()["translation"] == "The station."
+        assert model.translated == ["Wir treffen uns am Bahnhof."]
+        assert response.json()["translation"] == "Translation of: Wir treffen uns am Bahnhof."
+        assert response.json()["translation"] != before[0]["translation"]
+
+
+def test_an_unchanged_sentence_does_not_ask_the_model_again(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+
+        response = client.patch("/api/cards/1", json={"sentence": before[0]["sentence"]})
+
+        assert response.status_code == 200
+        assert model.translated == []
+        assert response.json() == before[0]
+
+
+def test_when_the_translation_fails_the_card_keeps_its_sentence_and_its_translation(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        model.failing_translation = LlmError("The language model took too long to answer.")
+
+        response = client.patch("/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof."})
+
+        assert response.status_code == 502
+        assert response.json() == {"detail": "The language model took too long to answer."}
+        assert client.get("/api/texts/1/cards").json() == before
+
+        model.failing_translation = LlmNotConfigured("The language model is not set up.")
+        assert client.patch("/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof."}).status_code == 503
+
+
+def test_the_translation_cannot_be_set_directly(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+
+        assert client.patch("/api/cards/1", json={"translation": "The station."}).status_code == 422
+        assert client.get("/api/texts/1/cards").json() == before
 
 
 def test_an_empty_edit_or_an_empty_sentence_is_refused(model) -> None:
