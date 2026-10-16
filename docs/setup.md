@@ -108,4 +108,19 @@ The page passes its `/api` calls to the backend on port 8000.
   npm run build
   ```
 
+- The language model call, with the product running and `LLM_API_KEY` and `LLM_MODEL` set in `.env`:
+
+  ```bash
+  curl -X POST http://localhost:8000/api/sentences -H "Content-Type: application/json" -d '{"word": "Haus", "text_language": "de", "first_language": "en"}'
+  ```
+
+  On Windows PowerShell:
+
+  ```powershell
+  Invoke-RestMethod -Method Post -Uri http://localhost:8000/api/sentences -ContentType "application/json" -Body '{"word": "Haus", "text_language": "de", "first_language": "en"}'
+  ```
+
+  The answer holds a `sentence` in German that contains the word and its `translation` into English.
+  Without a key in `.env`, the answer says so, with status 503.
+
 - Markdown and link checks run on every pull request, in the [Markdown and link checks](../.github/workflows/lychee.yml) workflow.
