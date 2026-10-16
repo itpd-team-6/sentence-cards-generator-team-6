@@ -7,7 +7,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
 
-from app.database import add_card, delete_card, get_card, get_connection, get_text, list_cards, update_card
+from app.database import (
+    add_card,
+    delete_card,
+    get_card,
+    get_connection,
+    get_text,
+    list_all_cards,
+    list_cards,
+    update_card,
+)
 from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, get_llm_client
 
 router = APIRouter()
@@ -117,6 +126,12 @@ def read_cards(text_id: int, connection: Annotated[sqlite3.Connection, Depends(g
     if get_text(connection, text_id) is None:
         raise HTTPException(status_code=404, detail="There is no text with this id.")
     return [card_response(card) for card in list_cards(connection, text_id)]
+
+
+@router.get("/api/cards")
+def read_all_cards(connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> list[CardResponse]:
+    """Every card of every text, so the learner can review the cards they study, whatever text they came from."""
+    return [card_response(card) for card in list_all_cards(connection)]
 
 
 @router.patch("/api/cards/{card_id}")

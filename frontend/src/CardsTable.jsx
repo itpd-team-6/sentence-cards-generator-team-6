@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { changeCard, deleteCard, newSentence } from "./api.js";
 
-// The cards of one text, as a table the learner reviews: edit a sentence, flag it, ask for a new one or delete the card.
+// The cards of all the texts, as a table the learner reviews: edit a sentence, flag it, ask for a new one or delete the card.
 export default function CardsTable({ cards, onCardsChange }) {
   const [editing, setEditing] = useState(null); // { id, sentence } of the card being edited
   const [busy, setBusy] = useState(null); // { id, what } while the product answers; every button waits

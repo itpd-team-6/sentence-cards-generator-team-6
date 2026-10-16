@@ -3,25 +3,6 @@ import { createCards, loadCards } from "./api.js";
 import CardsTable from "./CardsTable.jsx";
 import { markKey, splitText } from "./words.js";
 
-// The browser keeps the id of the last text, so a refresh of the page shows its cards again.
-const LAST_TEXT_KEY = "sentence-cards:last-text";
-
-function rememberText(textId) {
-  try {
-    localStorage.setItem(LAST_TEXT_KEY, String(textId));
-  } catch {
-    // The browser may refuse to store it; the cards are in the database anyway.
-  }
-}
-
-function rememberedText() {
-  try {
-    return localStorage.getItem(LAST_TEXT_KEY);
-  } catch {
-    return null;
-  }
-}
-
 const LANGUAGES = [
   { code: "ru", name: "Russian" },
   { code: "en", name: "English" },
@@ -71,12 +52,11 @@ export default function TextPage() {
   const [cards, setCards] = useState(null);
   const [asking, setAsking] = useState(false);
 
+  // The cards are in the database, so they are there again after a refresh, whatever text they came from.
   useEffect(() => {
-    const textId = rememberedText();
-    if (!textId) return;
-    loadCards(textId)
+    loadCards()
       .then((found) => found.length > 0 && setCards(found))
-      .catch(() => {}); // The text may be gone (a new database): then there is nothing to show.
+      .catch(() => {}); // Without the product there is nothing to show; the page says so when the learner asks.
   }, []);
 
   const pieces = useMemo(() => splitText(text), [text]);
@@ -116,8 +96,8 @@ export default function TextPage() {
       }
       const savedText = await response.json();
       setSaved(savedText);
-      rememberText(savedText.id);
-      setCards(await createCards(savedText.id));
+      await createCards(savedText.id);
+      setCards(await loadCards());
     } catch (error) {
       setMessage(error instanceof TypeError ? "The product could not be reached. Is it running?" : error.message);
     } finally {

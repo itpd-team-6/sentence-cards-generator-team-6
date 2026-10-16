@@ -464,3 +464,97 @@ textarea {
     font-weight: 600;
   }
 }
+
+/* The two pages of the product. */
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 1.5rem;
+  padding: 0.3rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.tab {
+  flex: 1;
+  padding: 0.55rem 0.5rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 4px);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-current="page"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* The study session: one card at a time. */
+.study-card {
+  margin: 1rem 0;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-align: center;
+}
+
+.study-word {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.study-sentence {
+  margin: 0 0 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.study-sentence strong {
+  padding: 0.05rem 0.3rem;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.study-translation {
+  min-height: 1.6rem;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.study-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.study-actions > button {
+  min-width: 10rem;
+}
+
+.secondary.big {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+@media (max-width: 34rem) {
+  .study-actions {
+    flex-direction: column;
+  }
+}
