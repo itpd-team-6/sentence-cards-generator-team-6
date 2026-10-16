@@ -1,0 +1,325 @@
+/* Colors, fonts and shape come from the variables below, so a theme only sets them. */
+:root {
+  /* Night theme with ruby. Contrast checked against WCAG 2.2 AA: text 4.5:1, borders of fields and focus 3:1. */
+  --bg: #0e1a20;
+  --surface: #15262e;
+  --text: #e9f2f3; /* 13.7:1 on the surface */
+  --muted: #8fa9b0; /* 6.3:1 on the surface */
+  --border: #28454f; /* decoration only */
+  --field-border: #4a6b76; /* 3.1:1 on the page background */
+  --accent: #c8183f; /* ruby: what the learner chose, and every notice */
+  --accent-text: #ffffff; /* 5.7:1 on the accent */
+  --accent-soft: #3a1d28; /* the marked-word chips and the notices */
+  --accent-soft-text: #ff8a9d; /* 5.7:1 on the soft ruby */
+  --focus: #ff6b84; /* 5.7:1 on the surface */
+  --radius: 12px;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Keep the space of the scrollbar, so the page does not shift sideways when the text makes it scroll. */
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.app {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 3rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2rem;
+  letter-spacing: 0.01em;
+}
+
+h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.35rem;
+}
+
+h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.28);
+  padding: 1.75rem;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.picker {
+  min-width: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.picker .field-label {
+  padding: 0;
+}
+
+.options {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.3rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.option {
+  position: relative;
+  flex: 1;
+}
+
+/* The radio button stays in the page for the keyboard and screen readers; the label is what the learner sees. */
+.option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.option span {
+  display: block;
+  padding: 0.45rem 0.5rem;
+  border-radius: calc(var(--radius) - 4px);
+  color: var(--muted);
+  font-weight: 600;
+  text-align: center;
+}
+
+.option:hover span {
+  color: var(--text);
+}
+
+/* The language chosen in the other picker: dimmed and not clickable. */
+.option input:disabled {
+  cursor: not-allowed;
+}
+
+.option input:disabled + span {
+  color: var(--muted);
+  opacity: 0.4;
+}
+
+.option:hover input:disabled + span {
+  color: var(--muted);
+}
+
+.option input:checked + span {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.option input:focus-visible + span {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+textarea {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.reading {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1.15rem;
+  line-height: 2.1;
+}
+
+.word {
+  margin: 0 -0.1rem;
+  padding: 0.05rem 0.2rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.word:hover {
+  background: var(--accent-soft);
+}
+
+.word:active,
+.primary:active {
+  transform: translateY(1px);
+}
+
+.word[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.glue {
+  white-space: nowrap;
+}
+
+.hint {
+  min-height: 2rem;
+  margin: 0;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 0.2rem 0.75rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.actions {
+  margin-top: 1.5rem;
+}
+
+.primary {
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary:hover {
+  filter: brightness(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* Every notice has the same ruby tone; the icon, not the colour, says whether it is a problem or a success. */
+.notice {
+  display: flex;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+.notice::before {
+  content: "!";
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--accent-soft-text);
+  color: var(--accent-soft);
+  font-size: 0.9rem;
+  line-height: 1.4rem;
+  text-align: center;
+}
+
+.notice.ok {
+  color: var(--text);
+}
+
+.notice.ok::before {
+  content: "\2713";
+}
+
+.status {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.status.problem {
+  color: var(--accent-soft-text);
+}
+
+@media (max-width: 34rem) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}

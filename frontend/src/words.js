@@ -15,7 +15,22 @@ export function splitText(text) {
   if (position < text.length) {
     pieces.push({ text: text.slice(position), isWord: false });
   }
-  return pieces;
+  return keepPunctuationWithItsWord(pieces);
+}
+
+// A comma or a full stop stays on the line of the word before it.
+function keepPunctuationWithItsWord(pieces) {
+  for (let index = 0; index < pieces.length - 1; index += 1) {
+    const next = pieces[index + 1];
+    if (pieces[index].isWord && !next.isWord) {
+      const punctuation = next.text.match(/^\S+/);
+      if (punctuation) {
+        pieces[index].trail = punctuation[0];
+        next.text = next.text.slice(punctuation[0].length);
+      }
+    }
+  }
+  return pieces.filter((piece) => piece.isWord || piece.text !== "");
 }
 
 /** The form of a word that is marked, so that "Zug" and "zug" are the same word. */

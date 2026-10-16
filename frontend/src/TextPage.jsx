@@ -7,10 +7,43 @@ const LANGUAGES = [
   { code: "de", name: "German" },
 ];
 
+// Three languages fit as buttons, so the learner sees them all and picks one with one click.
+// Clicking the chosen language again, or pressing Space on it, clears it.
+// `taken` is the language chosen in the other picker: the text and the cards need two different languages.
+function LanguagePicker({ label, name, value, onChange, taken }) {
+  return (
+    <fieldset className="picker">
+      <legend className="field-label">{label}</legend>
+      <div className="options">
+        {LANGUAGES.map((language) => (
+          <label className="option" key={language.code}>
+            <input
+              type="radio"
+              name={name}
+              value={language.code}
+              checked={value === language.code}
+              disabled={language.code === taken}
+              onChange={() => onChange(language.code)}
+              onClick={() => value === language.code && onChange("")}
+              onKeyDown={(event) => {
+                if (event.key === " " && value === language.code) {
+                  event.preventDefault();
+                  onChange("");
+                }
+              }}
+            />
+            <span>{language.name}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 export default function TextPage() {
   const [text, setText] = useState("");
-  const [textLanguage, setTextLanguage] = useState("de");
-  const [firstLanguage, setFirstLanguage] = useState("en");
+  const [textLanguage, setTextLanguage] = useState("");
+  const [firstLanguage, setFirstLanguage] = useState("");
   const [marked, setMarked] = useState([]);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(null);
@@ -27,6 +60,10 @@ export default function TextPage() {
   async function askForSentences() {
     if (marked.length === 0) {
       setMessage("No word is marked. Click the words you do not know.");
+      return;
+    }
+    if (!textLanguage || !firstLanguage) {
+      setMessage("Choose the language of the text and your first language.");
       return;
     }
     setMessage("");
@@ -52,30 +89,26 @@ export default function TextPage() {
   }
 
   return (
-    <section>
+    <section className="panel">
       <h2>Your text</h2>
-      <label>
-        Text language
-        <select value={textLanguage} onChange={(event) => setTextLanguage(event.target.value)}>
-          {LANGUAGES.map((language) => (
-            <option key={language.code} value={language.code}>
-              {language.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Your first language
-        <select value={firstLanguage} onChange={(event) => setFirstLanguage(event.target.value)}>
-          {LANGUAGES.map((language) => (
-            <option key={language.code} value={language.code}>
-              {language.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Paste a text
+      <div className="fields">
+        <LanguagePicker
+          label="Text language"
+          name="text-language"
+          value={textLanguage}
+          onChange={setTextLanguage}
+          taken={firstLanguage}
+        />
+        <LanguagePicker
+          label="Your first language"
+          name="first-language"
+          value={firstLanguage}
+          onChange={setFirstLanguage}
+          taken={textLanguage}
+        />
+      </div>
+      <label className="field">
+        <span className="field-label">Paste a text</span>
         <textarea
           rows={6}
           value={text}
@@ -89,39 +122,52 @@ export default function TextPage() {
       </label>
 
       {text.trim() && (
-        <>
+        <div className="marking">
           <h3>Click the words you do not know</h3>
-          <p aria-label="Text to mark">
+          <p className="reading" aria-label="Text to mark">
             {pieces.map((piece, index) =>
               piece.isWord ? (
-                <button
-                  type="button"
-                  key={index}
-                  aria-pressed={marked.includes(markKey(piece.text))}
-                  onClick={() => toggle(piece.text)}
-                >
-                  {piece.text}
-                </button>
+                <span className="glue" key={index}>
+                  <button
+                    type="button"
+                    className="word"
+                    aria-pressed={marked.includes(markKey(piece.text))}
+                    onClick={() => toggle(piece.text)}
+                  >
+                    {piece.text}
+                  </button>
+                  {piece.trail}
+                </span>
               ) : (
                 <span key={index}>{piece.text}</span>
               ),
             )}
           </p>
           <h3>Marked words ({marked.length})</h3>
-          <ul aria-label="Marked words">
-            {marked.map((word) => (
-              <li key={word}>{word}</li>
-            ))}
-          </ul>
-        </>
+          {marked.length === 0 ? (
+            <p className="hint">Nothing marked yet.</p>
+          ) : (
+            <ul className="chips" aria-label="Marked words">
+              {marked.map((word) => (
+                <li key={word}>{word}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
-      <button type="button" onClick={askForSentences}>
-        Ask for sentences
-      </button>
-      {message && <p role="alert">{message}</p>}
+      <div className="actions">
+        <button type="button" className="primary" onClick={askForSentences}>
+          Ask for sentences
+        </button>
+      </div>
+      {message && (
+        <p className="notice" role="alert">
+          {message}
+        </p>
+      )}
       {saved && (
-        <p role="status">
+        <p className="notice ok" role="status">
           Saved text {saved.id} with {saved.words.length} marked {saved.words.length === 1 ? "word" : "words"}.
         </p>
       )}

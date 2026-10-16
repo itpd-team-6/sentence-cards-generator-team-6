@@ -12,10 +12,10 @@ export default function App() {
   }, []);
 
   return (
-    <main>
+    <main className="app">
       <h1>Sentence cards generator</h1>
       <TextPage />
-      <p>
+      <p className={status === "ok" ? "status" : "status problem"}>
         API status: <strong>{status}</strong>
       </p>
     </main>
