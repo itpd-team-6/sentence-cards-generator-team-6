@@ -1,0 +1,7 @@
+site_name: Sentence cards generator
+site_description: Documentation of the Sentence cards generator, an open-source product that turns a text into flashcards with sentences and translations.
+repo_url: https://github.com/itpd-team-6/sentence-cards-generator-team-6
+docs_dir: docs
+site_dir: site
+theme:
+  name: readthedocs
