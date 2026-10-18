@@ -89,3 +89,143 @@ Build the product with a FastAPI (Python) API, a React (Vite) front end and an S
 - **Made by:** Team
 - **Source:** team discussion
 - **Why:** the team works in Python, and FastAPI keeps the API small, so the time goes into the three stories of the minimum usable product; React suits the review table of `US-02`, where the learner edits, regenerates, flags and deletes many cards at once, and one member already has React experience; SQLite is one file with no database server, so a learner can self-host the product on a local machine or a VPS as [`DEC-008`](#dec-008) requires; the model, key and endpoint come from `.env`, so a free or cheap model can be used and changed without code, as [`DEC-003`](#dec-003) allows.
+
+## DEC-010
+
+The audio for a word or a sentence may come from any outside source, a self-hosted text-to-speech model or an online service, and the product is configured to connect to that source and ask it for the audio.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** it answers the question [`DEC-007`](#dec-007) left open, whether the audio may come from an online service given that the product is self-hosted: "it may come from a new source, be it a self-hosted LLM, sorry, not an LLM, a text-to-speech model, or be it an online service" (Customer, [00:03:03]); the source is outside the application, which "should just be configured in a way to connect to that source and request audio for a sentence or for a word" (Customer, [00:03:21]).
+
+## DEC-011
+
+The Customer accepted `US-02` and `US-03`.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** after the six criteria of `US-02` were shown he said "I think this user story can be considered as done, as completed as it is" (Customer, [01:50:01]); he gave no separate verdict for `US-03` after its four criteria were shown, but when asked whether a learner can go from a text to studying its cards without getting stuck, he said "overall they are completed, and you can complete the core task without getting frustrated" (Customer, [03:04:51]); the changes he asked for during both stories are recorded as the decisions that follow, and he said reopening a story is fine if the interface changes dramatically (Customer, [01:48:12]).
+
+## DEC-012
+
+The Customer did not accept `US-01`: `AC-03` failed, and the story stays open until the next meeting.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** `AC-03` has the word shown without a sentence and with a message for it when the language model does not answer, and the learner asks again by hand; the Customer wants the request repeated automatically up to a limit, "a limit on the number of attempts to generate a sentence" (Customer, [00:11:32]), a blank card when the limit is reached, "I think blank will be all right" (Customer, [00:13:48]), and one message for all the failed sentences, "Maybe one message will be enough" (Customer, [01:15:20]); `AC-01` was satisfied, "It seems like this is satisfied" (Customer, [00:27:40]); he kept the story open because "Maybe the overall interface will change and something will change, so it would be nice to check this issue again" (Customer, [01:16:20]).
+
+## DEC-013
+
+A card is identified by its word and a short phrase, three or four words, that uses the word with the same meaning, and the product creates no second card with the same identifier.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** the sentence where a word appears stands for its meaning, and the same word with the same meaning must not give a second card: "if we ask to generate a card for a word that appears in the same sentence, then no card is generated, because we already have such a card" (Customer, [00:32:00]); the team proposed the word and its translation, and the Customer suggested instead "a phrase where the word has the same meaning as in the original sentence" (Customer, [00:46:28]), which keeps the whole meaning in the original language; the phrase "should be editable by the user and by the teacher" (Customer, [00:48:37]).
+
+## DEC-014
+
+The translation follows the sentence, it is made again when the sentence changes, and the learner may edit it or lock it so that it stays until the learner edits the sentence again.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** the Customer first wanted the translation read-only (Customer, [01:00:27]), then gave the learner control over it: "The automatic translation flow is one way, from the sentence to the translation" and "the translation should be preserved until the user edits the sentence again" (Customer, [01:06:31] and [01:06:44]); he also asked for "some lock icon", so that the translation does not change "even if the user changes the sentence and starts a regeneration" (Customer, [01:11:25]).
+
+## DEC-015
+
+A flag marks a card that needs another look: the product flags a card with an invalid sentence by itself, the learner may flag any card, and the teacher sees all the cards of a student with the flagged ones first.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** the learner cannot find every bad card, so "the teacher should not only see the cards marked for them, but also other cards, because they may also have some problems" (Customer, [00:21:04]), and "the teacher will see all cards, but those cards marked for the teacher will appear higher in their list" (Customer, [00:24:51]); a card with an invalid sentence is flagged for regeneration without calling the language model, which would spend the learner's tokens: "whenever a card is invalid, we flag it for regeneration" (Customer, [01:31:52]).
+
+## DEC-016
+
+The cards table lets the learner select several cards to regenerate or delete in one action, asks for confirmation before deleting, and has a hide button that keeps a card in its place in the table but out of study.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** with 300 cards, one button per card is too slow, and the Customer agreed to a checkbox in the first column ("Yes, something like this might work", [00:18:22]); for deleting, "they should be able to select a bunch of cards and then click delete, and then you can ask for a confirmation" (Customer, [01:40:34]); a hidden card "should still appear on your cards page" and "even appear at the same place where it was before being hidden" (Customer, [01:41:37]).
+
+## DEC-017
+
+The buttons of the cards table become small icons explained by a legend that stays visible while the table scrolls, the flag is renamed "mark for review", and the edit button opens a larger editor for the information that is not in the table.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** "What does \"flag\" mean?" and "Maybe \"mark for review\" is a good option" (Customer, [01:33:47]); the table "should be scrollable without moving the whole page, so that the legend is always visible" (Customer, [01:36:27]); the edit button can be repurposed "for opening a more advanced editor for a card" (Customer, [00:50:40]), which would show the identifier of [`DEC-013`](#dec-013) and the decks of a card.
+
+## DEC-018
+
+The review screen has four answer buttons that each show when the card will come back, keeps the front and the back apart, plays the audio on both sides, and shows the word as it is written in the text.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** "there should be not two buttons but four buttons, like in Anki" (Customer, [01:53:17]), and the buttons can show the forecast: "you can also show the scheduler's forecast about when the card will be shown next" (Customer, [02:12:38]); on the front the answer must not appear, "you don't show German and English in the same line, you show them separately" (Customer, [02:09:48]); "the audio should be playable for both sides" (Customer, [02:10:34]); German nouns are capitalized, so the word is given "with the same capitalization as it appears" (Customer, [02:15:20]).
+
+## DEC-019
+
+The learner sets a limit of new cards and a limit of cards to review for each day, the review counts three classes of cards (new, learning and to review), and the learner can ask for cards ahead of their schedule.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** in Anki the Customer could not get more cards when none was due, "I couldn't force it to give me more cards" (Customer, [02:39:42]); so "there should be settings for the limit of cards to review today, for a day, and for the number of new cards that are suggested, and also there should be a way to request cards to review ahead of the schedule" (Customer, [02:42:13]); "there are three classes of cards: something really new, something that you learned previously, and something that you found difficult to learn today" (Customer, [02:45:49]).
+
+## DEC-020
+
+A deck is separate from the texts: a card may belong to several decks if their pairs of languages are compatible, a deck may take cards from any number of texts, and the learner picks the decks when asking for sentences.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** the team proposed one deck for each pair of languages, and the Customer found it "a bit constraining" because a learner who studies topics wants separate decks "even though they have the same combination of languages" (Customer, [02:48:39]); after a card is made "the card forgets its original text" and "you don't need to relate texts to decks anymore" (Customer, [02:51:40]); the pair of languages is kept as information of a deck, to show only compatible decks, "you can add cards to multiple decks, but all of them must be compatible with each other with respect to the pair of languages" (Customer, [03:00:27]).
+
+## DEC-021
+
+The study queue is ordered by the date each card is due, and when the learner moves cards, the product gives them a due time that keeps that order; cards never studied are an exception to the daily limit.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** it answers the two readings of moving a text to the front: "it's not necessary that every card moves, only the cards that the user wants to move" (Customer, [03:09:29]); cards are sorted by when they are due, so for moved cards "we override their due time, so that the sorting invariant stays the same" (Customer, [03:17:47]); he confirmed it with "that's what I meant" (Customer, [03:22:30]); new cards are an exception to the daily limit so they cannot be left out by it, which the team proposed (nataliamotand, [03:12:48]) and the Customer did not contest.
+
+## DEC-022
+
+A card may have more than one word, a German noun with its article or a phrase, and the learner can select several words of the text as one card.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** "German nouns are usually studied together with their articles, and so we should support not only the noun but also its article" (Customer, [02:24:02]); the workaround of editing the card by hand "will really look like a workaround, not some native functionality" (Customer, [02:21:51]), so "we should somehow let the user select several words for a card" (Customer, [02:30:11]); how the learner makes the selection is open, see the Week 3 report.
+
+## DEC-023
+
+The next stories are built in this order: `US-04`, then `US-07`, then `US-05`, then `US-06`.
+
+- **Status:** Active
+- **Date:** 2026-10-17
+- **Made by:** Customer
+- **Source:** [the Week 3 validation meeting](../reports/week-03/meeting-report.md)
+- **Why:** "I would order them as four, seven, and then five, because the teacher requires accounts and can be postponed and implemented later" (Customer, [03:02:00]), and "user story six can even come after user story five" (Customer, [03:02:53]).
