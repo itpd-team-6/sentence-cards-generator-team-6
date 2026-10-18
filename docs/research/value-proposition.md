@@ -1,6 +1,6 @@
 # Value proposition
 
-Built on the gaps in [gap-analysis.md](gap-analysis.md) and adjusted after the kickoff with the Customer ([meeting transcript](../../reports/week-01/meeting-transcript.md)).
+Built on the gaps in [gap-analysis.md](gap-analysis.md) and adjusted after the kickoff with the Customer ([meeting transcript](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-01/meeting-transcript.md)).
 Before the kickoff, our main direction was picking words in your own text (GAP-03).
 The Customer put a sentence editor first, so VP-01 is now built around the editor, with picking words as its first step.
 
