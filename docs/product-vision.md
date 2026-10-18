@@ -7,6 +7,7 @@ Sentence cards generator
 A learner who studies from texts they chose can turn the words they do not know into cards whose sentences they have checked, and study the words of one text first, without editing files by hand or leaving the product.
 
 **Supports:** [VP-01](research/value-proposition.md#vp-01-an-editor-to-check-generated-sentences-before-you-study-them) and [VP-02](research/value-proposition.md#vp-02-the-learner-decides-which-words-come-first-without-losing-progress).
+**Threshold:** [the threshold of success](threshold-of-success.md).
 
 ## Stakeholders
 

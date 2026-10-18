@@ -14,6 +14,13 @@ Each pull request must close exactly one task issue. Replace `<issue-number>` wi
 
 <!-- e.g. rendered the Markdown on GitHub, opened every new link in a browser, link check is green. -->
 
+## Changelog
+
+<!-- Keep one line. -->
+
+- [ ] The change is user-visible and I updated `[Unreleased]` in `CHANGELOG.md`.
+- [ ] The change is not user-visible, so `CHANGELOG.md` stays as it is.
+
 ## For the reviewer
 
 <!-- What should the reviewer look at first? -->
