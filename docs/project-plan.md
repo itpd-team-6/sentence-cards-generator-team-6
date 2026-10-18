@@ -24,7 +24,7 @@ A learner pastes a text, marks the words they do not know, checks the generated 
 
 ### SPRINT-04
 
-A learner moves a text to the front of the study queue, and the retry of a failed sentence is built, so that the Customer can accept `US-01` at the next meeting.
+A learner moves a text to the front of the study queue, the retry of a failed sentence is built so that the Customer can accept `US-01` at the next meeting, and the changes the Customer asked for at the Week 3 meeting are built in the order the team plans at its weekly review.
 
 - **Due:** 2026-10-23
 - **Sprint Backlog:** [the issues scheduled into SPRINT-04](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/2)
