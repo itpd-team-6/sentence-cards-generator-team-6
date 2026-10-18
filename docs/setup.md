@@ -69,6 +69,28 @@ The product reads its settings from a `.env` file in the repository root.
 The product starts without a key and model.
 They are needed from the card generation onwards.
 
+### Get a language model key
+
+To generate cards, the product calls a language model through an OpenAI-compatible endpoint.
+The default `LLM_BASE_URL` in `.env.example` is Google's Gemini endpoint, so these steps use Gemini.
+
+1. Open Google AI Studio and create a key: <https://aistudio.google.com/apikey>.
+   You need a Google account; follow the page's own instructions to create the key.
+2. In `.env`, set the three values:
+
+   ```dotenv
+   LLM_API_KEY=your-key-here
+   LLM_MODEL=gemini-3.5-flash-lite
+   LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+   ```
+
+   `gemini-3.5-flash-lite` is the model the team tested with, and `LLM_BASE_URL` is the default from `.env.example`.
+   Model names and the free quota change over time, so check the current model name on Google's model list (<https://ai.google.dev/gemini-api/docs/models>) and the current free quota on Google's pricing page (<https://ai.google.dev/gemini-api/docs/pricing>).
+   At the time of writing, Google's pricing page lists Gemini 3.5 Flash-Lite as "Free of charge" in its Free Tier.
+
+3. Keep your key secret.
+   `.env` is in `.gitignore` and is never committed; do not put a real key anywhere in the repository.
+
 ## Run
 
 From the repository root, with the backend environment active:
@@ -93,6 +115,18 @@ npm run dev
 
 Open `http://localhost:5173`.
 The page passes its `/api` calls to the backend on port 8000.
+
+## Try the core task
+
+With the product running (see [Run](#run)) and a key set (see [Get a language model key](#get-a-language-model-key)), you can take a learner from a pasted text to studying the cards.
+The page has two tabs at the top, "Add a text" and "Study".
+
+1. On the "Add a text" tab, pick the text language and your first language (they must be different), then paste a text into "Paste a text".
+2. Under "Click the words you do not know", click the words you want to learn; each one appears under "Marked words".
+3. Click "Ask for sentences". The product asks the language model for one sentence per word, which takes a few seconds each, and the cards appear in a "Your cards" table, each with a sentence and a translation.
+4. Open the "Study" tab and click "Start a session". For each due card, read the word and its sentence, click "Show translation", then answer "Remembered" or "Forgotten". A card you remember is scheduled for a later day; one you forget comes back later in the same session.
+
+If a word gets a card with no sentence (the model did not answer), use the card's "New sentence" button in the "Your cards" table to ask again.
 
 ## Checks and tests
 
