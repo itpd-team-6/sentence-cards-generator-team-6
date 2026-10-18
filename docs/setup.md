@@ -157,4 +157,4 @@ If a word gets a card with no sentence (the model did not answer), use the card'
   The answer holds a `sentence` in German that contains the word and its `translation` into English.
   Without a key in `.env`, the answer says so, with status 503.
 
-- Markdown and link checks run on every pull request, in the [Markdown and link checks](../.github/workflows/lychee.yml) workflow.
+- Markdown and link checks run on every pull request, in the [Markdown and link checks](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/.github/workflows/lychee.yml) workflow.

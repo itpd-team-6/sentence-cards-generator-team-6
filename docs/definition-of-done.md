@@ -20,7 +20,7 @@ A story closes only on the Customer's acceptance, per [Showing Working Software]
 - The accountable reviewer ticks every task acceptance criterion before approving.
 - The approval comes from a member other than the author.
 - The repository checks are green: the link check and the Markdown check.
-- A user-visible change updates the `[Unreleased]` section of [`CHANGELOG.md`](../CHANGELOG.md).
+- A user-visible change updates the `[Unreleased]` section of [`CHANGELOG.md`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/CHANGELOG.md).
 - The acceptance criteria this pull request claims pass on its branch, and on `main` after it merges.
 - No secret, recording, or private-only material is committed.
 - Implementation notes in the pull request description record the decisions made and how the change was checked.

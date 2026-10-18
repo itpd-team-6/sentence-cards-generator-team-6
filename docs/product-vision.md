@@ -131,4 +131,4 @@ Nothing on the diagram does a job that `BND-02` leaves to nobody.
 ## Where The Detail Lives
 
 - [User stories](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues?q=label%3Auser-story)
-- [Week 2 report](../reports/week-02/README.md)
+- [Week 2 report](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-02/README.md)

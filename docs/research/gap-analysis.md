@@ -1,6 +1,6 @@
 # Gap analysis
 
-Gaps found by comparing the four alternatives in [alternatives.md](alternatives.md) and [comparison.md](comparison.md), and tested against the kickoff with the Customer ([meeting transcript](../../reports/week-01/meeting-transcript.md)).
+Gaps found by comparing the four alternatives in [alternatives.md](alternatives.md) and [comparison.md](comparison.md), and tested against the kickoff with the Customer ([meeting transcript](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-01/meeting-transcript.md)).
 They are sorted by how strong the evidence is.
 
 ## GAP-01
