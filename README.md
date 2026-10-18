@@ -13,6 +13,7 @@ An app that generates language-learning flashcards: the user uploads a text, sel
 ## Documentation
 
 - [Project documentation](docs/README.md)
+- [Documentation site](https://itpd-team-6.github.io/sentence-cards-generator-team-6/)
 - [Setup and run instructions](docs/setup.md)
 
 ## License
