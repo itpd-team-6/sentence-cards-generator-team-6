@@ -202,8 +202,6 @@ export default function TextPage() {
 
       {cards && (
         <section className="panel cards-panel">
-          <h2>Your cards</h2>
-          <p className="hint">Edit a sentence, flag it, ask for a new one or delete the card.</p>
           <CardsTable cards={cards} onCardsChange={setCards} />
         </section>
       )}

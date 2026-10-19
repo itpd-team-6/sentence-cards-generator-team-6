@@ -347,7 +347,7 @@ textarea {
 }
 
 .col-actions {
-  width: 15rem;
+  width: 12rem;
 }
 
 .cards th,
@@ -378,7 +378,7 @@ textarea {
   font-size: 0.85rem;
 }
 
-/* A flagged card has a ruby bar and the word "Flagged": the colour is not the only sign. */
+/* A card marked for review has a ruby bar and the words "Marked for review": the colour is not the only sign. */
 .cards .flagged th:first-child {
   box-shadow: inset 4px 0 0 var(--accent);
 }
@@ -397,9 +397,65 @@ textarea {
 }
 
 .row-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+/* The title and the legend are outside the box that scrolls, so the legend stays in view, in the top right corner. */
+.cards-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.cards-header h2 {
+  margin: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Only this box scrolls, so the page stays where it is and the legend stays in view. */
+.cards-scroll {
+  max-height: 32rem;
+  margin-top: 0.5rem;
+  /* The box reaches into the padding of the panel, so the scrollbar sits at the edge of the panel and the table keeps its place. */
+  margin-right: -1.5rem;
+  padding-right: 1.5rem;
+  overflow: auto;
+  /* The space of the scrollbar is always reserved, so the columns do not move when the scrollbar appears. */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.cards-scroll .cards {
+  margin-top: 0;
+}
+
+.cards-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
 }
 
 .cards .row-note td {
@@ -423,6 +479,16 @@ textarea {
   cursor: pointer;
 }
 
+/* An icon button is at least 2.25rem square, which is more than the 24 pixels WCAG 2.2 asks for. */
+.secondary.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+}
+
 .secondary:hover:not(:disabled) {
   background: var(--accent-soft);
 }
@@ -434,6 +500,12 @@ textarea {
 }
 
 @media (max-width: 44rem) {
+  /* Each card is a block on a narrow screen, so it takes the whole width instead of the width of the first column. */
+  .cards,
+  .cards tbody {
+    display: block;
+  }
+
   .cards thead {
     position: absolute;
     left: -9999px;
