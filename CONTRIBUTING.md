@@ -43,6 +43,12 @@ We use two views:
 - **Table**, grouped by milestone, with the `Responsible`, `Accountable`, `Assignees` and `Milestone` columns, to see in one place who does and who checks each issue in each sprint.
 - **Board**, by status, to see what is waiting, in progress or done during the weekly review.
 
+## The database
+
+The tables are made by numbered migrations, the list `MIGRATIONS` in `backend/app/database.py`.
+To change the tables, add a function at the end of the list and a test; never edit a migration that is already on `main`, because databases that ran it do not run it again.
+The database keeps the number of the last migration it ran, and the product runs the ones after it when it starts.
+
 ## Dependencies
 
 Dependabot proposes updates for the GitHub Actions, the Python packages of `backend` and the npm packages of `frontend`, weekly, as pull requests that follow the same rules.

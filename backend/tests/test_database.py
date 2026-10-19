@@ -4,10 +4,13 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
+from app import database
 from app.database import (
+    MIGRATIONS,
     add_card,
     connect,
     database_file,
+    database_version,
     delete_card,
     get_card,
     get_text,
@@ -124,3 +127,131 @@ def test_a_card_field_that_does_not_exist_is_refused() -> None:
 
     with pytest.raises(ValueError):
         update_card(connection, card_id, word="Tschüss")
+
+
+TABLES = {"texts", "marked_words", "cards"}
+
+# The tables of release `v0.1.0`, made by hand: the database file of a learner who installed it has them and no version.
+RELEASED_TABLES = """
+CREATE TABLE texts (
+    id INTEGER PRIMARY KEY,
+    text TEXT NOT NULL,
+    text_language TEXT NOT NULL,
+    first_language TEXT NOT NULL
+);
+CREATE TABLE marked_words (
+    id INTEGER PRIMARY KEY,
+    text_id INTEGER NOT NULL REFERENCES texts(id) ON DELETE CASCADE,
+    word TEXT NOT NULL,
+    UNIQUE (text_id, word)
+);
+CREATE TABLE cards (
+    id INTEGER PRIMARY KEY,
+    text_id INTEGER NOT NULL REFERENCES texts(id) ON DELETE CASCADE,
+    word TEXT NOT NULL,
+    sentence TEXT,
+    translation TEXT,
+    flagged INTEGER NOT NULL DEFAULT 0,
+    due_date TEXT NOT NULL,
+    interval_days INTEGER NOT NULL DEFAULT 0
+);
+INSERT INTO texts VALUES (1, 'Das Haus ist alt.', 'de', 'en');
+INSERT INTO marked_words VALUES (1, 1, 'Haus');
+INSERT INTO cards VALUES (1, 1, 'Haus', 'Das Haus ist alt.', 'The house is old.', 1, '2026-10-20', 4);
+"""
+
+
+def table_names(connection: sqlite3.Connection) -> set[str]:
+    rows = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+    return {row["name"] for row in rows}
+
+
+def test_a_database_that_does_not_exist_gets_the_tables_of_the_latest_version() -> None:
+    connection = connect()
+
+    init_db(connection)
+
+    assert TABLES <= table_names(connection)
+    assert database_version(connection) == len(MIGRATIONS)
+
+
+def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> None:
+    connection = connect()
+    connection.executescript(RELEASED_TABLES)
+    assert database_version(connection) == 0
+
+    init_db(connection)
+
+    assert database_version(connection) == len(MIGRATIONS)
+    assert get_text(connection, 1)["words"] == ["Haus"]
+    assert get_card(connection, 1) == {
+        "id": 1,
+        "text_id": 1,
+        "word": "Haus",
+        "sentence": "Das Haus ist alt.",
+        "translation": "The house is old.",
+        "flagged": 1,
+        "due_date": "2026-10-20",
+        "interval_days": 4,
+    }
+
+
+def test_a_database_made_before_the_interval_existed_keeps_its_cards_with_an_interval_of_0() -> None:
+    connection = connect()
+    connection.executescript(
+        RELEASED_TABLES.replace(",\n    interval_days INTEGER NOT NULL DEFAULT 0", "").replace(
+            "'2026-10-20', 4)", "'2026-10-20')"
+        )
+    )
+
+    init_db(connection)
+
+    assert get_card(connection, 1)["interval_days"] == 0
+    assert get_card(connection, 1)["sentence"] == "Das Haus ist alt."
+
+
+def test_a_migration_does_not_run_a_second_time(monkeypatch) -> None:
+    ran = []
+    monkeypatch.setattr(database, "MIGRATIONS", [lambda connection: ran.append("first")])
+    connection = connect()
+
+    init_db(connection)
+    init_db(connection)
+
+    assert ran == ["first"]
+    assert database_version(connection) == 1
+
+
+def test_a_new_migration_runs_alone_on_a_database_that_is_up_to_date(monkeypatch) -> None:
+    ran = []
+    connection = connect()
+    init_db(connection)
+    version = database_version(connection)
+
+    def add_a_column(connection: sqlite3.Connection) -> None:
+        ran.append("add a column")
+        connection.execute("ALTER TABLE cards ADD COLUMN phrase TEXT")
+
+    monkeypatch.setattr(database, "MIGRATIONS", [*MIGRATIONS, add_a_column])
+    init_db(connection)
+
+    assert ran == ["add a column"]
+    assert database_version(connection) == version + 1
+    assert "phrase" in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
+
+
+def test_a_migration_that_fails_leaves_the_database_at_its_version(monkeypatch) -> None:
+    connection = connect()
+    init_db(connection)
+    version = database_version(connection)
+
+    def fail_after_a_change(connection: sqlite3.Connection) -> None:
+        connection.execute("ALTER TABLE cards ADD COLUMN phrase TEXT")
+        raise RuntimeError("stop")
+
+    monkeypatch.setattr(database, "MIGRATIONS", [*MIGRATIONS, fail_after_a_change])
+    with pytest.raises(RuntimeError):
+        init_db(connection)
+
+    assert database_version(connection) == version
+    assert "phrase" not in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
