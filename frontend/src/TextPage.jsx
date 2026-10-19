@@ -96,8 +96,12 @@ export default function TextPage() {
       }
       const savedText = await response.json();
       setSaved(savedText);
-      await createCards(savedText.id);
+      const created = await createCards(savedText.id);
       setCards(await loadCards());
+      // One message for all the words the model gave no sentence for; each of them stays as a card without a sentence.
+      if (created.some((card) => card.error)) {
+        setMessage("Some sentences could not be generated. Try again later with the New sentence button of each card.");
+      }
     } catch (error) {
       setMessage(error instanceof TypeError ? "The product could not be reached. Is it running?" : error.message);
     } finally {

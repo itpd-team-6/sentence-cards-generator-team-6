@@ -229,3 +229,13 @@ The next stories are built in this order: `US-04`, then `US-07`, then `US-05`, t
 - **Made by:** Customer
 - **Source:** [the Week 3 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-03/meeting-report.md)
 - **Why:** "I would order them as four, seven, and then five, because the teacher requires accounts and can be postponed and implemented later" (Customer, [03:02:00]), and "user story six can even come after user story five" (Customer, [03:02:53]).
+
+## DEC-024
+
+When the language model does not answer, the product repeats the request up to 5 requests in total for a word, waiting 1, 2, 4 and 8 seconds plus a short random time between them, and does not repeat an error that a new request cannot fix.
+
+- **Status:** Active
+- **Date:** 2026-10-20
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Customer asked for "a limit on the number of attempts to generate a sentence" ([`DEC-012`](#dec-012)) and gave no number, so the team chose one from the guidance of the providers: the [Gemini API troubleshooting guide](https://ai.google.dev/gemini-api/docs/troubleshooting) recommends exponential backoff with jitter, a maximum number of attempts, and retrying only temporary errors (429, 408, 5xx), not errors such as 400, 402 or 403; the [Google Cloud retry strategy](https://docs.cloud.google.com/model-armor/retry-strategy) waits 1, 2 and 4 seconds plus a random fraction of a second, and caps the wait; the [AWS Architecture Blog](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) recommends jitter for remote clients; the sources give no number of attempts, so 5 requests was chosen to keep the longest wait for one word near 19 seconds (15 seconds of backoff plus up to 4 seconds of jitter), because a learner waits for it, and every repeat spends the request limit of a free plan.

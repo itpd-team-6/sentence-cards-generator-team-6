@@ -1,8 +1,10 @@
 """A client for the language model set in `.env`: it writes a sentence and its translation for a word."""
 
 import json
+import random
 import re
-from collections.abc import Iterator
+import time
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import Literal
 
@@ -14,11 +16,19 @@ Language = Literal["ru", "en", "de"]
 LANGUAGE_NAMES = {"ru": "Russian", "en": "English", "de": "German"}
 TIMEOUT_SECONDS = 30.0
 # A status that says the service is overloaded or down for now (a free model does this from time to time).
-UNAVAILABLE_STATUSES = {429, 500, 502, 503, 504}
+UNAVAILABLE_STATUSES = {408, 429, 500, 502, 503, 504}
+# Seconds to wait before each new request for a sentence: 5 requests in all, as `DEC-024` says. A random time of up to
+# `MAX_JITTER_SECONDS` is added each time, so that many requests do not come back at the same moment.
+RETRY_WAIT_SECONDS = (1, 2, 4, 8)
+MAX_JITTER_SECONDS = 1.0
 
 
 class LlmError(Exception):
     """The language model did not give a usable answer. The message is safe to show to the learner."""
+
+
+class LlmUnavailable(LlmError):
+    """The model did not answer for now (too slow, not reachable or overloaded), so a new request may work."""
 
 
 class LlmNotConfigured(LlmError):
@@ -102,9 +112,15 @@ def parse_translation(content: str) -> str:
 
 
 class LlmClient:
-    def __init__(self, settings: Settings | None = None, http_client: httpx2.Client | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        http_client: httpx2.Client | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
         self.settings = settings or get_settings()
         self.http_client = http_client or httpx2.Client(timeout=TIMEOUT_SECONDS)
+        self.sleep = sleep
 
     def close(self) -> None:
         self.http_client.close()
@@ -119,15 +135,25 @@ class LlmClient:
     ) -> GeneratedSentence:
         """Ask the model for a sentence with `word` and its translation.
 
-        Pass `previous_sentence` to ask for a different one. Raises `LlmError` with a message that is safe
-        to show; the key never appears in it.
+        Pass `previous_sentence` to ask for a different one. When the model does not answer for now, the request is
+        repeated by itself, up to 5 requests in all, and a different error is not repeated. Raises `LlmError` with a
+        message that is safe to show; the key never appears in it.
         """
-        content = self._ask(build_messages(word, text_language, first_language, context, previous_sentence))
-        return parse_answer(content)
+        messages = build_messages(word, text_language, first_language, context, previous_sentence)
+        return parse_answer(self._ask_again_when_unavailable(messages))
 
     def translate_sentence(self, sentence: str, text_language: Language, first_language: Language) -> str:
         """Ask the model to translate a sentence the learner wrote or edited. Raises `LlmError` like `write_sentence`."""
         return parse_translation(self._ask(build_translation_messages(sentence, text_language, first_language)))
+
+    def _ask_again_when_unavailable(self, messages: list[dict[str, str]]) -> str:
+        """Like `_ask`, but a model that does not answer for now is asked again after a wait that grows each time."""
+        for wait in RETRY_WAIT_SECONDS:
+            try:
+                return self._ask(messages)
+            except LlmUnavailable:
+                self.sleep(wait + random.uniform(0, MAX_JITTER_SECONDS))
+        return self._ask(messages)
 
     def _ask(self, messages: list[dict[str, str]]) -> str:
         """Send the messages to the model and return the text of its answer."""
@@ -144,11 +170,11 @@ class LlmClient:
                 url, json=payload, headers={"Authorization": f"Bearer {self.settings.llm_api_key}"}
             )
         except httpx2.TimeoutException:
-            raise LlmError("The language model took too long to answer.") from None
+            raise LlmUnavailable("The language model took too long to answer.") from None
         except httpx2.HTTPError:
-            raise LlmError("The language model could not be reached.") from None
+            raise LlmUnavailable("The language model could not be reached.") from None
         if response.status_code in UNAVAILABLE_STATUSES:
-            raise LlmError("The language model is not available right now. Try again in a moment.")
+            raise LlmUnavailable("The language model is not available right now. Try again in a moment.")
         if response.status_code >= 400:
             raise LlmError(f"The language model returned an error (status {response.status_code}).")
         try:
