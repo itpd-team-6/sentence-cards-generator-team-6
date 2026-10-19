@@ -13,10 +13,12 @@ REQUEST = {"word": "Haus", "text_language": "de", "first_language": "en"}
 
 
 def use_model(handler, **changes) -> None:
-    """Make the API ask a fake model, which never leaves the test."""
+    """Make the API ask a fake model, which never leaves the test. The waits between repeated requests are skipped."""
     values = {"llm_api_key": "test-key", "llm_model": "test-model", "llm_base_url": "https://llm.example/v1/"}
     values.update(changes)
-    client = LlmClient(Settings(_env_file=None, **values), httpx2.Client(transport=httpx2.MockTransport(handler)))
+    transport = httpx2.MockTransport(handler)
+    settings = Settings(_env_file=None, **values)
+    client = LlmClient(settings, httpx2.Client(transport=transport), sleep=lambda seconds: None)
     app.dependency_overrides[get_llm_client] = lambda: client
 
 

@@ -4,7 +4,16 @@ import httpx2
 import pytest
 
 from app.config import Settings
-from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, parse_answer, parse_translation
+from app.llm import (
+    MAX_JITTER_SECONDS,
+    RETRY_WAIT_SECONDS,
+    GeneratedSentence,
+    LlmClient,
+    LlmError,
+    LlmNotConfigured,
+    parse_answer,
+    parse_translation,
+)
 
 API_KEY = "secret-test-key-123"
 GOOD_ANSWER = '{"sentence": "Das Haus ist alt.", "translation": "The house is old."}'
@@ -20,9 +29,11 @@ def reply(content) -> dict:
     return {"choices": [{"message": {"content": content}}]}
 
 
-def client_for(handler, **changes) -> LlmClient:
+def client_for(handler, waits: list[float] | None = None, **changes) -> LlmClient:
+    """A client that sends its requests to `handler`. The waits between requests are kept in `waits`, not slept."""
     transport = httpx2.MockTransport(handler)
-    return LlmClient(settings(**changes), httpx2.Client(transport=transport))
+    sleep = waits.append if waits is not None else lambda seconds: None
+    return LlmClient(settings(**changes), httpx2.Client(transport=transport), sleep=sleep)
 
 
 def test_a_good_answer_gives_the_sentence_and_its_translation() -> None:
@@ -183,3 +194,102 @@ def test_a_refused_request_keeps_its_status_in_the_message(status) -> None:
         client_for(lambda request: httpx2.Response(status, text="no")).write_sentence("Haus", "de", "en")
 
     assert str(error.value) == f"The language model returned an error (status {status})."
+
+
+TEMPORARY_FAILURES = {
+    "request timeout": lambda request: httpx2.Response(408, text="too slow"),
+    "rate limit": lambda request: httpx2.Response(429, text="slow down"),
+    "server error": lambda request: httpx2.Response(500, text="boom"),
+    "bad gateway": lambda request: httpx2.Response(502, text="boom"),
+    "overloaded": lambda request: httpx2.Response(503, text="busy"),
+    "gateway timeout": lambda request: httpx2.Response(504, text="boom"),
+    "timeout": timeout,
+    "unreachable": unreachable,
+}
+
+
+@pytest.mark.parametrize("failure", TEMPORARY_FAILURES.values(), ids=TEMPORARY_FAILURES.keys())
+def test_a_model_that_does_not_answer_for_now_is_asked_5_times_in_all_and_then_the_error_is_raised(failure) -> None:
+    requests = []
+    waits: list[float] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return failure(request)
+
+    with pytest.raises(LlmError):
+        client_for(handler, waits).write_sentence("Haus", "de", "en")
+
+    assert len(requests) == 5
+    assert len(waits) == 4
+
+
+def test_the_waits_between_requests_are_1_2_4_and_8_seconds_plus_a_random_time_of_up_to_1_second() -> None:
+    waits: list[float] = []
+
+    with pytest.raises(LlmError):
+        client_for(lambda request: httpx2.Response(503, text="busy"), waits).write_sentence("Haus", "de", "en")
+
+    assert RETRY_WAIT_SECONDS == (1, 2, 4, 8)
+    for wait, base in zip(waits, RETRY_WAIT_SECONDS, strict=True):
+        assert base <= wait <= base + MAX_JITTER_SECONDS
+
+
+def test_a_model_that_answers_after_failing_gives_its_sentence_and_is_not_asked_again() -> None:
+    answers = iter([httpx2.Response(503, text="busy"), httpx2.Response(429, text="slow down")])
+    requests = []
+    waits: list[float] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return next(answers, None) or httpx2.Response(200, json=reply(GOOD_ANSWER))
+
+    result = client_for(handler, waits).write_sentence("Haus", "de", "en")
+
+    assert result == GeneratedSentence("Das Haus ist alt.", "The house is old.")
+    assert len(requests) == 3
+    assert len(waits) == 2
+
+
+@pytest.mark.parametrize("status", [400, 401, 402, 403, 404], ids=str)
+def test_an_error_that_a_new_request_cannot_fix_is_not_repeated(status) -> None:
+    requests = []
+    waits: list[float] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(status, text="no")
+
+    with pytest.raises(LlmError):
+        client_for(handler, waits).write_sentence("Haus", "de", "en")
+
+    assert len(requests) == 1
+    assert waits == []
+
+
+def test_an_answer_that_cannot_be_read_is_not_repeated() -> None:
+    requests = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json=reply("Sorry, I cannot do that."))
+
+    with pytest.raises(LlmError):
+        client_for(handler).write_sentence("Haus", "de", "en")
+
+    assert len(requests) == 1
+
+
+def test_a_translation_is_not_repeated_when_the_model_does_not_answer() -> None:
+    requests = []
+    waits: list[float] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(503, text="busy")
+
+    with pytest.raises(LlmError):
+        client_for(handler, waits).translate_sentence("Das Haus ist alt.", "de", "en")
+
+    assert len(requests) == 1
+    assert waits == []
