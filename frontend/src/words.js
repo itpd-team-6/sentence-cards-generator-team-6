@@ -37,3 +37,11 @@ function keepPunctuationWithItsWord(pieces) {
 export function markKey(word) {
   return word.toLocaleLowerCase();
 }
+
+// The sentence in three parts, so the word the learner studies can be shown in bold. A form of the word
+// that is not in the sentence (a different ending, say) is simply not marked.
+export function splitAtWord(sentence, word) {
+  const start = sentence.toLowerCase().indexOf(word.toLowerCase());
+  if (start === -1) return [sentence, "", ""];
+  return [sentence.slice(0, start), sentence.slice(start, start + word.length), sentence.slice(start + word.length)];
+}

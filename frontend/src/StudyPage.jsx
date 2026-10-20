@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { answerCard, loadDueCards } from "./api.js";
-
-// The sentence in three parts, so the word the learner studies can be shown in bold. A form of the word
-// that is not in the sentence (a different ending, say) is simply not marked.
-function splitAtWord(sentence, word) {
-  const start = sentence.toLowerCase().indexOf(word.toLowerCase());
-  if (start === -1) return [sentence, "", ""];
-  return [sentence.slice(0, start), sentence.slice(start, start + word.length), sentence.slice(start + word.length)];
-}
+import StudyQueue from "./StudyQueue.jsx";
+import { splitAtWord } from "./words.js";
 
 // The study session: the cards that are due, one at a time. A card that was forgotten goes to the end of the
 // session and comes back; a card that was remembered leaves it.
@@ -71,6 +65,7 @@ export default function StudyPage() {
               {busy ? "Looking for cards..." : "Start a session"}
             </button>
           </div>
+          <StudyQueue />
         </>
       )}
 

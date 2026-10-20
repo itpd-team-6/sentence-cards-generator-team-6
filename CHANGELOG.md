@@ -7,6 +7,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- On the Study page, the cards that are due are listed in the order the session shows them, and the learner drags a card, or the cards ticked together, to any place in the list, or moves it with the up and down arrows, and the new order is saved.
+- The study session orders the cards by the time they are due, not only by the day, so cards due the same day can be put before each other.
+
 - When the language model does not answer for a word, the product asks again by itself, up to 5 requests in all with a longer wait each time, and a word it still gets no sentence for is left as a card without a sentence.
 - One message tells that some sentences could not be generated, instead of one message for each word.
 - The actions of a card in the cards table are small icons, a legend in the top right corner of the box says what they do and stays in view while the table scrolls, and "Flag" is now called "Mark for review".

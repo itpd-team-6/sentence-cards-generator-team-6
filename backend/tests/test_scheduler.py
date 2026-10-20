@@ -70,6 +70,7 @@ def test_an_answer_is_kept_in_the_database() -> None:
 
     assert card["interval_days"] == 2
     assert card["due_date"] == "2026-10-19"
+    assert card["due_at"] == "2026-10-19T00:00:00.001000"
     assert get_card(connection, card_id) == card
 
 

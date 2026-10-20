@@ -16,6 +16,7 @@ from app.database import (
     get_text,
     init_db,
     list_cards,
+    list_due_cards,
     save_text,
     update_card,
 )
@@ -68,6 +69,7 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
         "translation": "The house is old.",
         "flagged": 0,
         "due_date": "2026-10-16",
+        "due_at": "2026-10-16T00:00:00.001000",
         "interval_days": 0,
     }
 
@@ -161,6 +163,11 @@ INSERT INTO cards VALUES (1, 1, 'Haus', 'Das Haus ist alt.', 'The house is old.'
 """
 
 
+def get_card_before(connection: sqlite3.Connection, card_id: int) -> str:
+    """The due date of a card in a database that has not been migrated yet."""
+    return connection.execute("SELECT due_date FROM cards WHERE id = ?", (card_id,)).fetchone()["due_date"]
+
+
 def table_names(connection: sqlite3.Connection) -> set[str]:
     rows = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     return {row["name"] for row in rows}
@@ -192,8 +199,27 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
         "translation": "The house is old.",
         "flagged": 1,
         "due_date": "2026-10-20",
+        "due_at": "2026-10-20T00:00:00.001000",
         "interval_days": 4,
     }
+
+
+def test_a_database_made_by_the_released_version_keeps_the_order_of_its_study_list() -> None:
+    connection = connect()
+    connection.executescript(
+        RELEASED_TABLES
+        + """
+        INSERT INTO cards VALUES (2, 1, 'alt', 'Das Haus ist alt.', 'The house is old.', 0, '2026-10-18', 1);
+        INSERT INTO cards VALUES (3, 1, 'Das', 'Das Haus ist alt.', 'The house is old.', 0, '2026-10-18', 2);
+        """
+    )
+    in_order_before = sorted([1, 2, 3], key=lambda card_id: (get_card_before(connection, card_id), card_id))
+
+    init_db(connection)
+
+    assert [card["id"] for card in list_due_cards(connection, date(2026, 10, 21))] == in_order_before == [2, 3, 1]
+    assert get_card(connection, 2)["due_date"] == "2026-10-18"
+    assert get_card(connection, 2)["due_at"] == "2026-10-18T00:00:00.002000"
 
 
 def test_a_database_made_before_the_interval_existed_keeps_its_cards_with_an_interval_of_0() -> None:
@@ -255,3 +281,13 @@ def test_a_migration_that_fails_leaves_the_database_at_its_version(monkeypatch) 
 
     assert database_version(connection) == version
     assert "phrase" not in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
+
+
+def test_two_cards_made_the_same_day_never_have_the_same_due_time() -> None:
+    connection = open_database()
+    text_id = save_text(connection, "Hallo Welt", "de", "en", ["Hallo", "Welt"])
+
+    first = add_card(connection, text_id, "Hallo", None, None, TODAY)
+    second = add_card(connection, text_id, "Welt", None, None, TODAY)
+
+    assert get_card(connection, first)["due_at"] < get_card(connection, second)["due_at"]
