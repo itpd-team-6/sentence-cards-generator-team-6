@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createCards, loadCards } from "./api.js";
 import CardsTable from "./CardsTable.jsx";
+import Notice, { newNotice } from "./Notice.jsx";
 import { markKey, splitText } from "./words.js";
 
 const LANGUAGES = [
@@ -47,7 +48,7 @@ export default function TextPage() {
   const [textLanguage, setTextLanguage] = useState("");
   const [firstLanguage, setFirstLanguage] = useState("");
   const [marked, setMarked] = useState([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [saved, setSaved] = useState(null);
   const [cards, setCards] = useState(null);
   const [asking, setAsking] = useState(false);
@@ -64,20 +65,20 @@ export default function TextPage() {
   function toggle(word) {
     const key = markKey(word);
     setMarked((current) => (current.includes(key) ? current.filter((item) => item !== key) : [...current, key]));
-    setMessage("");
+    setMessage(null);
     setSaved(null);
   }
 
   async function askForSentences() {
     if (marked.length === 0) {
-      setMessage("No word is marked. Click the words you do not know.");
+      setMessage(newNotice("No word is marked. Click the words you do not know."));
       return;
     }
     if (!textLanguage || !firstLanguage) {
-      setMessage("Choose the language of the text and your first language.");
+      setMessage(newNotice("Choose the language of the text and your first language."));
       return;
     }
-    setMessage("");
+    setMessage(null);
     setAsking(true);
     try {
       const response = await fetch("/api/texts", {
@@ -91,19 +92,30 @@ export default function TextPage() {
         }),
       });
       if (!response.ok) {
-        setMessage("The text could not be saved. Check it and try again.");
+        setMessage(newNotice("The text could not be saved. Check it and try again."));
         return;
       }
       const savedText = await response.json();
-      setSaved(savedText);
+      setSaved(
+        newNotice(
+          `Saved text ${savedText.id} with ${savedText.words.length} marked ${savedText.words.length === 1 ? "word" : "words"}.`,
+          "success",
+        ),
+      );
       const created = await createCards(savedText.id);
       setCards(await loadCards());
       // One message for all the words the model gave no sentence for; each of them stays as a card without a sentence.
       if (created.some((card) => card.error)) {
-        setMessage("Some sentences could not be generated. Try again later with the New sentence button of each card.");
+        setMessage(
+          newNotice(
+            "Some sentences could not be generated. Try again later with the New sentence button of each card.",
+          ),
+        );
       }
     } catch (error) {
-      setMessage(error instanceof TypeError ? "The product could not be reached. Is it running?" : error.message);
+      setMessage(
+        newNotice(error instanceof TypeError ? "The product could not be reached. Is it running?" : error.message),
+      );
     } finally {
       setAsking(false);
     }
@@ -138,7 +150,7 @@ export default function TextPage() {
               setText(event.target.value);
               setMarked([]);
               setSaved(null);
-              setMessage("");
+              setMessage(null);
             }}
           />
         </label>
@@ -183,18 +195,10 @@ export default function TextPage() {
             {asking ? "Asking the language model..." : "Ask for sentences"}
           </button>
         </div>
-        {message && (
-          <p className="notice" role="alert">
-            {message}
-          </p>
-        )}
-        {saved && (
-          <p className="notice ok" role="status">
-            Saved text {saved.id} with {saved.words.length} marked {saved.words.length === 1 ? "word" : "words"}.
-          </p>
-        )}
+        {message && <Notice notice={message} onDismiss={() => setMessage(null)} />}
+        {saved && <Notice notice={saved} onDismiss={() => setSaved(null)} />}
         {asking && (
-          <p className="notice busy" role="status">
+          <p className="hint" role="status">
             Asking the language model for sentences. This takes a few seconds for each word.
           </p>
         )}

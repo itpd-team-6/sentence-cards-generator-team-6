@@ -7,9 +7,9 @@
   --muted: #8fa9b0; /* 6.3:1 on the surface */
   --border: #28454f; /* decoration only */
   --field-border: #4a6b76; /* 3.1:1 on the page background */
-  --accent: #c8183f; /* ruby: what the learner chose, and every notice */
+  --accent: #c8183f; /* ruby: what the learner chose, and the tone of a problem message */
   --accent-text: #ffffff; /* 5.7:1 on the accent */
-  --accent-soft: #3a1d28; /* the marked-word chips and the notices */
+  --accent-soft: #3a1d28; /* the marked-word chips */
   --accent-soft-text: #ff8a9d; /* 5.7:1 on the soft ruby */
   --focus: #ff6b84; /* 5.7:1 on the surface */
   --radius: 12px;
@@ -272,40 +272,131 @@ textarea {
   * {
     transition: none !important;
   }
+
+  .toast,
+  .toast-line,
+  .spin {
+    animation: none !important;
+  }
+
+  .toast-line {
+    display: none;
+  }
 }
 
-/* Every notice has the same ruby tone; the icon, not the colour, says whether it is a problem or a success. */
-.notice {
+/* The messages of the product, stacked in the bottom right corner above the page. Every one has the same shape; the
+   tone (ruby for a problem, green for a success, grey-blue for a neutral note) is the border and the icon. */
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(26rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.toast {
+  --tone: var(--accent-soft-text);
+
+  position: relative;
   display: flex;
   gap: 0.6rem;
-  margin: 1rem 0 0;
-  padding: 0.75rem 1rem;
-  border-left: 4px solid var(--accent);
+  overflow: hidden;
+  padding: 0.7rem 0.9rem 0.8rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--tone);
   border-radius: 8px;
-  background: var(--accent-soft);
-  color: var(--accent-soft-text);
-  font-weight: 600;
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 45%);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  pointer-events: auto;
+  animation: toast-in 0.15s ease-out;
 }
 
-.notice::before {
-  content: "!";
+.toast.success {
+  --tone: #6fd6a0; /* 8.6:1 on the surface */
+}
+
+.toast.info {
+  --tone: #8fc3d6; /* 7.7:1 on the surface */
+}
+
+.toast-icon {
   flex: none;
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.3rem;
+  height: 1.3rem;
   border-radius: 50%;
-  background: var(--accent-soft-text);
-  color: var(--accent-soft);
-  font-size: 0.9rem;
-  line-height: 1.4rem;
+  background: var(--tone);
+  color: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3rem;
   text-align: center;
 }
 
-.notice.ok {
+.toast-text {
+  flex: 1;
+}
+
+.toast-close {
+  flex: none;
+  align-self: flex-start;
+  margin: -0.15rem -0.4rem 0 0;
+  padding: 0 0.45rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1.6rem;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  background: rgb(255 255 255 / 12%);
   color: var(--text);
 }
 
-.notice.ok::before {
-  content: "\2713";
+/* A thin line at the bottom that shrinks as the seconds pass, so the learner sees that the message will go away. */
+.toast-line {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--tone);
+  transform-origin: left;
+  animation: toast-line linear forwards;
+}
+
+@keyframes toast-line {
+  from {
+    opacity: 0.8;
+    transform: scaleX(1);
+  }
+
+  to {
+    opacity: 0.2;
+    transform: scaleX(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .status {
@@ -330,10 +421,6 @@ textarea {
   margin-top: 1.5rem;
 }
 
-.notice.busy::before {
-  content: "\2026";
-}
-
 .cards {
   width: 100%;
   margin-top: 1rem;
@@ -346,8 +433,9 @@ textarea {
   width: 6.5rem;
 }
 
+/* Wide enough for the five icons of a card to stay on one line. */
 .col-actions {
-  width: 12rem;
+  width: 14.5rem;
 }
 
 .cards th,
@@ -456,14 +544,6 @@ textarea {
   top: 0;
   z-index: 1;
   background: var(--surface);
-}
-
-.cards .row-note td {
-  padding-top: 0;
-}
-
-.cards .notice {
-  margin: 0;
 }
 
 .secondary {
@@ -669,7 +749,7 @@ textarea {
   margin-left: auto;
 }
 
-.queue-clear:disabled {
+.queue-pill:disabled {
   opacity: 0.45;
   cursor: default;
 }
@@ -707,8 +787,7 @@ textarea {
   scrollbar-color: var(--muted) transparent;
 }
 
-.queue-scroll + .hint,
-.queue-scroll + .notice {
+.queue-scroll + .hint {
   margin-top: 0.75rem;
 }
 
@@ -858,4 +937,110 @@ textarea {
   border-radius: 999px;
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+/* Selecting cards: the box in the first column, and the bar with the actions for the cards selected. */
+.col-select {
+  width: 2.75rem;
+}
+
+.select-cell {
+  padding-top: 1.1rem;
+}
+
+/* The bar above the table is always there: the selection on the left, what to do with the selected cards on the right. */
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.bulk-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The dots of "Working on 2 cards...": a fixed width, so the button does not change size at each dot. */
+.dots {
+  display: inline-block;
+  width: 1.1em;
+  text-align: left;
+}
+
+/* The arrow of "New sentence" turns while the answer of the model is awaited. */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon[aria-busy="true"]:disabled {
+  opacity: 1;
+}
+
+/* The question before cards are deleted: a box in the middle of the screen, over a dimmed page. */
+.modal {
+  max-width: 24rem;
+  padding: 1.5rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.modal::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.modal h3 {
+  margin: 0 0 0.5rem;
+}
+
+.modal p {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.modal-actions .primary {
+  padding: 0.4rem 1rem;
+}
+
+.bulk-count {
+  min-width: 5.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A hidden card keeps its place in the table, dimmed, and says "Hidden from study": the dimming is not the only sign. */
+.cards .hidden-card td,
+.cards .hidden-card th {
+  opacity: 0.6;
+}
+
+.cards .hidden-card .select-cell {
+  opacity: 1;
+}
+
+.hidden-badge {
+  color: var(--muted);
 }

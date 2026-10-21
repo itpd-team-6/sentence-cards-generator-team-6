@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { loadQueue, saveQueueOrder } from "./api.js";
+import Notice, { newNotice } from "./Notice.jsx";
 import { splitAtWord } from "./words.js";
 
 // The line between the cards due today and the cards due later. It is an item of the list, so a card is due today when
@@ -58,8 +59,8 @@ export default function StudyQueue() {
   const [list, setList] = useState([]);
   const [ticked, setTicked] = useState(new Set());
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [notice, setNotice] = useState(null); // the problem to show for a few seconds
+  const [saved, setSaved] = useState(null); // "Order saved." for a few seconds
   const [drag, setDrag] = useState(null); // { ids, over }: the cards being dragged, and the place the drop line is at
   const [focusId, setFocusId] = useState(null);
   const handles = useRef({});
@@ -67,7 +68,7 @@ export default function StudyQueue() {
   useEffect(() => {
     loadQueue()
       .then((cards) => setList(toList(cards)))
-      .catch((error) => setMessage(error.message));
+      .catch((error) => setNotice(newNotice(error.message)));
   }, []);
 
   // After a card moves with the keyboard, the focus goes back to its handle.
@@ -106,8 +107,8 @@ export default function StudyQueue() {
     const before = list;
     setList(next);
     setSaving(true);
-    setMessage("");
-    setSaved(false);
+    setNotice(null);
+    setSaved(null);
     try {
       const answer = await saveQueueOrder(
         next.filter((item) => !item.divider).map((item) => item.id),
@@ -115,10 +116,10 @@ export default function StudyQueue() {
         next.indexOf(DIVIDER),
       );
       setList(toList(answer));
-      setSaved(true);
+      setSaved(newNotice("Order saved.", "success"));
     } catch (error) {
       setList(before);
-      setMessage(`The move was not saved. ${error.message}`);
+      setNotice(newNotice(`The move was not saved. ${error.message}`));
     } finally {
       setSaving(false);
     }
@@ -167,7 +168,7 @@ export default function StudyQueue() {
     setDrag(null);
   }
 
-  if (cards.length === 0 && !message) return null;
+  if (cards.length === 0 && !notice) return null;
 
   let number = 0;
   return (
@@ -277,16 +278,8 @@ export default function StudyQueue() {
           />
         </ol>
       </div>
-      {saved && !message && (
-        <p className="hint" role="status">
-          Order saved.
-        </p>
-      )}
-      {message && (
-        <p className="notice" role="alert">
-          {message}
-        </p>
-      )}
+      {saved && <Notice notice={saved} onDismiss={() => setSaved(null)} />}
+      {notice && <Notice notice={notice} onDismiss={() => setNotice(null)} />}
     </div>
   );
 }

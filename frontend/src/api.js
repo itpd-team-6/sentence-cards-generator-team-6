@@ -28,12 +28,21 @@ export const createCards = (textId) => call(`/api/texts/${textId}/cards`, { meth
 // Every card of every text, the newest text first.
 export const loadCards = () => call("/api/cards");
 
-// `fields` has any of: sentence, translation, flagged.
+// `fields` has any of: sentence, flagged, hidden.
 export const changeCard = (cardId, fields) => call(`/api/cards/${cardId}`, json("PATCH", fields));
 
 export const newSentence = (cardId) => call(`/api/cards/${cardId}/new-sentence`, { method: "POST" });
 
 export const deleteCard = (cardId) => call(`/api/cards/${cardId}`, { method: "DELETE" });
+
+// Several cards at once. `deleteCards` deletes none of them when one does not exist; `newSentences` answers with the
+// cards, and a card the model gave no sentence for keeps its old sentence and carries an `error`.
+export const deleteCards = (cardIds) => call("/api/cards/delete", json("POST", { card_ids: cardIds }));
+
+// Hides several cards from study, or shows them again; the answer has the cards as they are now.
+export const hideCards = (cardIds, hidden) => call("/api/cards/hidden", json("POST", { card_ids: cardIds, hidden }));
+
+export const newSentences = (cardIds) => call("/api/cards/new-sentences", json("POST", { card_ids: cardIds }));
 
 // The cards due today or earlier, with a sentence to show. Empty when nothing is due.
 export const loadDueCards = () => call("/api/study/due");

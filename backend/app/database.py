@@ -78,11 +78,20 @@ def add_the_due_time(connection: sqlite3.Connection) -> None:
         )
 
 
+def add_the_hidden_mark(connection: sqlite3.Connection) -> None:
+    """Let the learner hide a card from study while it stays in the cards table (DEC-016). None is hidden at first."""
+    connection.execute("ALTER TABLE cards ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+
+
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
-MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [create_the_first_tables, add_the_due_time]
+MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
+    create_the_first_tables,
+    add_the_due_time,
+    add_the_hidden_mark,
+]
 
 # The card fields a caller may change with `update_card`.
-CARD_FIELDS = {"sentence", "translation", "flagged", "due_date", "due_at", "interval_days"}
+CARD_FIELDS = {"sentence", "translation", "flagged", "hidden", "due_date", "due_at", "interval_days"}
 
 
 
@@ -200,13 +209,13 @@ def list_all_cards(connection: sqlite3.Connection) -> list[dict]:
 
 
 def list_due_cards(connection: sqlite3.Connection, today: date) -> list[dict]:
-    """The cards to study on `today`: due today or earlier, and with a sentence and a translation to show.
+    """The cards to study on `today`: due today or earlier, not hidden, and with a sentence and a translation to show.
 
     The card with the earliest due time comes first, and cards with the same due time come in the order they were
     made. A card the model could not write a sentence for is left out until it has one.
     """
     rows = connection.execute(
-        "SELECT * FROM cards WHERE due_date <= ? AND sentence IS NOT NULL AND translation IS NOT NULL"
+        "SELECT * FROM cards WHERE due_date <= ? AND hidden = 0 AND sentence IS NOT NULL AND translation IS NOT NULL"
         " ORDER BY due_at, id",
         (today.isoformat(),),
     ).fetchall()
@@ -214,13 +223,13 @@ def list_due_cards(connection: sqlite3.Connection, today: date) -> list[dict]:
 
 
 def list_queue(connection: sqlite3.Connection) -> list[dict]:
-    """The study queue: every card that has a sentence and a translation to show, in the order they are studied.
+    """The study queue: every card that is not hidden and has a sentence and a translation to show, in study order.
 
     The card with the earliest due time comes first. The cards due today or earlier are the first ones of the queue
     (`list_due_cards` gives only those); the others follow, each with the date it is due.
     """
     rows = connection.execute(
-        "SELECT * FROM cards WHERE sentence IS NOT NULL AND translation IS NOT NULL ORDER BY due_at, id"
+        "SELECT * FROM cards WHERE hidden = 0 AND sentence IS NOT NULL AND translation IS NOT NULL ORDER BY due_at, id"
     ).fetchall()
     return [dict(row) for row in rows]
 
@@ -347,3 +356,28 @@ def delete_card(connection: sqlite3.Connection, card_id: int) -> bool:
     cursor = connection.execute("DELETE FROM cards WHERE id = ?", (card_id,))
     connection.commit()
     return cursor.rowcount == 1
+
+
+def set_hidden(connection: sqlite3.Connection, card_ids: list[int], hidden: bool) -> bool:
+    """Hide several cards from study, or show them again, in one step. Returns False, and changes nothing, when one of
+    them does not exist."""
+    ids = list(dict.fromkeys(card_ids))
+    marks = ", ".join("?" for _ in ids)
+    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[0]
+    if found != len(ids):
+        return False
+    connection.execute(f"UPDATE cards SET hidden = ? WHERE id IN ({marks})", [int(hidden), *ids])
+    connection.commit()
+    return True
+
+
+def delete_cards(connection: sqlite3.Connection, card_ids: list[int]) -> bool:
+    """Delete several cards in one step. Returns False, and deletes nothing, when one of them does not exist."""
+    ids = list(dict.fromkeys(card_ids))
+    marks = ", ".join("?" for _ in ids)
+    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[0]
+    if found != len(ids):
+        return False
+    connection.execute(f"DELETE FROM cards WHERE id IN ({marks})", ids)
+    connection.commit()
+    return True

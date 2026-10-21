@@ -365,6 +365,16 @@ def test_the_queue_has_every_card_with_a_sentence_in_study_order_and_says_which_
         assert queue(client) == ["today"]
 
 
+def test_a_hidden_card_is_not_in_the_queue_and_the_rest_can_still_be_ordered() -> None:
+    with study_client() as client:
+        add_cards(card("a1", TODAY), card("a2", TODAY), card("a3", TODAY))
+        update_card(connect(), 2, hidden=1)
+
+        assert [item["word"] for item in study_queue(client)] == ["a1", "a3"]
+        assert save_order(client, [3, 1], moved=[3]).status_code == 200
+        assert queue(client) == ["a3", "a1"]
+
+
 def test_a_later_card_dragged_above_the_separator_is_due_today_and_keeps_its_interval() -> None:
     with study_client() as client:
         add_cards(card("a1", TODAY), card("a2", TODAY), card("later", TODAY + timedelta(days=1)))
