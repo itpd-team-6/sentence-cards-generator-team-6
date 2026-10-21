@@ -5,16 +5,18 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.database import (
     add_card,
     delete_card,
+    delete_cards,
     get_card,
     get_connection,
     get_text,
     list_all_cards,
     list_cards,
+    set_hidden,
     update_card,
 )
 from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, get_llm_client
@@ -39,6 +41,7 @@ class CardResponse(BaseModel):
     sentence: str | None
     translation: str | None
     flagged: bool
+    hidden: bool
     due_date: str
     # Set only when cards were just generated and the model gave no sentence for this word.
     error: str | None = None
@@ -54,16 +57,29 @@ class CardChange(BaseModel):
 
     sentence: Sentence | None = None
     flagged: bool | None = None
+    hidden: bool | None = None
 
     @model_validator(mode="after")
     def something_changes(self) -> "CardChange":
         if not self.model_fields_set:
-            raise ValueError("Send at least one of: sentence, flagged.")
+            raise ValueError("Send at least one of: sentence, flagged, hidden.")
         return self
 
 
+class CardIds(BaseModel):
+    """The cards an action on several cards is for."""
+
+    card_ids: list[int] = Field(min_length=1)
+
+
+class HiddenCards(CardIds):
+    """The cards to hide from study, or to show again."""
+
+    hidden: bool
+
+
 def card_response(card: dict, error: str | None = None) -> CardResponse:
-    return CardResponse(**{**card, "flagged": bool(card["flagged"])}, error=error)
+    return CardResponse(**{**card, "flagged": bool(card["flagged"]), "hidden": bool(card["hidden"])}, error=error)
 
 
 def passage_around(text: str, word: str) -> str | None:
@@ -134,6 +150,52 @@ def read_all_cards(connection: Annotated[sqlite3.Connection, Depends(get_connect
     return [card_response(card) for card in list_all_cards(connection)]
 
 
+@router.post("/api/cards/new-sentences")
+def replace_sentences(
+    chosen: CardIds,
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+    client: Annotated[LlmClient, Depends(get_llm_client)],
+) -> list[CardResponse]:
+    """Ask the model for another sentence for each of the chosen cards, one after the other.
+
+    A card the model gives no sentence for keeps its sentence and carries an `error`; the other cards get theirs.
+    When a card does not exist, nothing changes. When the model is not set up, no card changes either.
+    """
+    ids = list(dict.fromkeys(chosen.card_ids))
+    cards = [find_card(connection, card_id) for card_id in ids]
+    errors: dict[int, str] = {}
+    for card in cards:
+        text = get_text(connection, card["text_id"])
+        try:
+            result = ask_model(client, text, card["word"], card["sentence"])
+        except LlmNotConfigured as error:
+            raise HTTPException(status_code=503, detail=str(error)) from None
+        except LlmError as error:
+            errors[card["id"]] = str(error)
+            continue
+        update_card(connection, card["id"], sentence=result.sentence, translation=result.translation, flagged=0)
+    return [card_response(get_card(connection, card_id), errors.get(card_id)) for card_id in ids]
+
+
+@router.post("/api/cards/hidden")
+def hide_cards(
+    chosen: HiddenCards, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> list[CardResponse]:
+    """Hide the chosen cards from study, or show them again, in one step. When a card does not exist, none changes."""
+    if not set_hidden(connection, chosen.card_ids, chosen.hidden):
+        raise HTTPException(status_code=404, detail="There is no card with one of these ids.")
+    ids = list(dict.fromkeys(chosen.card_ids))
+    return [card_response(get_card(connection, card_id)) for card_id in ids]
+
+
+@router.post("/api/cards/delete", status_code=204)
+def remove_cards(chosen: CardIds, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> Response:
+    """Delete the chosen cards in one step. When a card does not exist, none is deleted."""
+    if not delete_cards(connection, chosen.card_ids):
+        raise HTTPException(status_code=404, detail="There is no card with one of these ids.")
+    return Response(status_code=204)
+
+
 @router.patch("/api/cards/{card_id}")
 def change_card(
     card_id: int,
@@ -141,15 +203,16 @@ def change_card(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
 ) -> CardResponse:
-    """Edit the sentence or set the flag.
+    """Edit the sentence, set the flag, or hide the card from study or show it again.
 
     A new sentence is translated by the model before anything is saved, so the translation always matches it.
     When the model does not answer, nothing changes. Editing a card clears its flag unless the request sets it.
     """
     card = find_card(connection, card_id)
     fields = change.model_dump(exclude_unset=True)
-    if "flagged" in fields:
-        fields["flagged"] = int(fields["flagged"])
+    for name in ("flagged", "hidden"):
+        if name in fields:
+            fields[name] = int(fields[name])
     if fields.get("sentence") == card["sentence"]:
         del fields["sentence"]
     if "sentence" in fields:

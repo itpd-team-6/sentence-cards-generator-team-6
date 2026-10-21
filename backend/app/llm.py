@@ -21,6 +21,8 @@ UNAVAILABLE_STATUSES = {408, 429, 500, 502, 503, 504}
 # `MAX_JITTER_SECONDS` is added each time, so that many requests do not come back at the same moment.
 RETRY_WAIT_SECONDS = (1, 2, 4, 8)
 MAX_JITTER_SECONDS = 1.0
+# The most of the reason that a service gives for an error that is shown to the learner.
+MAX_REASON_CHARACTERS = 200
 
 
 class LlmError(Exception):
@@ -155,6 +157,29 @@ class LlmClient:
                 self.sleep(wait + random.uniform(0, MAX_JITTER_SECONDS))
         return self._ask(messages)
 
+    def _reason_of(self, response: httpx2.Response) -> str:
+        """The reason the service gave for an error, as a short sentence that starts with a space; empty when it gave
+        none that is readable. The key is never shown, even if the service repeats it."""
+        try:
+            data = response.json()
+        except ValueError:
+            return ""
+        if isinstance(data, list) and data:
+            data = data[0]
+        error = data.get("error") if isinstance(data, dict) else None
+        reason = error.get("message") if isinstance(error, dict) else error
+        if not isinstance(reason, str):
+            return ""
+        key = self.settings.llm_api_key
+        if key:
+            reason = reason.replace(key, "...")
+        reason = " ".join(reason.split())
+        if not reason:
+            return ""
+        if len(reason) > MAX_REASON_CHARACTERS:
+            reason = reason[:MAX_REASON_CHARACTERS].rstrip() + "..."
+        return f" {reason}" if reason.endswith((".", "!", "?")) else f" {reason}."
+
     def _ask(self, messages: list[dict[str, str]]) -> str:
         """Send the messages to the model and return the text of its answer."""
         if not self.settings.llm_api_key or not self.settings.llm_model:
@@ -176,7 +201,8 @@ class LlmClient:
         if response.status_code in UNAVAILABLE_STATUSES:
             raise LlmUnavailable("The language model is not available right now. Try again in a moment.")
         if response.status_code >= 400:
-            raise LlmError(f"The language model returned an error (status {response.status_code}).")
+            reason = self._reason_of(response)
+            raise LlmError(f"The language model returned an error (status {response.status_code}).{reason}")
         try:
             content = response.json()["choices"][0]["message"]["content"]
         except (ValueError, KeyError, IndexError, TypeError):

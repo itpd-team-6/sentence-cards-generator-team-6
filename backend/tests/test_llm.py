@@ -293,3 +293,43 @@ def test_a_translation_is_not_repeated_when_the_model_does_not_answer() -> None:
 
     assert len(requests) == 1
     assert waits == []
+
+
+def error_answer(status, body):
+    return client_for(lambda request: httpx2.Response(status, json=body)).write_sentence("Haus", "de", "en")
+
+
+def test_the_reason_the_service_gives_for_an_error_is_added_to_the_message() -> None:
+    message = "API key expired. Please renew the API key."
+    body = {"error": {"code": 400, "message": message, "status": "INVALID_ARGUMENT"}}
+
+    with pytest.raises(LlmError) as error:
+        error_answer(400, body)
+
+    assert str(error.value) == f"The language model returned an error (status 400). {message}"
+
+
+def test_a_reason_in_a_list_or_without_a_full_stop_is_read_too() -> None:
+    with pytest.raises(LlmError) as error:
+        error_answer(404, [{"error": {"message": "model not found"}}])
+
+    assert str(error.value) == "The language model returned an error (status 404). model not found."
+
+
+def test_a_long_reason_is_cut_and_the_key_is_never_shown() -> None:
+    body = {"error": {"message": f"bad key {API_KEY} " + "x" * 400}}
+
+    with pytest.raises(LlmError) as error:
+        client_for(lambda request: httpx2.Response(401, json=body)).write_sentence("Haus", "de", "en")
+
+    assert API_KEY not in str(error.value)
+    assert len(str(error.value)) < 300
+    assert str(error.value).endswith("...")
+
+
+@pytest.mark.parametrize("body", [{"error": 5}, {"other": "x"}, {"error": {"message": "   "}}, "plain"])
+def test_an_error_with_no_readable_reason_keeps_the_short_message(body) -> None:
+    with pytest.raises(LlmError) as error:
+        error_answer(403, body)
+
+    assert str(error.value) == "The language model returned an error (status 403)."

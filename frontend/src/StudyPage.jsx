@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { answerCard, loadDueCards } from "./api.js";
+import Notice, { newNotice } from "./Notice.jsx";
 import StudyQueue from "./StudyQueue.jsx";
 import { splitAtWord } from "./words.js";
 
@@ -10,20 +11,20 @@ export default function StudyPage() {
   const [reviewed, setReviewed] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [feedback, setFeedback] = useState("");
+  const [message, setMessage] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
   async function start() {
     setBusy(true);
-    setMessage("");
-    setFeedback("");
+    setMessage(null);
+    setFeedback(null);
     try {
       const due = await loadDueCards();
       setQueue(due);
       setReviewed(0);
       setRevealed(false);
     } catch (error) {
-      setMessage(error.message);
+      setMessage(newNotice(error.message));
     } finally {
       setBusy(false);
     }
@@ -32,7 +33,7 @@ export default function StudyPage() {
   async function answer(remembered) {
     const [card, ...rest] = queue;
     setBusy(true);
-    setMessage("");
+    setMessage(null);
     try {
       const result = await answerCard(card.id, remembered);
       setQueue(remembered ? rest : [...rest, card]);
@@ -40,11 +41,11 @@ export default function StudyPage() {
       setRevealed(false);
       setFeedback(
         remembered
-          ? `Remembered "${card.word}". You will see it again on ${result.due_date}.`
-          : `Forgotten "${card.word}". It comes back in this session.`,
+          ? newNotice(`Remembered "${card.word}". You will see it again on ${result.due_date}.`, "success")
+          : newNotice(`Forgotten "${card.word}". It comes back in this session.`, "info"),
       );
     } catch (error) {
-      setMessage(error.message);
+      setMessage(newNotice(error.message));
     } finally {
       setBusy(false);
     }
@@ -71,12 +72,11 @@ export default function StudyPage() {
 
       {queue !== null && !card && (
         <>
-          <p className="notice ok" role="status">
+          <p className="hint" role="status">
             {reviewed === 0
               ? "Nothing is due. Come back when a card is due."
               : `Session done: ${reviewed} ${reviewed === 1 ? "answer" : "answers"}. Nothing else is due.`}
           </p>
-          {feedback && <p className="hint">{feedback}</p>}
           <div className="actions">
             <button type="button" className="primary" onClick={start} disabled={busy}>
               Start another session
@@ -119,15 +119,11 @@ export default function StudyPage() {
               </button>
             )}
           </div>
-          {feedback && <p className="hint">{feedback}</p>}
         </>
       )}
 
-      {message && (
-        <p className="notice" role="alert">
-          {message}
-        </p>
-      )}
+      {message && <Notice notice={message} onDismiss={() => setMessage(null)} />}
+      {feedback && <Notice notice={feedback} onDismiss={() => setFeedback(null)} />}
     </section>
   );
 }

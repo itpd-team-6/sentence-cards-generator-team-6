@@ -332,3 +332,153 @@ def test_the_passage_is_the_text_around_the_word_whatever_its_case() -> None:
     assert "Bahnhof" in passage
     assert len(passage) < len(text)
     assert passage_around("Ich warte.", "Zug") is None
+
+
+def test_new_sentences_for_the_chosen_cards_replace_only_those_sentences(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+
+        response = client.post("/api/cards/new-sentences", json={"card_ids": [1, 3]})
+
+        assert response.status_code == 200
+        assert [card["id"] for card in response.json()] == [1, 3]
+        assert all(card["error"] is None for card in response.json())
+        after = client.get("/api/texts/1/cards").json()
+        assert after[0]["sentence"] != before[0]["sentence"]
+        assert after[0]["translation"] != before[0]["translation"]
+        assert after[1] == before[1]
+        assert after[2]["sentence"] != before[2]["sentence"]
+        assert [call["previous_sentence"] for call in model.calls[-2:]] == [
+            before[0]["sentence"],
+            before[2]["sentence"],
+        ]
+
+
+def test_a_card_the_model_fails_for_keeps_its_sentence_and_the_others_get_new_ones(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        model.failing = {"Zug": LlmError("The language model took too long to answer.")}
+
+        response = client.post("/api/cards/new-sentences", json={"card_ids": [1, 2, 3]})
+
+        assert response.status_code == 200
+        errors = [card["error"] for card in response.json()]
+        assert errors == [None, "The language model took too long to answer.", None]
+        after = client.get("/api/texts/1/cards").json()
+        assert after[1] == before[1]
+        assert after[0]["sentence"] != before[0]["sentence"]
+        assert after[2]["sentence"] != before[2]["sentence"]
+
+
+def test_a_model_that_is_not_set_up_changes_no_card_when_asked_for_several_new_sentences(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        model.failing = {"Bahnhof": LlmNotConfigured("The language model is not set up.")}
+
+        response = client.post("/api/cards/new-sentences", json={"card_ids": [1, 2]})
+
+        assert response.status_code == 503
+        assert client.get("/api/texts/1/cards").json() == before
+
+
+def test_a_card_that_does_not_exist_stops_the_new_sentences_before_the_model_is_asked(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+        calls = len(model.calls)
+
+        assert client.post("/api/cards/new-sentences", json={"card_ids": [1, 99]}).status_code == 404
+        assert len(model.calls) == calls
+
+
+def test_the_chosen_cards_are_deleted_in_one_action_and_the_others_stay(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        response = client.post("/api/cards/delete", json={"card_ids": [1, 3]})
+
+        assert response.status_code == 204
+        assert [card["id"] for card in client.get("/api/texts/1/cards").json()] == [2]
+
+
+def test_when_one_card_to_delete_does_not_exist_none_is_deleted(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        assert client.post("/api/cards/delete", json={"card_ids": [1, 99]}).status_code == 404
+        assert len(client.get("/api/texts/1/cards").json()) == 3
+
+
+def test_an_action_on_several_cards_needs_at_least_one_card(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        assert client.post("/api/cards/delete", json={"card_ids": []}).status_code == 422
+        assert client.post("/api/cards/new-sentences", json={}).status_code == 422
+        assert len(client.get("/api/texts/1/cards").json()) == 3
+
+
+def test_a_hidden_card_stays_in_its_place_in_the_cards_table_but_is_not_studied(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        hidden = client.patch("/api/cards/2", json={"hidden": True})
+
+        assert hidden.json()["hidden"] is True
+        cards = client.get("/api/cards").json()
+        assert [card["id"] for card in client.get("/api/texts/1/cards").json()] == [1, 2, 3]
+        assert [(card["id"], card["hidden"]) for card in cards] == [(1, False), (2, True), (3, False)]
+        assert [card["word"] for card in client.get("/api/study/due").json()] == ["Bahnhof", "Haus"]
+
+
+def test_a_hidden_card_that_is_shown_again_comes_back_to_the_study_session(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+        client.patch("/api/cards/2", json={"hidden": True})
+
+        shown = client.patch("/api/cards/2", json={"hidden": False})
+
+        assert shown.json()["hidden"] is False
+        assert [card["word"] for card in client.get("/api/study/due").json()] == ["Bahnhof", "Zug", "Haus"]
+
+
+def test_several_cards_are_hidden_in_one_action_and_shown_again_in_one_action(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        hidden = client.post("/api/cards/hidden", json={"card_ids": [1, 3], "hidden": True})
+
+        assert hidden.status_code == 200
+        assert [(card["id"], card["hidden"]) for card in hidden.json()] == [(1, True), (3, True)]
+        assert [card["word"] for card in client.get("/api/study/due").json()] == ["Zug"]
+        assert [card["id"] for card in client.get("/api/texts/1/cards").json()] == [1, 2, 3]
+
+        shown = client.post("/api/cards/hidden", json={"card_ids": [1, 3], "hidden": False})
+
+        assert [card["hidden"] for card in shown.json()] == [False, False]
+        assert [card["word"] for card in client.get("/api/study/due").json()] == ["Bahnhof", "Zug", "Haus"]
+
+
+def test_when_one_card_to_hide_does_not_exist_none_is_hidden(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        assert client.post("/api/cards/hidden", json={"card_ids": [1, 99], "hidden": True}).status_code == 404
+        assert [card["hidden"] for card in client.get("/api/cards").json()] == [False, False, False]
+
+
+def test_hiding_several_cards_needs_at_least_one_card_and_says_whether_to_hide_or_show(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        assert client.post("/api/cards/hidden", json={"card_ids": [], "hidden": True}).status_code == 422
+        assert client.post("/api/cards/hidden", json={"card_ids": [1]}).status_code == 422
+
+
+def test_editing_the_sentence_of_a_hidden_card_keeps_it_hidden(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+        client.patch("/api/cards/2", json={"hidden": True})
+
+        response = client.patch("/api/cards/2", json={"sentence": "Der Zug ist spät."})
+
+        assert response.json()["hidden"] is True

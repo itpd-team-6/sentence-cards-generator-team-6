@@ -68,6 +68,7 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
         "flagged": 0,
+        "hidden": 0,
         "due_date": "2026-10-16",
         "due_at": "2026-10-16T00:00:00.001000",
         "interval_days": 0,
@@ -198,6 +199,7 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
         "flagged": 1,
+        "hidden": 0,
         "due_date": "2026-10-20",
         "due_at": "2026-10-20T00:00:00.001000",
         "interval_days": 4,
@@ -291,3 +293,13 @@ def test_two_cards_made_the_same_day_never_have_the_same_due_time() -> None:
     second = add_card(connection, text_id, "Welt", None, None, TODAY)
 
     assert get_card(connection, first)["due_at"] < get_card(connection, second)["due_at"]
+
+
+def test_a_database_made_by_the_released_version_has_no_hidden_card() -> None:
+    connection = connect()
+    connection.executescript(RELEASED_TABLES)
+
+    init_db(connection)
+
+    assert get_card(connection, 1)["hidden"] == 0
+    assert [card["id"] for card in list_due_cards(connection, date(2026, 10, 21))] == [1]
