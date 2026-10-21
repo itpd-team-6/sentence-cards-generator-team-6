@@ -239,3 +239,14 @@ When the language model does not answer, the product repeats the request up to 5
 - **Made by:** Team
 - **Source:** team discussion
 - **Why:** the Customer asked for "a limit on the number of attempts to generate a sentence" ([`DEC-012`](#dec-012)) and gave no number, so the team chose one from the guidance of the providers: the [Gemini API troubleshooting guide](https://ai.google.dev/gemini-api/docs/troubleshooting) recommends exponential backoff with jitter, a maximum number of attempts, and retrying only temporary errors (429, 408, 5xx), not errors such as 400, 402 or 403; the [Google Cloud retry strategy](https://docs.cloud.google.com/model-armor/retry-strategy) waits 1, 2 and 4 seconds plus a random fraction of a second, and caps the wait; the [AWS Architecture Blog](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) recommends jitter for remote clients; the sources give no number of attempts, so 5 requests was chosen to keep the longest wait for one word near 19 seconds (15 seconds of backoff plus up to 4 seconds of jitter) not counting the time of the requests themselves, because a learner waits for it, and every repeat spends the request limit of a free plan.
+
+## DEC-025
+
+The learner selects several words of a text as one card by holding Shift and clicking the words one by one, and Shift and a click on a chosen word takes it out of the selection; selecting by dragging the mouse is not built.
+
+- **Status:** Active
+- **Date:** 2026-10-21
+- **Made by:** Customer
+- **Source:** [Selecting several words as one card](research/word-selection-options.md)
+- **Why:** the Customer chose the first of the two ways shown: "I prefer the first option because of verbs with a separable prefix" and "The second option may not be very convenient when parts of a verb are on different lines" (Customer, chat, 2026-10-21 23:20), and gave "zustimmen -> stimmt zu" and "sich bereit erklären -> erklärt sich bereit" as examples, where the parts of one verb are far apart (Customer, chat, 2026-10-21 23:23); it settles the open part of [`DEC-022`](#dec-022).
+  A visible button for touch screens was suggested with "May be" and is not decided, see the open questions in the source.
