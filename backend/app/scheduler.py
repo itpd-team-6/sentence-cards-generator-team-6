@@ -8,7 +8,7 @@ starts over.
 import sqlite3
 from datetime import date, timedelta
 
-from app.database import get_card, update_card
+from app.database import default_due_time, get_card, update_card
 
 SHORTEST_INTERVAL = 1  # days; a card that is new or was forgotten has an interval of 0 until it is remembered
 
@@ -31,5 +31,11 @@ def answer_card(connection: sqlite3.Connection, card_id: int, remembered: bool, 
     if card is None:
         return None
     interval, due_date = next_review(card["interval_days"], remembered, today)
-    update_card(connection, card_id, interval_days=interval, due_date=due_date.isoformat())
+    update_card(
+        connection,
+        card_id,
+        interval_days=interval,
+        due_date=due_date.isoformat(),
+        due_at=default_due_time(due_date, card_id),
+    )
     return get_card(connection, card_id)

@@ -40,3 +40,13 @@ export const loadDueCards = () => call("/api/study/due");
 
 // The learner's answer to a card; the answer has the card's next due date.
 export const answerCard = (cardId, remembered) => call(`/api/cards/${cardId}/answer`, json("POST", { remembered }));
+
+// The study queue: every card with a sentence, in the order they are studied. The cards due today come first, and each
+// card says whether it is due today and its due date.
+export const loadQueue = () => call("/api/study/queue");
+
+// Saves the order the learner gave the study queue. `cardIds` is the whole queue in the new order, `moved` the cards the
+// learner moved, and `todayCount` how many cards at the start of the order are due today; the answer is the queue as it
+// is now.
+export const saveQueueOrder = (cardIds, moved, todayCount) =>
+  call("/api/study/queue/order", json("POST", { card_ids: cardIds, moved, today_count: todayCount }));

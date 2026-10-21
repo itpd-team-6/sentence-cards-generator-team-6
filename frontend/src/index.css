@@ -630,3 +630,232 @@ textarea {
     flex-direction: column;
   }
 }
+
+/* The queue of the cards that are due, before a study session starts. */
+.queue-box {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.queue-box h3 {
+  margin: 0 0 0.25rem;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+/* One button for each text: it ticks the cards of that text. Ruby when all of them are ticked, dashed when some are. */
+.queue-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0.9rem;
+}
+
+.queue-pill {
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--field-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Unticks every card; it sits at the end of the row. */
+.queue-clear {
+  margin-left: auto;
+}
+
+.queue-clear:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.queue-pill:hover:not(:disabled) {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
+.queue-pill.part {
+  border-style: dashed;
+  color: var(--text);
+}
+
+.queue-pill[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.queue-hint-handle {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--text);
+}
+
+/* The same scroll box as the cards page: a thin bar at the edge of the panel, whose space is always reserved. */
+.queue-scroll {
+  max-height: 18rem;
+  margin-right: -1.5rem;
+  padding-right: 1.5rem;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.queue-scroll + .hint,
+.queue-scroll + .notice {
+  margin-top: 0.75rem;
+}
+
+.queue {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queue li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* While a card is dragged, a ruby line shows where it will land, and the cards that move are dimmed. */
+.queue li.drop-before {
+  box-shadow: 0 -2px 0 var(--accent);
+}
+
+.queue li.dragging {
+  opacity: 0.45;
+}
+
+/* "Due today" and "Later": a small label with a line after it. The line before "Later" is also a place to drop. */
+.queue li.queue-section {
+  gap: 0.75rem;
+  padding: 0.9rem 0.25rem 0.3rem;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.queue li.queue-section::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--border);
+}
+
+.queue li.queue-end {
+  display: block;
+  height: 0.75rem;
+  padding: 0;
+  border: 0;
+}
+
+.queue-handle {
+  display: inline-flex;
+  padding: 0.2rem;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: grab;
+}
+
+.queue-handle:hover {
+  color: var(--text);
+}
+
+.queue-handle:active {
+  cursor: grabbing;
+}
+
+.queue-check {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  border: 1.5px solid var(--field-border);
+  border-radius: 5px;
+  background: var(--bg);
+  appearance: none;
+  cursor: pointer;
+}
+
+.queue-check:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.queue-check:checked::after {
+  content: "";
+  width: 0.3rem;
+  height: 0.6rem;
+  margin-top: -0.1rem;
+  border: solid var(--accent-text);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.queue-number {
+  min-width: 1.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.queue-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-word {
+  display: block;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* The sentence is one line; the word of the card is marked in soft ruby, as on the study page. */
+.queue-sentence {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-sentence mark {
+  padding: 0 0.2rem;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+.queue-date {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.queue-text {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
