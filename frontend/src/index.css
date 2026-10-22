@@ -1,17 +1,18 @@
 /* Colors, fonts and shape come from the variables below, so a theme only sets them. */
 :root {
-  /* Night theme with ruby. Contrast checked against WCAG 2.2 AA: text 4.5:1, borders of fields and focus 3:1. */
+  /* Night theme with blue. Contrast checked against WCAG 2.2 AA: text 4.5:1, borders of fields and focus 3:1. */
   --bg: #0e1a20;
   --surface: #15262e;
   --text: #e9f2f3; /* 13.7:1 on the surface */
   --muted: #8fa9b0; /* 6.3:1 on the surface */
   --border: #28454f; /* decoration only */
   --field-border: #4a6b76; /* 3.1:1 on the page background */
-  --accent: #c8183f; /* ruby: what the learner chose, and the tone of a problem message */
-  --accent-text: #ffffff; /* 5.7:1 on the accent */
-  --accent-soft: #3a1d28; /* the marked-word chips */
-  --accent-soft-text: #ff8a9d; /* 5.7:1 on the soft ruby */
-  --focus: #ff6b84; /* 5.7:1 on the surface */
+  --accent: #2b6fd6; /* blue: what the learner chose; 3.2:1 on the surface */
+  --accent-text: #ffffff; /* 4.8:1 on the accent */
+  --accent-soft: #172f55; /* the marked-word chips */
+  --accent-soft-text: #a3c8ff; /* 7.8:1 on the soft blue */
+  --focus: #8dbbff; /* 7.9:1 on the surface */
+  --error-text: #ff8a9d; /* the tone of a problem message, kept red so that the accent is not read as an error */
   --radius: 12px;
   color-scheme: dark; /* the browser draws scrollbars and form parts in the dark theme too */
   --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -385,7 +386,7 @@ textarea {
 }
 
 /* The messages of the product, stacked in the bottom right corner above the page. Every one has the same shape; the
-   tone (ruby for a problem, green for a success, grey-blue for a neutral note) is the border and the icon. */
+   tone (red for a problem, green for a success, grey-blue for a neutral note) is the border and the icon. */
 .toasts {
   position: fixed;
   right: 1rem;
@@ -399,7 +400,7 @@ textarea {
 }
 
 .toast {
-  --tone: var(--accent-soft-text);
+  --tone: var(--error-text);
 
   position: relative;
   display: flex;
@@ -566,7 +567,7 @@ textarea {
   font-size: 0.85rem;
 }
 
-/* A card marked for review has a ruby bar and the words "Marked for review": the colour is not the only sign. */
+/* A card marked for review has a blue bar and the words "Marked for review": the colour is not the only sign. */
 .cards .flagged th:first-child {
   box-shadow: inset 4px 0 0 var(--accent);
 }
@@ -825,7 +826,7 @@ textarea {
   font-size: 1.1rem;
 }
 
-/* One button for each text: it ticks the cards of that text. Ruby when all of them are ticked, dashed when some are. */
+/* One button for each text: it ticks the cards of that text. Blue when all of them are ticked, dashed when some are. */
 .queue-pills {
   display: flex;
   flex-wrap: wrap;
@@ -905,7 +906,7 @@ textarea {
   border-bottom: 1px solid var(--border);
 }
 
-/* While a card is dragged, a ruby line shows where it will land, and the cards that move are dimmed. */
+/* While a card is dragged, a blue line shows where it will land, and the cards that move are dimmed. */
 .queue li.drop-before {
   box-shadow: 0 -2px 0 var(--accent);
 }
@@ -1005,7 +1006,7 @@ textarea {
   line-height: 1.35;
 }
 
-/* The sentence is one line; the word of the card is marked in soft ruby, as on the study page. */
+/* The sentence is one line; the word of the card is marked in soft blue, as on the study page. */
 .queue-sentence {
   display: block;
   overflow: hidden;

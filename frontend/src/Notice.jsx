@@ -47,7 +47,7 @@ function toastBox() {
 }
 
 // Every message of the product looks the same and goes away by itself after a few seconds. Only the tone changes with
-// the kind: "error" is a problem (ruby), "success" says that something worked (green), "info" is neutral. The icon says
+// the kind: "error" is a problem (red), "success" says that something worked (green), "info" is neutral. The icon says
 // the kind too, so the colour is never the only sign. A line at the bottom shrinks as the time passes, hovering the
 // message stops the clock, and the button closes it at once.
 export default function Notice({ notice, onDismiss, seconds = NOTICE_SECONDS }) {
