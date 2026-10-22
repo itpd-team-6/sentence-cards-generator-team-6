@@ -8,8 +8,13 @@ const ACTIONS = [
   { id: "review", name: "Mark for review", icon: "M7 4h10v16l-5-4-5 4V4z" },
   {
     id: "hide",
-    name: "Hide from study or show again",
+    name: "Hide",
     icon: "M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4 4l16 16",
+  },
+  {
+    id: "lock",
+    name: "Lock translation",
+    icon: "M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2",
   },
   { id: "new", name: "New sentence", icon: "M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" },
   { id: "delete", name: "Delete", icon: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v5M14 11v5" },
@@ -36,6 +41,9 @@ function Icon({ path, filled = false, spinning = false }) {
   );
 }
 
+// The lock of a translation that is not locked: the shackle is open.
+const OPEN_LOCK = "M7 11V8a5 5 0 0 1 9.6-2M5 11h14v10H5zM12 15v2";
+
 const iconOf = (id) => ACTIONS.find((action) => action.id === id).icon;
 
 // "Working on 2 cards" with one, two and three dots in turn, until the answer comes. A learner who asked for less motion
@@ -60,11 +68,12 @@ function Working({ count }) {
 
 // The cards of all the texts, as a table the learner reviews: edit a sentence, mark it for review, hide it from study,
 // ask for a new sentence or delete the card. Each action is an icon, and a legend in the top right corner of the box,
-// which stays in view while the table scrolls, says what the icons do. A box in the first column selects cards, and a
-// bar above the table, always in view, selects all the cards or none and acts on the selected ones: a new sentence for
-// each, hide them from study or show them again, or delete them after the learner confirms.
+// which stays in view while the table scrolls, says what the icons do. A box in the first column selects cards, and the
+// box in its header selects all the cards or none. While cards are selected, a bar under the table, in view at the bottom
+// of the window, acts on them: a new sentence for each, hide them from study or show them again, or delete them after
+// the learner confirms. Without a selection the bar is not there, and the table does not move when it appears.
 export default function CardsTable({ cards, onCardsChange }) {
-  const [editing, setEditing] = useState(null); // { id, sentence } of the card being edited
+  const [editing, setEditing] = useState(null); // { id, sentence, translation } of the card being edited
   const [busy, setBusy] = useState(null); // { id, what } while the product answers; every button waits
   const [notes, setNotes] = useState({}); // card id -> the message about that card, or null when it went away
   const [ticked, setTicked] = useState(new Set()); // ids of the cards selected for an action on several cards
@@ -91,6 +100,10 @@ export default function CardsTable({ cards, onCardsChange }) {
 
   const toggleFlag = (card) =>
     act(card, "flag", async () => replace(await changeCard(card.id, { flagged: !card.flagged })));
+
+  // A locked translation is not changed by the product, whatever happens to the sentence (DEC-014).
+  const toggleLock = (card) =>
+    act(card, "lock", async () => replace(await changeCard(card.id, { translation_locked: !card.translation_locked })));
 
   const toggleHidden = (card) =>
     act(card, "hide", async () => replace(await changeCard(card.id, { hidden: !card.hidden })));
@@ -176,21 +189,31 @@ export default function CardsTable({ cards, onCardsChange }) {
       setEditing(null);
     });
 
-  const startEditing = (card) => setEditing({ id: card.id, sentence: card.sentence ?? "" });
+  const startEditing = (card) =>
+    setEditing({ id: card.id, sentence: card.sentence ?? "", translation: card.translation ?? "" });
 
-  // The translation is not edited by hand: the product translates the new sentence, so the two always match.
+  // The translation follows the sentence unless the learner writes it or locks it: when only the sentence changes, the
+  // product translates the new one; a translation the learner writes is kept as written.
   function save(card) {
     const sentence = editing.sentence.trim();
+    const translation = editing.translation.trim();
     if (!sentence) {
       setNote(card.id, "Write the sentence.");
       return;
     }
-    if (sentence === card.sentence) {
+    if (card.translation && !translation) {
+      setNote(card.id, "Write the translation.");
+      return;
+    }
+    const fields = {};
+    if (sentence !== card.sentence) fields.sentence = sentence;
+    if (translation && translation !== card.translation) fields.translation = translation;
+    if (Object.keys(fields).length === 0) {
       setEditing(null);
       return;
     }
     act(card, "save", async () => {
-      replace(await changeCard(card.id, { sentence }));
+      replace(await changeCard(card.id, fields));
       setEditing(null);
     });
   }
@@ -217,63 +240,6 @@ export default function CardsTable({ cards, onCardsChange }) {
             </li>
           ))}
         </ul>
-      </div>
-      <div className="bulk-bar" role="toolbar" aria-label="Select cards and act on the selected ones">
-        <div className="bulk-group">
-          <span className="bulk-count" aria-live="polite">
-            {chosen.length} selected
-          </span>
-          <button
-            type="button"
-            className="queue-pill"
-            disabled={busy || allTicked}
-            onClick={() => setTicked(new Set(cards.map((card) => card.id)))}
-          >
-            Select all
-          </button>
-          <button
-            type="button"
-            className="queue-pill"
-            disabled={busy || chosen.length === 0}
-            onClick={() => setTicked(new Set())}
-          >
-            Clear selection
-          </button>
-        </div>
-        <div className="bulk-group">
-          <button
-            type="button"
-            className="secondary"
-            disabled={busy || chosen.length === 0}
-            onClick={askForNewSentences}
-          >
-            {busy?.what === "sentences" ? <Working count={chosen.length} /> : "New sentences"}
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={busy || chosen.length === 0}
-            onClick={() => hideChosen(true)}
-          >
-            Hide
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={busy || chosen.length === 0}
-            onClick={() => hideChosen(false)}
-          >
-            Show
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={busy || chosen.length === 0}
-            onClick={() => setConfirming(true)}
-          >
-            Delete
-          </button>
-        </div>
       </div>
       {batchNotice && <Notice notice={batchNotice} onDismiss={() => setBatchNotice(null)} />}
       {cards.map((card) => {
@@ -320,7 +286,17 @@ export default function CardsTable({ cards, onCardsChange }) {
           </colgroup>
           <thead>
             <tr>
-              <th scope="col" aria-label="Select" />
+              <th scope="col" className="select-cell">
+                <input
+                  type="checkbox"
+                  className="queue-check"
+                  aria-label="Select all cards"
+                  checked={allTicked}
+                  ref={(box) => box && (box.indeterminate = chosen.length > 0 && !allTicked)}
+                  disabled={busy}
+                  onChange={() => setTicked(allTicked ? new Set() : new Set(cards.map((card) => card.id)))}
+                />
+              </th>
               <th scope="col">Word</th>
               <th scope="col">Sentence</th>
               <th scope="col">Translation</th>
@@ -364,8 +340,39 @@ export default function CardsTable({ cards, onCardsChange }) {
                     )}
                   </td>
                   <td data-label="Translation">
-                    {card.translation ?? <span className="empty">No translation yet.</span>}
-                    {isEditing && <span className="empty note">The translation is made again when you save.</span>}
+                    {isEditing ? (
+                      <textarea
+                        aria-label={`Translation for ${card.word}`}
+                        value={editing.translation}
+                        onChange={(event) => setEditing({ ...editing, translation: event.target.value })}
+                      />
+                    ) : (
+                      <span className="translation-line">
+                        <span>{card.translation ?? <span className="empty">No translation yet.</span>}</span>
+                        <button
+                          type="button"
+                          className="secondary icon lock"
+                          disabled={busy || !card.translation}
+                          title={card.translation_locked ? "Unlock the translation" : "Lock the translation"}
+                          aria-label={
+                            card.translation_locked
+                              ? `Unlock the translation of ${card.word}`
+                              : `Lock the translation of ${card.word}`
+                          }
+                          aria-pressed={card.translation_locked}
+                          onClick={() => toggleLock(card)}
+                        >
+                          <Icon path={card.translation_locked ? iconOf("lock") : OPEN_LOCK} />
+                        </button>
+                      </span>
+                    )}
+                    {isEditing && (
+                      <span className="empty note">
+                        {card.translation_locked
+                          ? "The translation is locked, so it stays when the sentence changes."
+                          : "Change only the sentence and the translation is made again when you save."}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <div className="row-actions">
@@ -447,6 +454,65 @@ export default function CardsTable({ cards, onCardsChange }) {
           })}
         </table>
       </div>
+      {chosen.length > 0 && (
+        <div className="bulk-bar" role="toolbar" aria-label="Select cards and act on the selected ones">
+          <div className="bulk-group">
+            <span className="bulk-count" aria-live="polite">
+              {chosen.length} selected
+            </span>
+            <button
+              type="button"
+              className="queue-pill"
+              disabled={busy || allTicked}
+              onClick={() => setTicked(new Set(cards.map((card) => card.id)))}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className="queue-pill"
+              disabled={busy || chosen.length === 0}
+              onClick={() => setTicked(new Set())}
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="bulk-group">
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy || chosen.length === 0}
+              onClick={askForNewSentences}
+            >
+              {busy?.what === "sentences" ? <Working count={chosen.length} /> : "New sentences"}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy || chosen.length === 0}
+              onClick={() => hideChosen(true)}
+            >
+              Hide
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy || chosen.length === 0}
+              onClick={() => hideChosen(false)}
+            >
+              Show
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy || chosen.length === 0}
+              onClick={() => setConfirming(true)}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

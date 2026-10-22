@@ -28,7 +28,7 @@ export const createCards = (textId) => call(`/api/texts/${textId}/cards`, { meth
 // Every card of every text, the newest text first.
 export const loadCards = () => call("/api/cards");
 
-// `fields` has any of: sentence, flagged, hidden.
+// `fields` has any of: sentence, translation, translation_locked, flagged, hidden.
 export const changeCard = (cardId, fields) => call(`/api/cards/${cardId}`, json("PATCH", fields));
 
 export const newSentence = (cardId) => call(`/api/cards/${cardId}/new-sentence`, { method: "POST" });

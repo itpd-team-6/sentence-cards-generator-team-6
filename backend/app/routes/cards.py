@@ -41,6 +41,7 @@ class CardResponse(BaseModel):
     word: str
     sentence: str | None
     translation: str | None
+    translation_locked: bool
     flagged: bool
     hidden: bool
     due_date: str
@@ -51,19 +52,21 @@ class CardResponse(BaseModel):
 class CardChange(BaseModel):
     """What the learner changes on a card. Only the fields that are sent are changed.
 
-    There is no `translation`: it is made by the model from the sentence, so it always matches it.
+    The translation follows the sentence unless the learner writes it or locks it (DEC-014).
     """
 
     model_config = ConfigDict(extra="forbid")
 
     sentence: Sentence | None = None
+    translation: Sentence | None = None
+    translation_locked: bool | None = None
     flagged: bool | None = None
     hidden: bool | None = None
 
     @model_validator(mode="after")
     def something_changes(self) -> "CardChange":
         if not self.model_fields_set:
-            raise ValueError("Send at least one of: sentence, flagged, hidden.")
+            raise ValueError("Send at least one of: sentence, translation, translation_locked, flagged, hidden.")
         return self
 
 
@@ -80,7 +83,15 @@ class HiddenCards(CardIds):
 
 
 def card_response(card: dict, error: str | None = None) -> CardResponse:
-    return CardResponse(**{**card, "flagged": bool(card["flagged"]), "hidden": bool(card["hidden"])}, error=error)
+    return CardResponse(
+        **{
+            **card,
+            "translation_locked": bool(card["translation_locked"]),
+            "flagged": bool(card["flagged"]),
+            "hidden": bool(card["hidden"]),
+        },
+        error=error,
+    )
 
 
 def passage_around(text: str, word: str) -> str | None:
@@ -121,14 +132,32 @@ def parts_span(text: str, parts: list[str]) -> tuple[int, int] | None:
     return None
 
 
-def ask_model(client: LlmClient, text: dict, word: str, previous_sentence: str | None = None) -> GeneratedSentence:
+def ask_model(
+    client: LlmClient, text: dict, card_or_word: dict | str, previous_sentence: str | None = None
+) -> GeneratedSentence:
+    """Ask for a sentence. For a card whose translation is locked, the sentence is written to fit that translation."""
+    if isinstance(card_or_word, dict):
+        word = card_or_word["word"]
+        locked = card_or_word["translation"] if card_or_word["translation_locked"] else None
+    else:
+        word, locked = card_or_word, None
+    extra = {"locked_translation": locked} if locked else {}
     return client.write_sentence(
         word,
         text["text_language"],
         text["first_language"],
         passage_around(text["text"], word),
         previous_sentence,
+        **extra,
     )
+
+
+def new_sentence_fields(card: dict, result: GeneratedSentence) -> dict:
+    """What a new sentence changes on a card: the sentence, and the translation too unless it is locked."""
+    fields: dict = {"sentence": result.sentence, "flagged": 0}
+    if not card["translation_locked"]:
+        fields["translation"] = result.translation
+    return fields
 
 
 def find_card(connection: sqlite3.Connection, card_id: int) -> dict:
@@ -198,13 +227,13 @@ def replace_sentences(
     for card in cards:
         text = get_text(connection, card["text_id"])
         try:
-            result = ask_model(client, text, card["word"], card["sentence"])
+            result = ask_model(client, text, card, card["sentence"])
         except LlmNotConfigured as error:
             raise HTTPException(status_code=503, detail=str(error)) from None
         except LlmError as error:
             errors[card["id"]] = str(error)
             continue
-        update_card(connection, card["id"], sentence=result.sentence, translation=result.translation, flagged=0)
+        update_card(connection, card["id"], **new_sentence_fields(card, result))
     return [card_response(get_card(connection, card_id), errors.get(card_id)) for card_id in ids]
 
 
@@ -234,19 +263,25 @@ def change_card(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
 ) -> CardResponse:
-    """Edit the sentence, set the flag, or hide the card from study or show it again.
+    """Edit the sentence or the translation, lock the translation, set the flag, or hide the card from study.
 
-    A new sentence is translated by the model before anything is saved, so the translation always matches it.
+    The translation follows the sentence (DEC-014): when the sentence changes, the model translates the new one before
+    anything is saved, unless the learner sends a translation in the same request, or the translation is locked, in
+    which case it stays. A translation the learner sends is saved as it is. A card needs a translation to be locked.
     When the model does not answer, nothing changes. Editing a card clears its flag unless the request sets it.
     """
     card = find_card(connection, card_id)
     fields = change.model_dump(exclude_unset=True)
-    for name in ("flagged", "hidden"):
+    for name in ("flagged", "hidden", "translation_locked"):
         if name in fields:
             fields[name] = int(fields[name])
-    if fields.get("sentence") == card["sentence"]:
-        del fields["sentence"]
-    if "sentence" in fields:
+    for name in ("sentence", "translation"):
+        if name in fields and fields[name] == card[name]:
+            del fields[name]
+    locked = bool(fields.get("translation_locked", card["translation_locked"]))
+    if locked and not (fields.get("translation") or card["translation"]):
+        raise HTTPException(status_code=422, detail="A card without a translation cannot have its translation locked.")
+    if "sentence" in fields and "translation" not in fields and not locked:
         text = get_text(connection, card["text_id"])
         try:
             fields["translation"] = client.translate_sentence(
@@ -256,6 +291,7 @@ def change_card(
             raise HTTPException(status_code=503, detail=str(error)) from None
         except LlmError as error:
             raise HTTPException(status_code=502, detail=str(error)) from None
+    if "sentence" in fields or "translation" in fields:
         fields.setdefault("flagged", 0)
     update_card(connection, card_id, **fields)
     return card_response(get_card(connection, card_id))
@@ -267,16 +303,20 @@ def replace_sentence(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
 ) -> CardResponse:
-    """Ask the model for another sentence for the card's word. When it does not answer, the card stays as it is."""
+    """Ask the model for another sentence for the card's word, and its translation, unless the translation is locked.
+
+    A locked translation stays, and the model writes a sentence that means the same. When the model does not answer,
+    the card stays as it is.
+    """
     card = find_card(connection, card_id)
     text = get_text(connection, card["text_id"])
     try:
-        result = ask_model(client, text, card["word"], card["sentence"])
+        result = ask_model(client, text, card, card["sentence"])
     except LlmNotConfigured as error:
         raise HTTPException(status_code=503, detail=str(error)) from None
     except LlmError as error:
         raise HTTPException(status_code=502, detail=str(error)) from None
-    update_card(connection, card_id, sentence=result.sentence, translation=result.translation, flagged=0)
+    update_card(connection, card_id, **new_sentence_fields(card, result))
     return card_response(get_card(connection, card_id))
 
 

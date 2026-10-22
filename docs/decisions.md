@@ -134,7 +134,7 @@ A card is identified by its word and a short phrase, three or four words, that u
 
 The translation follows the sentence, it is made again when the sentence changes, and the learner may edit it or lock it so that it stays until the learner edits the sentence again.
 
-- **Status:** Active
+- **Status:** Reversed by [DEC-028](#dec-028)
 - **Date:** 2026-10-17
 - **Made by:** Customer
 - **Source:** [the Week 3 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-03/meeting-report.md)
@@ -272,3 +272,17 @@ The accent colour of the interface is blue, `#2b6fd6`, instead of ruby, and ever
 - **Why:** the team sent a screenshot with the current ruby and two options, because red may be read as an error; the Customer answered "I prefer option 2" (Customer, chat, 2026-10-22 07:46), the blue one, and "The color is familiar and the contrast seems to be good enough. The contrast must be checked against wcag 2.2" (Customer, chat, 2026-10-22 07:47, message edited).
   The contrast was calculated by the team with the WCAG formula: white text on the blue 4.83:1, text `#a3c8ff` on the soft blue `#172f55` 7.79:1, the focus colour `#8dbbff` on the surface 7.92:1, and the blue on the surface 3.22:1.
   A message about a problem keeps a red tone of its own, so that the accent is no longer read as an error.
+
+## DEC-028
+
+The translation of a card follows its sentence, and the learner may write the translation and lock it; a locked translation does not change when the learner edits the sentence or asks for a new sentence, and the new sentence is written to mean the same as the locked translation.
+
+- **Status:** Active
+- **Date:** 2026-10-22
+- **Made by:** Team
+- **Source:** team discussion
+- **Reverses:** [DEC-014](#dec-014)
+- **Why:** [`DEC-014`](#dec-014) said that the lock keeps the translation "until the learner edits the sentence again", which is what the Customer said about a translation the learner edited ("the translation should be preserved until the user edits the sentence again", Customer, [01:06:44]); about the lock he said that "the translation does not change even if the user changes the sentence and starts a regeneration" (Customer, [01:11:25]), and the lock follows that: it holds when the sentence is edited and when a new sentence is asked for.
+  Without the lock, the translation is made again from the new sentence in both cases, as before.
+  The learner may always edit the translation, also when it is locked, and only the learner locks and unlocks it; a card without a translation cannot be locked.
+  That the model is given the locked translation when it writes a new sentence, so the two still match, is the team's choice, to be confirmed with the Customer in the Week 4 meeting.

@@ -25,12 +25,23 @@ class FakeModel:
         self.calls: list[dict] = []
         self.translated: list[str] = []
 
-    def write_sentence(self, word, text_language, first_language, context=None, previous_sentence=None):
-        self.calls.append({"word": word, "context": context, "previous_sentence": previous_sentence})
+    def write_sentence(
+        self, word, text_language, first_language, context=None, previous_sentence=None, locked_translation=None
+    ):
+        self.calls.append(
+            {
+                "word": word,
+                "context": context,
+                "previous_sentence": previous_sentence,
+                "locked_translation": locked_translation,
+            }
+        )
         if word in self.failing:
             raise self.failing[word]
         number = len(self.calls)
-        return GeneratedSentence(f"Sentence {number} with {word}.", f"Translation {number} of {word}.")
+        return GeneratedSentence(
+            f"Sentence {number} with {word}.", locked_translation or f"Translation {number} of {word}."
+        )
 
     def translate_sentence(self, sentence, text_language, first_language):
         self.translated.append(sentence)
@@ -185,12 +196,134 @@ def test_when_the_translation_fails_the_card_keeps_its_sentence_and_its_translat
         assert client.patch("/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof."}).status_code == 503
 
 
-def test_the_translation_cannot_be_set_directly(model) -> None:
+def test_the_learner_can_write_the_translation_and_it_is_saved_as_written(model) -> None:
     with TestClient(app) as client:
         before = make_cards(client)
 
-        assert client.patch("/api/cards/1", json={"translation": "The station."}).status_code == 422
-        assert client.get("/api/texts/1/cards").json() == before
+        response = client.patch("/api/cards/1", json={"translation": "  The station.  "})
+
+        assert response.status_code == 200
+        assert response.json()["translation"] == "The station."
+        assert response.json()["sentence"] == before[0]["sentence"]
+        assert model.translated == []
+        assert client.get("/api/texts/1/cards").json()[0]["translation"] == "The station."
+
+
+def test_a_translation_written_in_the_same_save_as_a_new_sentence_is_the_one_kept(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+
+        response = client.patch(
+            "/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof.", "translation": "We meet at the station."}
+        )
+
+        assert response.json()["sentence"] == "Wir treffen uns am Bahnhof."
+        assert response.json()["translation"] == "We meet at the station."
+        assert model.translated == []
+
+
+def test_a_translation_written_by_the_learner_is_made_again_when_the_sentence_is_edited_and_not_locked(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+        client.patch("/api/cards/1", json={"translation": "The station."})
+
+        response = client.patch("/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof."})
+
+        assert response.json()["translation"] == "Translation of: Wir treffen uns am Bahnhof."
+
+
+def test_the_learner_locks_and_unlocks_the_translation_of_a_card_with_one_click(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        assert before[0]["translation_locked"] is False
+        client.patch("/api/cards/1", json={"flagged": True})
+
+        locked = client.patch("/api/cards/1", json={"translation_locked": True}).json()
+
+        assert locked["translation_locked"] is True
+        assert locked["translation"] == before[0]["translation"]
+        assert locked["sentence"] == before[0]["sentence"]
+        assert locked["flagged"] is True
+        assert client.get("/api/texts/1/cards").json()[0]["translation_locked"] is True
+        assert client.patch("/api/cards/1", json={"translation_locked": False}).json()["translation_locked"] is False
+
+
+def test_a_card_without_a_translation_cannot_be_locked() -> None:
+    fake = FakeModel(failing={"Zug": LlmError("The language model took too long to answer.")})
+    app.dependency_overrides[get_llm_client] = lambda: fake
+    app.dependency_overrides[get_today] = lambda: TODAY
+    try:
+        with TestClient(app) as client:
+            make_cards(client)
+
+            response = client.patch("/api/cards/2", json={"translation_locked": True})
+
+            assert response.status_code == 422
+            assert client.get("/api/texts/1/cards").json()[1]["translation_locked"] is False
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_a_locked_translation_stays_when_the_sentence_is_edited(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        client.patch("/api/cards/1", json={"translation_locked": True})
+
+        response = client.patch("/api/cards/1", json={"sentence": "Wir treffen uns am Bahnhof."})
+
+        assert response.json()["sentence"] == "Wir treffen uns am Bahnhof."
+        assert response.json()["translation"] == before[0]["translation"]
+        assert response.json()["translation_locked"] is True
+        assert model.translated == []
+
+
+def test_the_learner_can_edit_a_locked_translation_and_it_stays_locked(model) -> None:
+    with TestClient(app) as client:
+        make_cards(client)
+        client.patch("/api/cards/1", json={"translation_locked": True})
+
+        response = client.patch("/api/cards/1", json={"translation": "The station."})
+
+        assert response.json()["translation"] == "The station."
+        assert response.json()["translation_locked"] is True
+
+
+def test_a_new_sentence_for_a_locked_card_keeps_the_translation_and_the_model_is_given_it(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        client.patch("/api/cards/1", json={"translation_locked": True})
+
+        response = client.post("/api/cards/1/new-sentence")
+
+        assert response.json()["sentence"] != before[0]["sentence"]
+        assert response.json()["translation"] == before[0]["translation"]
+        assert response.json()["translation_locked"] is True
+        assert model.calls[-1]["locked_translation"] == before[0]["translation"]
+
+
+def test_new_sentences_for_several_cards_keep_the_locked_translations_and_change_the_others(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+        client.patch("/api/cards/1", json={"translation_locked": True})
+
+        response = client.post("/api/cards/new-sentences", json={"card_ids": [1, 2]}).json()
+
+        assert response[0]["translation"] == before[0]["translation"]
+        assert response[0]["sentence"] != before[0]["sentence"]
+        assert response[1]["translation"] != before[1]["translation"]
+        assert response[1]["sentence"] != before[1]["sentence"]
+        assert [call["locked_translation"] for call in model.calls[-2:]] == [before[0]["translation"], None]
+
+
+def test_a_new_sentence_for_a_card_that_is_not_locked_changes_the_sentence_and_the_translation(model) -> None:
+    with TestClient(app) as client:
+        before = make_cards(client)
+
+        response = client.post("/api/cards/1/new-sentence").json()
+
+        assert response["sentence"] != before[0]["sentence"]
+        assert response["translation"] != before[0]["translation"]
+        assert model.calls[-1]["locked_translation"] is None
 
 
 def test_an_empty_edit_or_an_empty_sentence_is_refused(model) -> None:
