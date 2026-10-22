@@ -104,22 +104,30 @@ export default function TextPage() {
         return;
       }
       const savedText = await response.json();
-      setSaved(
-        newNotice(
-          `Saved text ${savedText.id} with ${savedText.words.length} marked ${savedText.words.length === 1 ? "word" : "words"}.`,
-          "success",
-        ),
-      );
       const created = await createCards(savedText.id);
       setCards(await loadCards());
+      // When the model has answered, tell how many cards got a sentence, so the learner sees that the work is done.
+      const made = created.cards.filter((card) => card.sentence).length;
+      if (made > 0) {
+        setSaved(newNotice(`Saved text ${savedText.id} and made ${made} ${made === 1 ? "card" : "cards"}.`, "success"));
+      }
       // One message for all the words the model gave no sentence for; each of them stays as a card without a sentence.
-      if (created.some((card) => card.error)) {
-        setMessage(
-          newNotice(
-            "Some sentences could not be generated. Try again later with the New sentence button of each card.",
-          ),
+      const problems = [];
+      const failed = created.cards.some((card) => card.error);
+      if (failed) {
+        problems.push(
+          "Some sentences could not be generated. Try again later with the New sentence button of each card.",
         );
       }
+      // A word the learner already has a card for, with the same meaning, gets no second card (DEC-013).
+      if (created.existing.length > 0) {
+        const listed = created.existing.map((item) => `${item.word} ("${item.phrase}")`).join(", ");
+        problems.push(
+          `No new card for ${listed}: you already have ${created.existing.length === 1 ? "a card" : "cards"} with that meaning.`,
+        );
+      }
+      // Only a word without a sentence is a problem; a word that already has its card is told as information.
+      if (problems.length > 0) setMessage(newNotice(problems.join(" "), failed ? "error" : "info"));
     } catch (error) {
       setMessage(
         newNotice(error instanceof TypeError ? "The product could not be reached. Is it running?" : error.message),
@@ -190,7 +198,8 @@ export default function TextPage() {
         )}
 
         <div className="actions">
-          <button type="button" className="primary" onClick={askForSentences} disabled={asking}>
+          <button type="button" className="primary" onClick={askForSentences} disabled={asking} aria-busy={asking}>
+            {asking && <span className="button-spinner" aria-hidden="true" />}
             {asking ? "Asking the language model..." : "Ask for sentences"}
           </button>
         </div>

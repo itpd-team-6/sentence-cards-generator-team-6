@@ -1,6 +1,5 @@
 """The API calls that turn the marked words of a text into cards, and let the learner review them."""
 
-import re
 import sqlite3
 from datetime import date
 from typing import Annotated
@@ -12,15 +11,25 @@ from app.database import (
     add_card,
     delete_card,
     delete_cards,
+    find_card_by_phrase,
     get_card,
     get_connection,
     get_text,
     list_all_cards,
     list_cards,
+    meanings_of_word,
     set_hidden,
     update_card,
 )
-from app.llm import GeneratedSentence, LlmClient, LlmError, LlmNotConfigured, get_llm_client
+from app.llm import (
+    CardExists,
+    GeneratedSentence,
+    LlmClient,
+    LlmError,
+    LlmNotConfigured,
+    get_llm_client,
+)
+from app.phrases import parts_span, phrase_problem
 
 router = APIRouter()
 
@@ -39,6 +48,8 @@ class CardResponse(BaseModel):
     id: int
     text_id: int
     word: str
+    # The context phrase that, with the word, identifies the card (DEC-013); None for a card made before phrases existed.
+    phrase: str | None
     sentence: str | None
     translation: str | None
     translation_locked: bool
@@ -47,6 +58,18 @@ class CardResponse(BaseModel):
     due_date: str
     # Set only when cards were just generated and the model gave no sentence for this word.
     error: str | None = None
+
+
+class ExistingCard(BaseModel):
+    """A word that got no card because the learner already has one for it with the same meaning."""
+
+    word: str
+    phrase: str
+
+
+class CreatedCards(BaseModel):
+    cards: list[CardResponse]
+    existing: list[ExistingCard]
 
 
 class CardChange(BaseModel):
@@ -59,6 +82,7 @@ class CardChange(BaseModel):
 
     sentence: Sentence | None = None
     translation: Sentence | None = None
+    phrase: Sentence | None = None
     translation_locked: bool | None = None
     flagged: bool | None = None
     hidden: bool | None = None
@@ -66,7 +90,7 @@ class CardChange(BaseModel):
     @model_validator(mode="after")
     def something_changes(self) -> "CardChange":
         if not self.model_fields_set:
-            raise ValueError("Send at least one of: sentence, translation, translation_locked, flagged, hidden.")
+            raise ValueError("Send at least one of: sentence, translation, phrase, translation_locked, flagged, hidden.")
         return self
 
 
@@ -113,35 +137,31 @@ def passage_around(text: str, word: str) -> str | None:
     return text[max(0, position - PASSAGE_RADIUS) : position + len(word) + PASSAGE_RADIUS].strip()
 
 
-def parts_span(text: str, parts: list[str]) -> tuple[int, int] | None:
-    """Where the first part of a card word starts and the last one ends, with the parts in this order in the text.
-
-    Each part is a whole word, whatever its case. The first appearance of the first part that has all the other
-    parts after it is the one used. None when the parts do not all appear in this order.
-    """
-    patterns = [re.compile(rf"(?<!\w){re.escape(part)}(?!\w)", re.IGNORECASE) for part in parts]
-    for first in patterns[0].finditer(text):
-        end = first.end()
-        for pattern in patterns[1:]:
-            found = pattern.search(text, end)
-            if found is None:
-                break
-            end = found.end()
-        else:
-            return first.start(), end
-    return None
-
-
 def ask_model(
-    client: LlmClient, text: dict, card_or_word: dict | str, previous_sentence: str | None = None
+    client: LlmClient,
+    text: dict,
+    card_or_word: dict | str,
+    previous_sentence: str | None = None,
+    known_phrases: "list[str] | dict[str, str] | None" = None,
 ) -> GeneratedSentence:
-    """Ask for a sentence. For a card whose translation is locked, the sentence is written to fit that translation."""
+    """Ask for a sentence. For a card whose translation is locked, the sentence is written to fit that translation.
+
+    A word that has no card yet, and a card that has no sentence and no phrase, are also asked for the phrase that
+    identifies the card, with `known_phrases`, the phrases of the other cards for the word: when the word has the same
+    meaning as one of them, `CardExists` is raised. A card that has a phrase gets a sentence that keeps its meaning.
+    """
+    extra: dict = {}
     if isinstance(card_or_word, dict):
         word = card_or_word["word"]
-        locked = card_or_word["translation"] if card_or_word["translation_locked"] else None
+        if card_or_word["translation_locked"] and card_or_word["translation"]:
+            extra["locked_translation"] = card_or_word["translation"]
+        if card_or_word["phrase"]:
+            extra["meaning_phrase"] = card_or_word["phrase"]
+        elif card_or_word["sentence"] is None:
+            extra.update(ask_phrase=True, known_phrases=known_phrases)
     else:
-        word, locked = card_or_word, None
-    extra = {"locked_translation": locked} if locked else {}
+        word = card_or_word
+        extra.update(ask_phrase=True, known_phrases=known_phrases)
     return client.write_sentence(
         word,
         text["text_language"],
@@ -153,11 +173,25 @@ def ask_model(
 
 
 def new_sentence_fields(card: dict, result: GeneratedSentence) -> dict:
-    """What a new sentence changes on a card: the sentence, and the translation too unless it is locked."""
+    """What a new sentence changes on a card: the sentence, and the translation too unless it is locked.
+
+    A card that had no phrase gets the one the model wrote with the sentence, if it was asked for one.
+    """
     fields: dict = {"sentence": result.sentence, "flagged": 0}
     if not card["translation_locked"]:
         fields["translation"] = result.translation
+    if result.phrase and not card["phrase"]:
+        fields["phrase"] = result.phrase
     return fields
+
+
+def check_phrase_is_free(
+    connection: sqlite3.Connection, word: str, phrase: str | None, card_id: int | None = None
+) -> None:
+    """Raise `CardExists` when another card for the word already has this phrase, whatever the model said."""
+    other = find_card_by_phrase(connection, word, phrase, card_id) if phrase else None
+    if other:
+        raise CardExists(other["phrase"])
 
 
 def find_card(connection: sqlite3.Connection, card_id: int) -> dict:
@@ -173,28 +207,35 @@ def create_cards(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
     today: Annotated[date, Depends(get_today)],
-) -> list[CardResponse]:
-    """A card for each marked word of the text that has none yet, with a sentence and its translation.
+) -> CreatedCards:
+    """A card for each marked word of the text that has none yet, with a sentence, its translation and its phrase.
 
-    The cards exist at once, without the learner confirming them. When the model gives no sentence for a word,
-    that card has no sentence and carries an `error`; the other words keep their sentences. Calling this again
-    does not touch the cards that exist, so a word without a sentence is retried with the card's own call.
+    The cards exist at once, without the learner confirming them. A word is identified by its phrase (DEC-013): when
+    the learner already has a card for the word with the same meaning, no card is made and the word is listed in
+    `existing` with the phrase of that card. When the model gives no sentence for a word, that card has no sentence
+    and carries an `error`; the other words keep their sentences. Calling this again does not touch the cards that
+    exist, so a word without a sentence is retried with the card's own call.
     """
     text = get_text(connection, text_id)
     if text is None:
         raise HTTPException(status_code=404, detail="There is no text with this id.")
     have_a_card = {card["word"] for card in list_cards(connection, text_id)}
     errors: dict[str, str] = {}
+    existing: list[ExistingCard] = []
     for word in text["words"]:
         if word in have_a_card:
             continue
         try:
-            result = ask_model(client, text, word)
-            add_card(connection, text_id, word, result.sentence, result.translation, today)
+            result = ask_model(client, text, word, known_phrases=meanings_of_word(connection, word))
+            check_phrase_is_free(connection, word, result.phrase)
+            add_card(connection, text_id, word, result.sentence, result.translation, today, result.phrase)
+        except CardExists as exists:
+            existing.append(ExistingCard(word=word, phrase=exists.phrase))
         except LlmError as error:
             add_card(connection, text_id, word, None, None, today)
             errors[word] = str(error)
-    return [card_response(card, errors.get(card["word"])) for card in list_cards(connection, text_id)]
+    cards = [card_response(card, errors.get(card["word"])) for card in list_cards(connection, text_id)]
+    return CreatedCards(cards=cards, existing=existing)
 
 
 @router.get("/api/texts/{text_id}/cards")
@@ -227,10 +268,13 @@ def replace_sentences(
     for card in cards:
         text = get_text(connection, card["text_id"])
         try:
-            result = ask_model(client, text, card, card["sentence"])
+            result = ask_model(
+                client, text, card, card["sentence"], meanings_of_word(connection, card["word"], card["id"])
+            )
+            check_phrase_is_free(connection, card["word"], result.phrase, card["id"])
         except LlmNotConfigured as error:
             raise HTTPException(status_code=503, detail=str(error)) from None
-        except LlmError as error:
+        except (LlmError, CardExists) as error:
             errors[card["id"]] = str(error)
             continue
         update_card(connection, card["id"], **new_sentence_fields(card, result))
@@ -263,7 +307,10 @@ def change_card(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
 ) -> CardResponse:
-    """Edit the sentence or the translation, lock the translation, set the flag, or hide the card from study.
+    """Edit the sentence, the translation or the phrase, lock the translation, set the flag, or hide the card.
+
+    The phrase identifies the card with its word (DEC-013): a phrase that is not 2 to 6 words with the word in them is
+    refused with 422, and one that another card for the word already has with 409, and nothing changes.
 
     The translation follows the sentence (DEC-014): when the sentence changes, the model translates the new one before
     anything is saved, unless the learner sends a translation in the same request, or the translation is locked, in
@@ -275,9 +322,18 @@ def change_card(
     for name in ("flagged", "hidden", "translation_locked"):
         if name in fields:
             fields[name] = int(fields[name])
-    for name in ("sentence", "translation"):
+    for name in ("sentence", "translation", "phrase"):
         if name in fields and fields[name] == card[name]:
             del fields[name]
+    if "phrase" in fields:
+        fields["phrase"] = " ".join(fields["phrase"].split())
+        problem = phrase_problem(card["word"], fields["phrase"])
+        if problem:
+            raise HTTPException(status_code=422, detail=problem)
+        try:
+            check_phrase_is_free(connection, card["word"], fields["phrase"], card_id)
+        except CardExists as error:
+            raise HTTPException(status_code=409, detail=str(error)) from None
     locked = bool(fields.get("translation_locked", card["translation_locked"]))
     if locked and not (fields.get("translation") or card["translation"]):
         raise HTTPException(status_code=422, detail="A card without a translation cannot have its translation locked.")
@@ -311,9 +367,12 @@ def replace_sentence(
     card = find_card(connection, card_id)
     text = get_text(connection, card["text_id"])
     try:
-        result = ask_model(client, text, card, card["sentence"])
+        result = ask_model(client, text, card, card["sentence"], meanings_of_word(connection, card["word"], card_id))
+        check_phrase_is_free(connection, card["word"], result.phrase, card_id)
     except LlmNotConfigured as error:
         raise HTTPException(status_code=503, detail=str(error)) from None
+    except CardExists as error:
+        raise HTTPException(status_code=409, detail=str(error)) from None
     except LlmError as error:
         raise HTTPException(status_code=502, detail=str(error)) from None
     update_card(connection, card_id, **new_sentence_fields(card, result))

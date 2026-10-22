@@ -11,6 +11,7 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 from app.config import REPOSITORY_ROOT, get_settings
+from app.phrases import same_phrase
 
 
 def create_the_first_tables(connection: sqlite3.Connection) -> None:
@@ -88,17 +89,37 @@ def add_the_translation_lock(connection: sqlite3.Connection) -> None:
     connection.execute("ALTER TABLE cards ADD COLUMN translation_locked INTEGER NOT NULL DEFAULT 0")
 
 
+def add_the_card_phrase(connection: sqlite3.Connection) -> None:
+    """Give a card a context phrase that, with its word, identifies it (DEC-013). A card made before has none.
+
+    The index is a last guard: two cards with the same word and the same phrase cannot both be saved. The product checks
+    this first, whatever the case of the letters (`find_card_by_phrase`), so the learner gets a clear message.
+    """
+    connection.execute("ALTER TABLE cards ADD COLUMN phrase TEXT")
+    connection.execute("CREATE UNIQUE INDEX cards_word_phrase ON cards (word, phrase) WHERE phrase IS NOT NULL")
+
+
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
     add_the_due_time,
     add_the_hidden_mark,
     add_the_translation_lock,
+    add_the_card_phrase,
 ]
 
 # The card fields a caller may change with `update_card`.
-CARD_FIELDS = {"sentence", "translation", "translation_locked", "flagged", "hidden", "due_date", "due_at", "interval_days"}
-
+CARD_FIELDS = {
+    "sentence",
+    "translation",
+    "phrase",
+    "translation_locked",
+    "flagged",
+    "hidden",
+    "due_date",
+    "due_at",
+    "interval_days",
+}
 
 
 def database_file(path: str | None = None) -> Path:
@@ -186,11 +207,12 @@ def add_card(
     sentence: str | None,
     translation: str | None,
     today: date,
+    phrase: str | None = None,
 ) -> int:
     """Add a card. A new card is due on `today`."""
     cursor = connection.execute(
-        "INSERT INTO cards (text_id, word, sentence, translation, due_date) VALUES (?, ?, ?, ?, ?)",
-        (text_id, word, sentence, translation, today.isoformat()),
+        "INSERT INTO cards (text_id, word, sentence, translation, due_date, phrase) VALUES (?, ?, ?, ?, ?, ?)",
+        (text_id, word, sentence, translation, today.isoformat(), phrase),
     )
     card_id = cursor.lastrowid
     connection.execute("UPDATE cards SET due_at = ? WHERE id = ?", (default_due_time(today, card_id), card_id))
@@ -201,6 +223,37 @@ def add_card(
 def get_card(connection: sqlite3.Connection, card_id: int) -> dict | None:
     row = connection.execute("SELECT * FROM cards WHERE id = ?", (card_id,)).fetchone()
     return dict(row) if row else None
+
+
+def phrases_of_word(connection: sqlite3.Connection, word: str, except_card_id: int | None = None) -> list[str]:
+    """The phrases of the cards for `word`, whatever the case of the word, in the order the cards were made."""
+    rows = connection.execute("SELECT id, word, phrase FROM cards WHERE phrase IS NOT NULL ORDER BY id").fetchall()
+    return [row["phrase"] for row in rows if row["word"].casefold() == word.casefold() and row["id"] != except_card_id]
+
+
+def meanings_of_word(connection: sqlite3.Connection, word: str, except_card_id: int | None = None) -> dict[str, str]:
+    """Like `phrases_of_word`, with the translation of the card's sentence for each phrase ("" when it has none), so
+    that the language model sees what the word means on each card and not only three or four words."""
+    rows = connection.execute(
+        "SELECT id, word, phrase, translation FROM cards WHERE phrase IS NOT NULL ORDER BY id"
+    ).fetchall()
+    return {
+        row["phrase"]: row["translation"] or ""
+        for row in rows
+        if row["word"].casefold() == word.casefold() and row["id"] != except_card_id
+    }
+
+
+def find_card_by_phrase(
+    connection: sqlite3.Connection, word: str, phrase: str, except_card_id: int | None = None
+) -> dict | None:
+    """The card for `word` whose phrase is `phrase`, or None. The case of the letters and the spaces do not matter, so
+    "den Zug nehmen" and "Den Zug  nehmen" are the same phrase. `except_card_id` leaves out the card being changed."""
+    for row in connection.execute("SELECT * FROM cards WHERE phrase IS NOT NULL ORDER BY id"):
+        is_another_card = row["id"] != except_card_id
+        if is_another_card and row["word"].casefold() == word.casefold() and same_phrase(row["phrase"], phrase):
+            return dict(row)
+    return None
 
 
 def list_cards(connection: sqlite3.Connection, text_id: int) -> list[dict]:

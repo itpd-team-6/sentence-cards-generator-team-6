@@ -376,7 +376,8 @@ textarea {
 
   .toast,
   .toast-line,
-  .spin {
+  .spin,
+  .button-spinner {
     animation: none !important;
   }
 
@@ -1157,6 +1158,24 @@ textarea {
   opacity: 1;
 }
 
+/* The ring in "Ask for sentences" turns while the model is asked, and the button stays readable instead of dimmed. */
+.button-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.6em;
+  border: 2px solid currentcolor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.15em;
+  animation: spin 0.9s linear infinite;
+}
+
+.primary[aria-busy="true"]:disabled {
+  opacity: 0.9;
+  cursor: progress;
+}
+
 /* The question before cards are deleted: a box in the middle of the screen, over a dimmed page. */
 .modal {
   max-width: 24rem;
@@ -1209,4 +1228,43 @@ textarea {
 
 .hidden-badge {
   color: var(--muted);
+}
+
+/* The editor of a card is a modal box wider than the question about deleting. */
+.modal.editor {
+  width: min(32rem, calc(100vw - 2rem));
+  max-width: none;
+}
+
+.editor input[type="text"] {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.editor .field-label {
+  margin-top: 0.9rem;
+}
+
+.editor textarea {
+  min-height: 5rem;
+}
+
+.editor .note {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+}
+
+.editor .form-error {
+  margin: 0.9rem 0 0;
+  color: var(--error-text);
+  font-weight: 600;
+}
+
+.editor .modal-actions {
+  margin-top: 1.25rem;
 }
