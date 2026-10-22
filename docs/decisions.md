@@ -286,3 +286,23 @@ The translation of a card follows its sentence, and the learner may write the tr
   Without the lock, the translation is made again from the new sentence in both cases, as before.
   The learner may always edit the translation, also when it is locked, and only the learner locks and unlocks it; a card without a translation cannot be locked.
   That the model is given the locked translation when it writes a new sentence, so the two still match, is the team's choice, to be confirmed with the Customer in the Week 4 meeting.
+
+## DEC-029
+
+The learner answers a card with one of four buttons, "Again", "Hard", "Good" and "Easy", each button says when the card comes back, and the wait that each answer gives is set by the rule below, made from the rule of Anki's SM-2 scheduler without its ease.
+
+- **Status:** Active
+- **Date:** 2026-10-22
+- **Made by:** Team
+- **Source:** [Anki manual, Deck Options](https://docs.ankiweb.net/deck-options.html) and [Anki FAQ, What spaced repetition algorithm does Anki use?](https://docs.ankiweb.net/faqs/what-spaced-repetition-algorithm), read on 2026-10-22
+- **Why:** [`DEC-018`](#dec-018) has the Customer's request for four buttons "like in Anki" (Customer, [01:53:17]) that show "the scheduler's forecast about when the card will be shown next" (Customer, [02:12:38]), and leaves the rule of the three new answers to the team.
+  The rule, with the wait of a card in days (0 when the card is new or was forgotten):
+  - "Again": the card is due today and its wait starts over. Anki says that "The default 0.00 means that a review card's delay is reset to zero when you forget it."
+  - "Hard": the wait times 1.2, as in Anki ("with a default of 1.20, a card with a 10-day interval will be given 12 days.").
+  - "Good": the wait doubled, which is the rule the product already had (1, 2, 4, 8 days); Anki multiplies by the ease of the card, 2.5 at the start ("It defaults to 2.50"), and the team does not keep an ease for each card yet.
+  - "Easy": the doubled wait times 1.3, as the Anki "easy bonus" ("With the default value of 1.30").
+  - "all new intervals (except Again) will always be at least one day longer than the previous interval" (Anki FAQ), so each of the answers is at least one day longer than the card's wait, and in the team's rule "Good" is at least one day longer than "Hard" and "Easy" one day longer than "Good", so that the buttons do not show the same day.
+  - No wait is longer than 365 days, as the scheduler already had it (its code cites Cepeda et al., 2008, for the one-year limit).
+  - A card that is new or was forgotten waits 1 day for "Hard", 2 for "Good" and 4 for "Easy". These three numbers are the team's choice: Anki uses minutes and learning steps there, which the product does not have yet. The first "Good" is now 2 days, where the product had 1.
+  - The rule rounds half days up. Intervals of 1, 2, 4, 8 and 16 days give "Hard" 2, 3, 5, 10 and 19, "Good" 3, 4, 8, 16 and 32, and "Easy" 4, 5, 10, 21 and 42.
+  - The ease of each card and the learning steps in minutes are not part of this rule.

@@ -74,6 +74,12 @@ def test_the_session_has_the_sentence_and_the_translation_of_each_card() -> None
                 "sentence": "Der Zug kommt.",
                 "translation": "The train comes.",
                 "due_date": "2026-10-16",
+                "forecast": {
+                    "again": {"interval_days": 0, "due_date": "2026-10-16"},
+                    "hard": {"interval_days": 1, "due_date": "2026-10-17"},
+                    "good": {"interval_days": 2, "due_date": "2026-10-18"},
+                    "easy": {"interval_days": 4, "due_date": "2026-10-20"},
+                },
             }
         ]
 
@@ -97,31 +103,71 @@ def test_with_no_cards_at_all_the_session_is_empty() -> None:
         assert client.get("/api/study/due").json() == []
 
 
-def test_a_remembered_card_leaves_the_session_and_is_due_later_than_today() -> None:
+def test_a_good_answer_takes_the_card_out_of_the_session_and_makes_it_due_later_than_today() -> None:
     with study_client() as client:
         add_cards(card("Zug", TODAY), card("Haus", TODAY))
 
-        response = client.post("/api/cards/1/answer", json={"remembered": True})
+        response = client.post("/api/cards/1/answer", json={"answer": "good"})
 
         assert response.status_code == 200
-        assert response.json() == {"id": 1, "word": "Zug", "due_date": "2026-10-17", "interval_days": 1}
+        assert response.json() == {"id": 1, "word": "Zug", "due_date": "2026-10-18", "interval_days": 2}
         assert [item["word"] for item in client.get("/api/study/due").json()] == ["Haus"]
 
 
-def test_a_forgotten_card_is_still_due_today_so_it_comes_back_in_the_session() -> None:
+def test_an_again_answer_leaves_the_card_due_today_so_it_comes_back_in_the_session() -> None:
     with study_client() as client:
         add_cards(card("Zug", TODAY - timedelta(days=5)))
 
-        response = client.post("/api/cards/1/answer", json={"remembered": False})
+        response = client.post("/api/cards/1/answer", json={"answer": "again"})
 
         assert response.json() == {"id": 1, "word": "Zug", "due_date": "2026-10-16", "interval_days": 0}
         assert [item["word"] for item in client.get("/api/study/due").json()] == ["Zug"]
 
 
+def test_each_card_of_the_session_says_when_it_comes_back_for_each_of_the_four_answers() -> None:
+    with study_client() as client:
+        add_cards(card("Zug", TODAY))
+
+        item = client.get("/api/study/due").json()[0]
+
+        assert item["forecast"] == {
+            "again": {"interval_days": 0, "due_date": "2026-10-16"},
+            "hard": {"interval_days": 1, "due_date": "2026-10-17"},
+            "good": {"interval_days": 2, "due_date": "2026-10-18"},
+            "easy": {"interval_days": 4, "due_date": "2026-10-20"},
+        }
+
+
+def test_each_answer_gives_the_card_the_due_date_that_its_button_said() -> None:
+    answers = ["again", "hard", "good", "easy"]
+    with study_client() as client:
+        ids = add_cards(*[card(answer, TODAY) for answer in answers])
+        connection = connect()
+        try:
+            for card_id in ids:
+                update_card(connection, card_id, interval_days=8)
+        finally:
+            connection.close()
+        said = {item["word"]: item["forecast"] for item in client.get("/api/study/due").json()}
+
+        for card_id, answer in zip(ids, answers):
+            answered = client.post(f"/api/cards/{card_id}/answer", json={"answer": answer}).json()
+
+            assert (answered["interval_days"], answered["due_date"]) == (
+                said[answer][answer]["interval_days"],
+                said[answer][answer]["due_date"],
+            )
+        connection = connect()
+        try:
+            assert [get_card(connection, card_id)["interval_days"] for card_id in ids] == [0, 10, 16, 21]
+        finally:
+            connection.close()
+
+
 def test_the_answers_are_still_there_after_a_restart() -> None:
     with study_client() as client:
         add_cards(card("Zug", TODAY))
-        client.post("/api/cards/1/answer", json={"remembered": True})
+        client.post("/api/cards/1/answer", json={"answer": "good"})
 
     with study_client() as restarted:
         assert restarted.get("/api/study/due").json() == []
@@ -129,15 +175,16 @@ def test_the_answers_are_still_there_after_a_restart() -> None:
 
 def test_an_answer_for_a_card_that_does_not_exist_is_not_found() -> None:
     with study_client() as client:
-        assert client.post("/api/cards/99/answer", json={"remembered": True}).status_code == 404
+        assert client.post("/api/cards/99/answer", json={"answer": "good"}).status_code == 404
 
 
-def test_an_answer_must_say_whether_the_card_was_remembered() -> None:
+def test_an_answer_must_be_one_of_the_four_answers() -> None:
     with study_client() as client:
         add_cards(card("Zug", TODAY))
 
         assert client.post("/api/cards/1/answer", json={}).status_code == 422
-        assert client.post("/api/cards/1/answer", json={"remembered": "maybe"}).status_code == 422
+        assert client.post("/api/cards/1/answer", json={"answer": "maybe"}).status_code == 422
+        assert client.post("/api/cards/1/answer", json={"remembered": True}).status_code == 422
 
 
 def queue(client: TestClient) -> list[str]:
@@ -264,9 +311,9 @@ def test_a_moved_card_that_is_answered_gets_the_due_date_of_the_scheduler_and_th
         _, second = add_two_texts(["a1", "a2"], ["b1", "b2", "b3"])
         save_order(client, [second[1], 1, 2, second[0], second[2]], moved=[second[1]])
 
-        answered = client.post(f"/api/cards/{second[1]}/answer", json={"remembered": True}).json()
+        answered = client.post(f"/api/cards/{second[1]}/answer", json={"answer": "good"}).json()
 
-        assert answered["due_date"] == "2026-10-17"
+        assert answered["due_date"] == "2026-10-18"
         assert queue(client) == ["a1", "a2", "b1", "b3"]
 
 
@@ -275,7 +322,7 @@ def test_a_forgotten_moved_card_goes_back_to_its_default_place_of_the_day() -> N
         add_cards(card("a1", TODAY), card("a2", TODAY), card("a3", TODAY))
         save_order(client, [3, 1, 2], moved=[3])
 
-        client.post("/api/cards/3/answer", json={"remembered": False})
+        client.post("/api/cards/3/answer", json={"answer": "again"})
 
         assert queue(client) == ["a1", "a2", "a3"]
 

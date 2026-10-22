@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from app.database import InvalidMove, QueueOutOfDate, get_connection, list_due_cards, list_queue, reorder_queue
 from app.routes.cards import get_today
-from app.scheduler import answer_card
+from app.scheduler import Answer, answer_card, forecast
 
 router = APIRouter()
 
@@ -21,6 +21,19 @@ class StudyCard(BaseModel):
     sentence: str
     translation: str
     due_date: str
+
+
+class Forecast(BaseModel):
+    """What an answer would give the card: the wait in days and the day it comes back."""
+
+    interval_days: int
+    due_date: str
+
+
+class DueCard(StudyCard):
+    """A card of the session, with what each of the four answers would do to it."""
+
+    forecast: dict[Answer, Forecast]
 
 
 class QueueCard(StudyCard):
@@ -36,8 +49,8 @@ class QueueOrder(BaseModel):
     today_count: int = Field(ge=0)
 
 
-class Answer(BaseModel):
-    remembered: bool
+class AnswerBody(BaseModel):
+    answer: Answer
 
 
 class AnsweredCard(BaseModel):
@@ -51,9 +64,19 @@ class AnsweredCard(BaseModel):
 def due_cards(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     today: Annotated[date, Depends(get_today)],
-) -> list[StudyCard]:
-    """The cards due today or earlier, in the order they are studied. The list is empty when nothing is due."""
-    return [StudyCard(**card) for card in list_due_cards(connection, today)]
+) -> list[DueCard]:
+    """The cards due today or earlier, in the order they are studied, each with the wait that every answer would give
+    it. The list is empty when nothing is due."""
+    return [
+        DueCard(
+            **card,
+            forecast={
+                answer: Forecast(interval_days=interval, due_date=due.isoformat())
+                for answer, (interval, due) in forecast(card["interval_days"], today).items()
+            },
+        )
+        for card in list_due_cards(connection, today)
+    ]
 
 
 def queue_response(connection: sqlite3.Connection, today: date) -> list[QueueCard]:
@@ -96,13 +119,13 @@ def save_queue_order(
 @router.post("/api/cards/{card_id}/answer")
 def answer(
     card_id: int,
-    answer: Answer,
+    body: AnswerBody,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     today: Annotated[date, Depends(get_today)],
 ) -> AnsweredCard:
-    """Record the learner's answer. The scheduler sets the next due date: later than today when remembered,
-    today again when forgotten."""
-    card = answer_card(connection, card_id, answer.remembered, today)
+    """Record the learner's answer, one of "again", "hard", "good" and "easy". The scheduler sets the next due date:
+    today again for "again", and later than today for the others."""
+    card = answer_card(connection, card_id, body.answer, today)
     if card is None:
         raise HTTPException(status_code=404, detail="There is no card with this id.")
     return AnsweredCard(**card)

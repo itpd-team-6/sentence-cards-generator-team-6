@@ -47,8 +47,8 @@ export const newSentences = (cardIds) => call("/api/cards/new-sentences", json("
 // The cards due today or earlier, with a sentence to show. Empty when nothing is due.
 export const loadDueCards = () => call("/api/study/due");
 
-// The learner's answer to a card; the answer has the card's next due date.
-export const answerCard = (cardId, remembered) => call(`/api/cards/${cardId}/answer`, json("POST", { remembered }));
+// The learner's answer to a card, one of "again", "hard", "good" and "easy"; the answer has the card's next due date.
+export const answerCard = (cardId, answer) => call(`/api/cards/${cardId}/answer`, json("POST", { answer }));
 
 // The study queue: every card with a sentence, in the order they are studied. The cards due today come first, and each
 // card says whether it is due today and its due date.
