@@ -49,6 +49,7 @@ def build_messages(
     first_language: Language,
     context: str | None,
     previous_sentence: str | None,
+    locked_translation: str | None = None,
 ) -> list[dict[str, str]]:
     if len(word.split()) > 1:
         # A card word of several words, such as a verb with a separable prefix: the words stay in this order and in
@@ -58,15 +59,23 @@ def build_messages(
         )
     else:
         contains = f'that contains the word "{word}"'
-    lines = [
-        f"Write one short, natural example sentence in {LANGUAGE_NAMES[text_language]} {contains}.",
-        f"Then translate the sentence into {LANGUAGE_NAMES[first_language]}.",
-    ]
+    lines = [f"Write one short, natural example sentence in {LANGUAGE_NAMES[text_language]} {contains}."]
+    if locked_translation:
+        # The learner locked the translation: the new sentence must say what it says, and only the sentence is asked.
+        lines.append(
+            f"The sentence must mean the same as this {LANGUAGE_NAMES[first_language]} translation, "
+            f'which the learner keeps: "{locked_translation}"'
+        )
+    else:
+        lines.append(f"Then translate the sentence into {LANGUAGE_NAMES[first_language]}.")
     if context:
         lines.append(f'The word comes from this passage, so give it the same meaning: "{context}"')
     if previous_sentence:
         lines.append(f'Do not repeat this sentence, write a different one: "{previous_sentence}"')
-    lines.append('Answer only with JSON, in this form: {"sentence": "...", "translation": "..."}')
+    if locked_translation:
+        lines.append('Answer only with JSON, in this form: {"sentence": "..."}')
+    else:
+        lines.append('Answer only with JSON, in this form: {"sentence": "...", "translation": "..."}')
     return [
         {"role": "system", "content": "You write example sentences for people who learn a language."},
         {"role": "user", "content": "\n".join(lines)},
@@ -89,6 +98,23 @@ def parse_answer(content: str) -> GeneratedSentence:
     if not sentence.strip() or not translation.strip():
         raise LlmError("The language model gave an answer without a sentence or a translation.")
     return GeneratedSentence(sentence.strip(), translation.strip())
+
+
+def parse_sentence(content: str, translation: str) -> GeneratedSentence:
+    """Read the answer to a request that had a locked translation: only the sentence is new."""
+    text = re.sub(r"```(?:json)?", "", content)
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end < start:
+        raise LlmError("The language model gave an answer that could not be read.")
+    try:
+        sentence = json.loads(text[start : end + 1])["sentence"]
+    except (ValueError, KeyError, TypeError):
+        raise LlmError("The language model gave an answer that could not be read.") from None
+    if not isinstance(sentence, str):
+        raise LlmError("The language model gave an answer that could not be read.")
+    if not sentence.strip():
+        raise LlmError("The language model gave an answer without a sentence.")
+    return GeneratedSentence(sentence.strip(), translation)
 
 
 def build_translation_messages(
@@ -142,15 +168,18 @@ class LlmClient:
         first_language: Language,
         context: str | None = None,
         previous_sentence: str | None = None,
+        locked_translation: str | None = None,
     ) -> GeneratedSentence:
         """Ask the model for a sentence with `word` and its translation.
 
-        Pass `previous_sentence` to ask for a different one. When the model does not answer for now, the request is
+        Pass `previous_sentence` to ask for a different one. Pass `locked_translation` when the learner locked the
+        translation: the sentence is written to mean the same, and the translation that comes back is that one. When the model does not answer for now, the request is
         repeated by itself, up to 5 requests in all, and a different error is not repeated. Raises `LlmError` with a
         message that is safe to show; the key never appears in it.
         """
-        messages = build_messages(word, text_language, first_language, context, previous_sentence)
-        return parse_answer(self._ask_again_when_unavailable(messages))
+        messages = build_messages(word, text_language, first_language, context, previous_sentence, locked_translation)
+        answer = self._ask_again_when_unavailable(messages)
+        return parse_sentence(answer, locked_translation) if locked_translation else parse_answer(answer)
 
     def translate_sentence(self, sentence: str, text_language: Language, first_language: Language) -> str:
         """Ask the model to translate a sentence the learner wrote or edited. Raises `LlmError` like `write_sentence`."""

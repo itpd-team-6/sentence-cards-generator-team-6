@@ -83,15 +83,21 @@ def add_the_hidden_mark(connection: sqlite3.Connection) -> None:
     connection.execute("ALTER TABLE cards ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
 
 
+def add_the_translation_lock(connection: sqlite3.Connection) -> None:
+    """Let the learner lock the translation of a card, so the product does not change it (DEC-014). None is locked."""
+    connection.execute("ALTER TABLE cards ADD COLUMN translation_locked INTEGER NOT NULL DEFAULT 0")
+
+
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
     add_the_due_time,
     add_the_hidden_mark,
+    add_the_translation_lock,
 ]
 
 # The card fields a caller may change with `update_card`.
-CARD_FIELDS = {"sentence", "translation", "flagged", "hidden", "due_date", "due_at", "interval_days"}
+CARD_FIELDS = {"sentence", "translation", "translation_locked", "flagged", "hidden", "due_date", "due_at", "interval_days"}
 
 
 

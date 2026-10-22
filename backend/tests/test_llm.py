@@ -11,6 +11,7 @@ from app.llm import (
     LlmClient,
     LlmError,
     LlmNotConfigured,
+    build_messages,
     parse_answer,
     parse_translation,
 )
@@ -362,3 +363,36 @@ def test_a_single_word_is_asked_for_as_before() -> None:
     prompt = bodies[0]["messages"][-1]["content"]
     assert 'that contains the word "Haus"' in prompt
     assert "all of these words" not in prompt
+
+
+def test_a_locked_translation_is_given_to_the_model_and_only_the_sentence_is_asked_for() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None, "The house is old.")[-1]["content"]
+
+    assert "The house is old." in prompt
+    assert "mean the same" in prompt
+    assert '{"sentence": "..."}' in prompt
+    assert '"translation"' not in prompt
+
+
+def test_a_card_that_is_not_locked_is_asked_for_a_sentence_and_its_translation_as_before() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None)[-1]["content"]
+
+    assert "Then translate the sentence" in prompt
+    assert '{"sentence": "...", "translation": "..."}' in prompt
+
+
+def test_a_new_sentence_for_a_locked_translation_comes_back_with_that_translation() -> None:
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json=reply('{"sentence": "Das Haus ist sehr alt."}'))
+
+    result = client_for(handler).write_sentence("Haus", "de", "en", locked_translation="The house is old.")
+
+    assert result == GeneratedSentence("Das Haus ist sehr alt.", "The house is old.")
+
+
+def test_an_answer_without_a_sentence_for_a_locked_translation_is_an_error() -> None:
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json=reply('{"sentence": "  "}'))
+
+    with pytest.raises(LlmError, match="without a sentence"):
+        client_for(handler).write_sentence("Haus", "de", "en", locked_translation="The house is old.")
