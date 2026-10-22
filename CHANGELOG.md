@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The colour of the interface is blue instead of ruby, as the Customer chose, with contrast that meets WCAG 2.2; a message about a problem stays red, so that the blue is not read as an error.
 - The learner holds Shift and clicks several words of the text to make them one card, such as "stimmt zu" of "Putin stimmt Wiederaufnahme von Gesprächen zu", with other words between them if the text has them. The chosen words are one block, a bubble over them shows the word of the card, Shift and a click on a chosen word takes it out, and the language model is asked for one sentence that has all the words. A card keeps its word as the text writes it, so a noun such as "Zug" keeps its capital, and not in lowercase.
 - On the Study page, all the cards are listed in the order they are studied, the ones due today first and the ones due later after them with their dates, and the learner drags a card, or the cards ticked together, to any place in the list, also from one part to the other, or moves it with the up and down arrows, and the new order is saved.
 - The study session orders the cards by the time they are due, not only by the day, so cards due the same day can be put before each other.
