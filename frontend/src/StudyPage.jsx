@@ -2,7 +2,7 @@ import { useState } from "react";
 import { answerCard, loadDueCards } from "./api.js";
 import Notice, { newNotice } from "./Notice.jsx";
 import StudyQueue from "./StudyQueue.jsx";
-import { splitAtWord } from "./words.js";
+import { splitAtWords } from "./words.js";
 
 // The study session: the cards that are due, one at a time. A card that was forgotten goes to the end of the
 // session and comes back; a card that was remembered leaves it.
@@ -52,7 +52,6 @@ export default function StudyPage() {
   }
 
   const card = queue?.[0];
-  const [before, word, after] = card ? splitAtWord(card.sentence, card.word) : [];
 
   return (
     <section className="panel">
@@ -93,9 +92,9 @@ export default function StudyPage() {
           <div className="study-card">
             <p className="study-word">{card.word}</p>
             <p className="study-sentence">
-              {before}
-              {word && <strong>{word}</strong>}
-              {after}
+              {splitAtWords(card.sentence, card.word).map((segment, index) =>
+                segment.marked ? <strong key={index}>{segment.text}</strong> : segment.text,
+              )}
             </p>
             {revealed ? (
               <p className="study-translation">{card.translation}</p>

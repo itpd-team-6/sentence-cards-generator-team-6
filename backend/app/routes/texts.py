@@ -32,8 +32,12 @@ class TextRequest(BaseModel):
     @field_validator("words")
     @classmethod
     def words_appear_once(cls, words: list[str]) -> list[str]:
-        """Each marked word is kept once, in the order the learner marked it."""
-        return list(dict.fromkeys(words))
+        """Each marked word is kept once, in the order the learner marked it.
+
+        A marked item may be several words chosen as one card ("stimmt zu"); the spaces between its words are
+        made one space, so the same words chosen twice are the same item.
+        """
+        return list(dict.fromkeys(" ".join(word.split()) for word in words))
 
 
 class TextResponse(BaseModel):

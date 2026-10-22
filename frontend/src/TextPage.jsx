@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createCards, loadCards } from "./api.js";
 import CardsTable from "./CardsTable.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
-import { markKey, splitText } from "./words.js";
+import WordPicker from "./WordPicker.jsx";
+import { splitText, writtenForm } from "./words.js";
 
 const LANGUAGES = [
   { code: "ru", name: "Russian" },
@@ -48,6 +49,7 @@ export default function TextPage() {
   const [textLanguage, setTextLanguage] = useState("");
   const [firstLanguage, setFirstLanguage] = useState("");
   const [marked, setMarked] = useState([]);
+  const [selections, setSelections] = useState([]); // several words chosen as one card, see WordPicker
   const [message, setMessage] = useState(null);
   const [saved, setSaved] = useState(null);
   const [cards, setCards] = useState(null);
@@ -62,15 +64,21 @@ export default function TextPage() {
 
   const pieces = useMemo(() => splitText(text), [text]);
 
-  function toggle(word) {
-    const key = markKey(word);
-    setMarked((current) => (current.includes(key) ? current.filter((item) => item !== key) : [...current, key]));
+  // What is marked: single words, then the selections of several words, each as its words with a space between.
+  const cardWords = [
+    ...marked.map((key) => writtenForm(pieces, key)),
+    ...selections
+      .filter((selection) => selection.words.length > 1)
+      .map((selection) => selection.words.map((i) => pieces[i].text).join(" ")),
+  ];
+
+  function edited() {
     setMessage(null);
     setSaved(null);
   }
 
   async function askForSentences() {
-    if (marked.length === 0) {
+    if (cardWords.length === 0) {
       setMessage(newNotice("No word is marked. Click the words you do not know."));
       return;
     }
@@ -88,7 +96,7 @@ export default function TextPage() {
           text,
           text_language: textLanguage,
           first_language: firstLanguage,
-          words: marked,
+          words: cardWords,
         }),
       });
       if (!response.ok) {
@@ -149,6 +157,7 @@ export default function TextPage() {
             onChange={(event) => {
               setText(event.target.value);
               setMarked([]);
+              setSelections([]);
               setSaved(null);
               setMessage(null);
             }}
@@ -158,31 +167,21 @@ export default function TextPage() {
         {text.trim() && (
           <div className="marking">
             <h3>Click the words you do not know</h3>
-            <p className="reading" aria-label="Text to mark">
-              {pieces.map((piece, index) =>
-                piece.isWord ? (
-                  <span className="glue" key={index}>
-                    <button
-                      type="button"
-                      className="word"
-                      aria-pressed={marked.includes(markKey(piece.text))}
-                      onClick={() => toggle(piece.text)}
-                    >
-                      {piece.text}
-                    </button>
-                    {piece.trail}
-                  </span>
-                ) : (
-                  <span key={index}>{piece.text}</span>
-                ),
-              )}
-            </p>
-            <h3>Marked words ({marked.length})</h3>
-            {marked.length === 0 ? (
+            <p className="hint">Hold Shift and click several words to make them one card.</p>
+            <WordPicker
+              pieces={pieces}
+              marked={marked}
+              setMarked={setMarked}
+              selections={selections}
+              setSelections={setSelections}
+              onEdit={edited}
+            />
+            <h3>Marked words ({cardWords.length})</h3>
+            {cardWords.length === 0 ? (
               <p className="hint">Nothing marked yet.</p>
             ) : (
               <ul className="chips" aria-label="Marked words">
-                {marked.map((word) => (
+                {cardWords.map((word) => (
                   <li key={word}>{word}</li>
                 ))}
               </ul>

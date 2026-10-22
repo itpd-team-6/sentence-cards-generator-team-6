@@ -195,13 +195,14 @@ textarea {
 }
 
 .word {
-  margin: 0 -0.1rem;
-  padding: 0.05rem 0.2rem;
+  margin: 0 -0.2em;
+  padding: 0.1em 0.35em;
   border: 0;
-  border-radius: 6px;
+  border-radius: 10px;
   background: transparent;
   color: inherit;
   font: inherit;
+  line-height: 1.4;
   cursor: pointer;
 }
 
@@ -218,6 +219,105 @@ textarea {
   background: var(--accent);
   color: var(--accent-text);
   font-weight: 600;
+}
+
+/* Several words chosen as one card. The reading box is the anchor of the bubble. */
+.words {
+  position: relative;
+  padding-top: 2.8rem; /* room for the bubble over the first line */
+}
+
+/* Chosen words next to each other, and the space between them, are one continuous block. A word left out between
+   chosen words has no mark of the selection: it is plain, or marked on its own as another card. */
+.words .gap.joined {
+  display: inline-block;
+  padding-block: 0.1em;
+  line-height: 1.4;
+  white-space: pre;
+}
+
+.words .gap.joined {
+  background: var(--accent);
+}
+
+.words .word.join-l {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.words .word.join-r {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* The other parts of a selection that is on several lines, while the pointer is on one part. The ring is drawn once
+   around a run of chosen words that touch, so it has no line between them. */
+.words .word.linked {
+  position: relative;
+}
+
+.words .word.linked::after {
+  position: absolute;
+  inset: -0.2em -0.15em;
+  border: 2px dashed var(--accent-soft-text);
+  border-radius: 14px;
+  content: "";
+  pointer-events: none;
+}
+
+.words .word.linked.join-l::after {
+  left: -0.7em;
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.words .word.linked.join-r::after {
+  right: -0.7em;
+  border-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.words .bubble {
+  position: absolute;
+  z-index: 5;
+  padding: 0.3rem 0.9rem 0.4rem;
+  transform: translate(-50%, calc(-100% - 0.5rem));
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.3;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 55%);
+  pointer-events: none;
+}
+
+.words .bubble::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -6px) rotate(45deg);
+  border-right: 1px solid var(--accent);
+  border-bottom: 1px solid var(--accent);
+  background: var(--bg);
+  content: "";
+}
+
+.words .bubble small {
+  display: block;
+  color: var(--accent-soft-text);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.words .bubble b {
+  font-size: 1.2rem;
 }
 
 .glue {
