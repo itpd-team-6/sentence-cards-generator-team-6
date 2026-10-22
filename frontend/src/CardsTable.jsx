@@ -73,13 +73,15 @@ function Working({ count }) {
 // of the window, acts on them: a new sentence for each, hide them from study or show them again, or delete them after
 // the learner confirms. Without a selection the bar is not there, and the table does not move when it appears.
 export default function CardsTable({ cards, onCardsChange }) {
-  const [editing, setEditing] = useState(null); // { id, sentence, translation } of the card being edited
+  const [editing, setEditing] = useState(null); // { id, phrase, sentence, translation } of the card being edited
+  const [editError, setEditError] = useState(""); // the problem with what the learner wrote in the editor
   const [busy, setBusy] = useState(null); // { id, what } while the product answers; every button waits
   const [notes, setNotes] = useState({}); // card id -> the message about that card, or null when it went away
   const [ticked, setTicked] = useState(new Set()); // ids of the cards selected for an action on several cards
   const [confirming, setConfirming] = useState(false); // asking whether to delete the selected cards
   const [batchNotice, setBatchNotice] = useState(null); // the problem with an action on several cards
   const deleteDialog = useRef(null);
+  const editDialog = useRef(null);
 
   const setNote = (id, message) => setNotes((current) => ({ ...current, [id]: message ? newNotice(message) : null }));
   const replace = (card) => onCardsChange(cards.map((item) => (item.id === card.id ? card : item)));
@@ -128,6 +130,15 @@ export default function CardsTable({ cards, onCardsChange }) {
     if (asking && !dialog.open) dialog.showModal();
     if (!asking && dialog.open) dialog.close();
   }, [asking, cards.length]);
+
+  // The editor is a modal box too. It closes when the card goes away, for instance after it was deleted.
+  const editedCard = editing && cards.find((card) => card.id === editing.id);
+  useEffect(() => {
+    const dialog = editDialog.current;
+    if (!dialog) return;
+    if (editedCard && !dialog.open) dialog.showModal();
+    if (!editedCard && dialog.open) dialog.close();
+  }, [editedCard]);
 
   // Runs an action on the selected cards. Every button waits, as for one card; `what` says which action is running.
   async function actOnChosen(what, work) {
@@ -189,33 +200,54 @@ export default function CardsTable({ cards, onCardsChange }) {
       setEditing(null);
     });
 
-  const startEditing = (card) =>
-    setEditing({ id: card.id, sentence: card.sentence ?? "", translation: card.translation ?? "" });
+  const startEditing = (card) => {
+    setEditError("");
+    setEditing({
+      id: card.id,
+      phrase: card.phrase ?? "",
+      sentence: card.sentence ?? "",
+      translation: card.translation ?? "",
+    });
+  };
 
   // The translation follows the sentence unless the learner writes it or locks it: when only the sentence changes, the
-  // product translates the new one; a translation the learner writes is kept as written.
-  function save(card) {
+  // product translates the new one; a translation the learner writes is kept as written. The phrase identifies the card
+  // with its word (DEC-013): the product refuses a phrase that another card of the word already has, and the editor
+  // stays open with the reason, so nothing the learner wrote is lost.
+  async function save(card) {
+    const phrase = editing.phrase.trim().split(/\s+/).filter(Boolean).join(" ");
     const sentence = editing.sentence.trim();
     const translation = editing.translation.trim();
+    if (card.phrase && !phrase) {
+      setEditError("Write the context phrase.");
+      return;
+    }
     if (!sentence) {
-      setNote(card.id, "Write the sentence.");
+      setEditError("Write the sentence.");
       return;
     }
     if (card.translation && !translation) {
-      setNote(card.id, "Write the translation.");
+      setEditError("Write the translation.");
       return;
     }
     const fields = {};
+    if (phrase && phrase !== (card.phrase ?? "")) fields.phrase = phrase;
     if (sentence !== card.sentence) fields.sentence = sentence;
     if (translation && translation !== card.translation) fields.translation = translation;
     if (Object.keys(fields).length === 0) {
       setEditing(null);
       return;
     }
-    act(card, "save", async () => {
+    setBusy({ id: card.id, what: "save" });
+    setEditError("");
+    try {
       replace(await changeCard(card.id, fields));
       setEditing(null);
-    });
+    } catch (error) {
+      setEditError(error.message);
+    } finally {
+      setBusy(null);
+    }
   }
 
   if (cards.length === 0) {
@@ -275,6 +307,76 @@ export default function CardsTable({ cards, onCardsChange }) {
           </button>
         </div>
       </dialog>
+      <dialog
+        ref={editDialog}
+        className="modal editor"
+        aria-labelledby="edit-title"
+        onClose={() => setEditing(null)}
+        onClick={(event) => event.target === event.currentTarget && !busy && setEditing(null)}
+      >
+        {editedCard && (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              save(editedCard);
+            }}
+          >
+            <h3 id="edit-title">Edit {editedCard.word}</h3>
+            <label className="field-label" htmlFor="edit-phrase">
+              Context phrase
+            </label>
+            <input
+              id="edit-phrase"
+              type="text"
+              autoFocus
+              autoComplete="off"
+              aria-describedby="edit-phrase-hint"
+              value={editing.phrase}
+              placeholder={editedCard.phrase ? undefined : "No context phrase yet"}
+              onChange={(event) => setEditing({ ...editing, phrase: event.target.value })}
+            />
+            <p id="edit-phrase-hint" className="note">
+              Three or four words that show the meaning {editedCard.word} has on this card. A word has only one card for
+              each context phrase.
+            </p>
+            <label className="field-label" htmlFor="edit-sentence">
+              Sentence
+            </label>
+            <textarea
+              id="edit-sentence"
+              value={editing.sentence}
+              onChange={(event) => setEditing({ ...editing, sentence: event.target.value })}
+            />
+            <label className="field-label" htmlFor="edit-translation">
+              Translation
+            </label>
+            <textarea
+              id="edit-translation"
+              aria-describedby="edit-translation-hint"
+              value={editing.translation}
+              onChange={(event) => setEditing({ ...editing, translation: event.target.value })}
+            />
+            <p id="edit-translation-hint" className="note">
+              {editedCard.translation_locked
+                ? "The translation is locked, so it stays when the sentence changes."
+                : "Change only the sentence and the translation is made again when you save."}
+            </p>
+            {editError && (
+              <p className="form-error" role="alert">
+                {editError}
+              </p>
+            )}
+            <div className="modal-actions">
+              <button type="button" className="secondary" disabled={busy} onClick={() => setEditing(null)}>
+                Cancel
+              </button>
+              <button type="submit" className="primary" disabled={busy}>
+                {working(editedCard, "save") ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </form>
+        )}
+      </dialog>
       <div className="cards-scroll" tabIndex={0} role="region" aria-label="Your cards">
         <table className="cards">
           <colgroup>
@@ -304,7 +406,6 @@ export default function CardsTable({ cards, onCardsChange }) {
             </tr>
           </thead>
           {cards.map((card) => {
-            const isEditing = editing?.id === card.id;
             const regenerating = working(card, "new") || (busy?.what === "sentences" && ticked.has(card.id));
             return (
               <tbody
@@ -328,124 +429,88 @@ export default function CardsTable({ cards, onCardsChange }) {
                     {card.flagged && <span className="badge">Marked for review</span>}
                     {card.hidden && <span className="badge hidden-badge">Hidden from study</span>}
                   </th>
-                  <td data-label="Sentence">
-                    {isEditing ? (
-                      <textarea
-                        aria-label={`Sentence for ${card.word}`}
-                        value={editing.sentence}
-                        onChange={(event) => setEditing({ ...editing, sentence: event.target.value })}
-                      />
-                    ) : (
-                      (card.sentence ?? <span className="empty">No sentence yet.</span>)
-                    )}
-                  </td>
+                  <td data-label="Sentence">{card.sentence ?? <span className="empty">No sentence yet.</span>}</td>
                   <td data-label="Translation">
-                    {isEditing ? (
-                      <textarea
-                        aria-label={`Translation for ${card.word}`}
-                        value={editing.translation}
-                        onChange={(event) => setEditing({ ...editing, translation: event.target.value })}
-                      />
-                    ) : (
-                      <span className="translation-line">
-                        <span>{card.translation ?? <span className="empty">No translation yet.</span>}</span>
-                        <button
-                          type="button"
-                          className="secondary icon lock"
-                          disabled={busy || !card.translation}
-                          title={card.translation_locked ? "Unlock the translation" : "Lock the translation"}
-                          aria-label={
-                            card.translation_locked
-                              ? `Unlock the translation of ${card.word}`
-                              : `Lock the translation of ${card.word}`
-                          }
-                          aria-pressed={card.translation_locked}
-                          onClick={() => toggleLock(card)}
-                        >
-                          <Icon path={card.translation_locked ? iconOf("lock") : OPEN_LOCK} />
-                        </button>
-                      </span>
-                    )}
-                    {isEditing && (
-                      <span className="empty note">
-                        {card.translation_locked
-                          ? "The translation is locked, so it stays when the sentence changes."
-                          : "Change only the sentence and the translation is made again when you save."}
-                      </span>
-                    )}
+                    <span className="translation-line">
+                      <span>{card.translation ?? <span className="empty">No translation yet.</span>}</span>
+                      <button
+                        type="button"
+                        className="secondary icon lock"
+                        disabled={busy || !card.translation}
+                        title={card.translation_locked ? "Unlock the translation" : "Lock the translation"}
+                        aria-label={
+                          card.translation_locked
+                            ? `Unlock the translation of ${card.word}`
+                            : `Lock the translation of ${card.word}`
+                        }
+                        aria-pressed={card.translation_locked}
+                        onClick={() => toggleLock(card)}
+                      >
+                        <Icon path={card.translation_locked ? iconOf("lock") : OPEN_LOCK} />
+                      </button>
+                    </span>
                   </td>
                   <td>
                     <div className="row-actions">
-                      {isEditing ? (
-                        <>
-                          <button type="button" className="secondary" disabled={busy} onClick={() => save(card)}>
-                            {working(card, "save") ? "Saving..." : "Save"}
-                          </button>
-                          <button type="button" className="secondary" disabled={busy} onClick={() => setEditing(null)}>
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            className="secondary icon"
-                            disabled={busy}
-                            title="Edit"
-                            aria-label={`Edit ${card.word}`}
-                            onClick={() => startEditing(card)}
-                          >
-                            <Icon path={iconOf("edit")} />
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary icon"
-                            disabled={busy}
-                            title="Mark for review"
-                            aria-label={`Mark ${card.word} for review`}
-                            aria-pressed={card.flagged}
-                            onClick={() => toggleFlag(card)}
-                          >
-                            <Icon path={iconOf("review")} filled={card.flagged} />
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary icon"
-                            disabled={busy}
-                            title={card.hidden ? "Show in study" : "Hide from study"}
-                            aria-label={card.hidden ? `Show ${card.word} in study` : `Hide ${card.word} from study`}
-                            aria-pressed={card.hidden}
-                            onClick={() => toggleHidden(card)}
-                          >
-                            <Icon path={iconOf("hide")} filled={card.hidden} />
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary icon"
-                            disabled={busy}
-                            title="New sentence"
-                            aria-label={
-                              regenerating
-                                ? `Asking for a new sentence for ${card.word}`
-                                : `New sentence for ${card.word}`
-                            }
-                            aria-busy={regenerating}
-                            onClick={() => askForNewSentence(card)}
-                          >
-                            <Icon path={iconOf("new")} spinning={regenerating} />
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary icon"
-                            disabled={busy}
-                            title="Delete"
-                            aria-label={`Delete ${card.word}`}
-                            onClick={() => remove(card)}
-                          >
-                            <Icon path={iconOf("delete")} />
-                          </button>
-                        </>
-                      )}
+                      <>
+                        <button
+                          type="button"
+                          className="secondary icon"
+                          disabled={busy}
+                          title="Edit"
+                          aria-label={`Edit ${card.word}`}
+                          onClick={() => startEditing(card)}
+                        >
+                          <Icon path={iconOf("edit")} />
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary icon"
+                          disabled={busy}
+                          title="Mark for review"
+                          aria-label={`Mark ${card.word} for review`}
+                          aria-pressed={card.flagged}
+                          onClick={() => toggleFlag(card)}
+                        >
+                          <Icon path={iconOf("review")} filled={card.flagged} />
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary icon"
+                          disabled={busy}
+                          title={card.hidden ? "Show in study" : "Hide from study"}
+                          aria-label={card.hidden ? `Show ${card.word} in study` : `Hide ${card.word} from study`}
+                          aria-pressed={card.hidden}
+                          onClick={() => toggleHidden(card)}
+                        >
+                          <Icon path={iconOf("hide")} filled={card.hidden} />
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary icon"
+                          disabled={busy}
+                          title="New sentence"
+                          aria-label={
+                            regenerating
+                              ? `Asking for a new sentence for ${card.word}`
+                              : `New sentence for ${card.word}`
+                          }
+                          aria-busy={regenerating}
+                          onClick={() => askForNewSentence(card)}
+                        >
+                          <Icon path={iconOf("new")} spinning={regenerating} />
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary icon"
+                          disabled={busy}
+                          title="Delete"
+                          aria-label={`Delete ${card.word}`}
+                          onClick={() => remove(card)}
+                        >
+                          <Icon path={iconOf("delete")} />
+                        </button>
+                      </>
                     </div>
                   </td>
                 </tr>
