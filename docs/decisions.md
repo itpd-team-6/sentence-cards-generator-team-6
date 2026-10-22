@@ -260,3 +260,15 @@ A word left out between the chosen words of a card, such as "Wiederaufnahme von 
 - **Made by:** Customer
 - **Source:** [Selecting several words as one card](research/word-selection-options.md)
 - **Why:** about the examples sent, where such a word had a pale ground, the Customer wrote "I think it shouldn't be highlighted at all because it's not a part of the word combination" and "It can be highlighted with a normal color on its own, as a word separate from the word combination" (Customer, chat, 2026-10-22, message edited 07:52); to the question whether this means the learner can select the word as another card, he answered "Yes" (Customer, chat, 2026-10-22 10:18).
+
+## DEC-027
+
+The accent colour of the interface is blue, `#2b6fd6`, instead of ruby, and every colour pair of the interface must meet the contrast of WCAG 2.2 (4.5:1 for text, 3:1 for the parts of the interface).
+
+- **Status:** Active
+- **Date:** 2026-10-22
+- **Made by:** Customer
+- **Source:** chat with the Customer, 2026-10-22
+- **Why:** the team sent a screenshot with the current ruby and two options, because red may be read as an error; the Customer answered "I prefer option 2" (Customer, chat, 2026-10-22 07:46), the blue one, and "The color is familiar and the contrast seems to be good enough. The contrast must be checked against wcag 2.2" (Customer, chat, 2026-10-22 07:47, message edited).
+  The contrast was calculated by the team with the WCAG formula: white text on the blue 4.83:1, text `#a3c8ff` on the soft blue `#172f55` 7.79:1, the focus colour `#8dbbff` on the surface 7.92:1, and the blue on the surface 3.22:1.
+  A message about a problem keeps a red tone of its own, so that the accent is no longer read as an error.
