@@ -124,7 +124,7 @@ The page has two tabs at the top, "Add a text" and "Study".
 1. On the "Add a text" tab, pick the text language and your first language (they must be different), then paste a text into "Paste a text".
 2. Under "Click the words you do not know", click the words you want to learn; each one appears under "Marked words".
 3. Click "Ask for sentences". The product asks the language model for one sentence per word, which takes a few seconds each, and the cards appear in a "Your cards" table, each with a sentence and a translation.
-4. Open the "Study" tab and click "Start a session". For each due card, read the word and its sentence, click "Show translation", then answer "Remembered" or "Forgotten". A card you remember is scheduled for a later day; one you forget comes back later in the same session.
+4. Open the "Study" tab and click "Start a session". For each due card, read the word and its sentence, click "Show translation", then answer "Again", "Hard", "Good" or "Easy". Each button says when the card comes back. "Again" brings the card back later in the same session; the other answers schedule it for a later day, "Easy" the furthest.
 
 If a word gets a card with no sentence (the model did not answer), use the card's "New sentence" button in the "Your cards" table to ask again.
 

@@ -808,8 +808,6 @@ textarea {
   color: var(--muted);
   font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .study-sentence {
@@ -842,16 +840,35 @@ textarea {
   min-width: 10rem;
 }
 
-.secondary.big {
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius);
+/* The four answers: the name of the answer, and under it when the card comes back. */
+.study-actions .answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  border-radius: 8px;
+}
+
+.answer-name {
   font-size: 1rem;
   font-weight: 700;
 }
 
+.answer-when {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 @media (max-width: 34rem) {
   .study-actions {
-    flex-direction: column;
+    flex-wrap: wrap;
+  }
+
+  .study-actions .answer {
+    flex: 1 1 40%;
   }
 }
 

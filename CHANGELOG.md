@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The study session has four answer buttons, "Again", "Hard", "Good" and "Easy", like in Anki, and each button says when the card comes back; the rule of the waits is [DEC-029](docs/decisions.md#dec-029), and the first "Good" of a new card is 2 days, where it was 1. The word of the card is shown as the text writes it, and not in capital letters.
 - The learner can edit the translation of a card, in the same Edit as the sentence, and lock it with the lock beside it. A locked translation does not change when the learner edits the sentence or asks for a new sentence, and the new sentence is written to mean the same; a translation that is not locked is made again, as before.
 - The colour of the interface is blue instead of ruby, as the Customer chose, with contrast that meets WCAG 2.2; a message about a problem stays red, so that the blue is not read as an error.
 - The learner holds Shift and clicks several words of the text to make them one card, such as "stimmt zu" of "Putin stimmt Wiederaufnahme von Gesprächen zu", with other words between them if the text has them. The chosen words are one block, a bubble over them shows the word of the card, Shift and a click on a chosen word takes it out, and the language model is asked for one sentence that has all the words. A card keeps its word as the text writes it, so a noun such as "Zug" keeps its capital, and not in lowercase.
