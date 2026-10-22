@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { loadQueue, saveQueueOrder } from "./api.js";
 import Notice, { newNotice } from "./Notice.jsx";
-import { splitAtWord } from "./words.js";
+import { splitAtWords } from "./words.js";
 
 // The line between the cards due today and the cards due later. It is an item of the list, so a card is due today when
 // it sits above the line and later when it sits below it.
@@ -24,12 +24,11 @@ function Handle() {
 
 // The sentence of a card on one line, with the word of the card marked, so the learner knows which card it is.
 function Sentence({ card }) {
-  const [before, word, after] = splitAtWord(card.sentence, card.word);
   return (
     <span className="queue-sentence">
-      {before}
-      {word && <mark>{word}</mark>}
-      {after}
+      {splitAtWords(card.sentence, card.word).map((segment, index) =>
+        segment.marked ? <mark key={index}>{segment.text}</mark> : segment.text,
+      )}
     </span>
   );
 }

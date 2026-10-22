@@ -482,3 +482,34 @@ def test_editing_the_sentence_of_a_hidden_card_keeps_it_hidden(model) -> None:
         response = client.patch("/api/cards/2", json={"sentence": "Der Zug ist spät."})
 
         assert response.json()["hidden"] is True
+
+
+def test_the_passage_of_a_card_word_of_several_words_runs_from_its_first_part_to_its_last() -> None:
+    text = "a" * 500 + " Putin stimmt Wiederaufnahme von Gesprächen zu. " + "b" * 500
+
+    passage = passage_around(text, "stimmt zu")
+
+    assert "stimmt Wiederaufnahme von Gesprächen zu" in passage
+    assert len(passage) < len(text)
+
+
+def test_the_parts_of_a_card_word_must_all_be_in_the_text_in_this_order() -> None:
+    assert passage_around("Er stimmt dem Plan zu.", "STIMMT zu") is not None
+    assert passage_around("Er stimmt dem Plan zu.", "zu stimmt") is None
+    assert passage_around("Er stimmt dem Plan.", "stimmt zu") is None
+
+
+def test_a_part_of_a_card_word_is_a_whole_word_of_the_text() -> None:
+    # "zu" is inside "Zug", but it is not the word "zu".
+    assert passage_around("Er stimmt dem Zug", "stimmt zu") is None
+
+
+def test_a_card_word_of_several_words_gets_a_card_and_the_model_gets_the_passage_around_its_parts(model) -> None:
+    text = {**TEXT, "text": "Putin stimmt der Wiederaufnahme von Gesprächen zu.", "words": ["stimmt zu", "Gesprächen"]}
+    with TestClient(app) as client:
+        text_id = client.post("/api/texts", json=text).json()["id"]
+        cards = client.post(f"/api/texts/{text_id}/cards").json()
+
+    assert [card["word"] for card in cards] == ["stimmt zu", "Gesprächen"]
+    assert "stimmt der Wiederaufnahme von Gesprächen zu" in model.calls[0]["context"]
+    assert model.calls[0]["word"] == "stimmt zu"

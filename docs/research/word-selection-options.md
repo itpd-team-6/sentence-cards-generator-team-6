@@ -64,6 +64,13 @@ At 23:23 the Customer sent a headline from a news site with the parts of two ver
 The headline itself is not kept in the repository.
 At 23:33 `nataliamotand` replied: "Oooh, okay! I understood better now. Makes sense. We'll implement it with shift then, it'll be more convenient for the user".
 
+## The words between the chosen ones
+
+The examples sent showed a word left out between chosen words on a pale ground.
+The Customer wrote about them: "I think it shouldn't be highlighted at all because it's not a part of the word combination" and "It can be highlighted with a normal color on its own, as a word separate from the word combination" (Customer, chat, 2026-10-22, message edited 07:52).
+`nataliamotand` asked: "Ok, I understand the first part of the message, that it shouldn't be highlighted if it's not selected. But I don't quite get what you meant in the second part. Is it just that the user should be able to select it as another card?" (chat, 2026-10-22 10:08), and the Customer answered "Yes" (chat, 2026-10-22 10:18).
+This is [`DEC-026`](../decisions.md#dec-026): the word has no mark of the selection, and a click marks it as a card of its own.
+
 ## Result
 
 The way built is the first one: Shift and click ([`DEC-025`](../decisions.md#dec-025)).

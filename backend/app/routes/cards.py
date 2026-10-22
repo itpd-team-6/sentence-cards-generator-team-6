@@ -1,5 +1,6 @@
 """The API calls that turn the marked words of a text into cards, and let the learner review them."""
 
+import re
 import sqlite3
 from datetime import date
 from typing import Annotated
@@ -83,11 +84,41 @@ def card_response(card: dict, error: str | None = None) -> CardResponse:
 
 
 def passage_around(text: str, word: str) -> str | None:
-    """The part of the text around the first appearance of the word, or None when the word is not found."""
+    """The part of the text around the first appearance of the word, or None when the word is not found.
+
+    A card word of several words, such as "stimmt zu", may have other words between its parts in the text, so
+    its passage runs from the first part to the last one, found in this order (see `parts_span`).
+    """
+    parts = word.split()
+    if len(parts) > 1:
+        span = parts_span(text, parts)
+        if span is None:
+            return None
+        start, end = span
+        return text[max(0, start - PASSAGE_RADIUS) : end + PASSAGE_RADIUS].strip()
     position = text.lower().find(word.lower())
     if position == -1:
         return None
     return text[max(0, position - PASSAGE_RADIUS) : position + len(word) + PASSAGE_RADIUS].strip()
+
+
+def parts_span(text: str, parts: list[str]) -> tuple[int, int] | None:
+    """Where the first part of a card word starts and the last one ends, with the parts in this order in the text.
+
+    Each part is a whole word, whatever its case. The first appearance of the first part that has all the other
+    parts after it is the one used. None when the parts do not all appear in this order.
+    """
+    patterns = [re.compile(rf"(?<!\w){re.escape(part)}(?!\w)", re.IGNORECASE) for part in parts]
+    for first in patterns[0].finditer(text):
+        end = first.end()
+        for pattern in patterns[1:]:
+            found = pattern.search(text, end)
+            if found is None:
+                break
+            end = found.end()
+        else:
+            return first.start(), end
+    return None
 
 
 def ask_model(client: LlmClient, text: dict, word: str, previous_sentence: str | None = None) -> GeneratedSentence:

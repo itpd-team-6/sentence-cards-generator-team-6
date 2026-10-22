@@ -250,3 +250,13 @@ The learner selects several words of a text as one card by holding Shift and cli
 - **Source:** [Selecting several words as one card](research/word-selection-options.md)
 - **Why:** the Customer chose the first of the two ways shown: "I prefer the first option because of verbs with a separable prefix" and "The second option may not be very convenient when parts of a verb are on different lines" (Customer, chat, 2026-10-21 23:20), and gave "zustimmen -> stimmt zu" and "sich bereit erklären -> erklärt sich bereit" as examples, where the parts of one verb are far apart (Customer, chat, 2026-10-21 23:23); it settles the open part of [`DEC-022`](#dec-022).
   A visible button for touch screens was suggested with "May be" and is not decided, see the open questions in the source.
+
+## DEC-026
+
+A word left out between the chosen words of a card, such as "Wiederaufnahme von Gesprächen" between "stimmt" and "zu", is not highlighted as part of the card, and the learner can still mark it with the normal colour as a word of its own, so it becomes another card.
+
+- **Status:** Active
+- **Date:** 2026-10-22
+- **Made by:** Customer
+- **Source:** [Selecting several words as one card](research/word-selection-options.md)
+- **Why:** about the examples sent, where such a word had a pale ground, the Customer wrote "I think it shouldn't be highlighted at all because it's not a part of the word combination" and "It can be highlighted with a normal color on its own, as a word separate from the word combination" (Customer, chat, 2026-10-22, message edited 07:52); to the question whether this means the learner can select the word as another card, he answered "Yes" (Customer, chat, 2026-10-22 10:18).

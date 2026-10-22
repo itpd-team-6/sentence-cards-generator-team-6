@@ -50,8 +50,16 @@ def build_messages(
     context: str | None,
     previous_sentence: str | None,
 ) -> list[dict[str, str]]:
+    if len(word.split()) > 1:
+        # A card word of several words, such as a verb with a separable prefix: the words stay in this order and in
+        # this form, and other words may stand between them.
+        contains = (
+            f'that contains all of these words, in this order and in this form, with other words allowed between them: "{word}"'
+        )
+    else:
+        contains = f'that contains the word "{word}"'
     lines = [
-        f'Write one short, natural example sentence in {LANGUAGE_NAMES[text_language]} that contains the word "{word}".',
+        f"Write one short, natural example sentence in {LANGUAGE_NAMES[text_language]} {contains}.",
         f"Then translate the sentence into {LANGUAGE_NAMES[first_language]}.",
     ]
     if context:

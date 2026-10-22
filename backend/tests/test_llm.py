@@ -333,3 +333,32 @@ def test_an_error_with_no_readable_reason_keeps_the_short_message(body) -> None:
         error_answer(403, body)
 
     assert str(error.value) == "The language model returned an error (status 403)."
+
+
+def test_a_card_word_of_several_words_asks_for_one_sentence_with_all_of_them() -> None:
+    bodies = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        bodies.append(json.loads(request.content))
+        return httpx2.Response(200, json=reply(GOOD_ANSWER))
+
+    client_for(handler).write_sentence("stimmt zu", "de", "en")
+
+    prompt = bodies[0]["messages"][-1]["content"]
+    assert '"stimmt zu"' in prompt
+    assert "all of these words" in prompt
+    assert "other words allowed between them" in prompt
+
+
+def test_a_single_word_is_asked_for_as_before() -> None:
+    bodies = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        bodies.append(json.loads(request.content))
+        return httpx2.Response(200, json=reply(GOOD_ANSWER))
+
+    client_for(handler).write_sentence("Haus", "de", "en")
+
+    prompt = bodies[0]["messages"][-1]["content"]
+    assert 'that contains the word "Haus"' in prompt
+    assert "all of these words" not in prompt
