@@ -12,11 +12,14 @@ from app.database import (
     database_file,
     database_version,
     delete_card,
+    find_card_by_phrase,
     get_card,
     get_text,
     init_db,
     list_cards,
     list_due_cards,
+    meanings_of_word,
+    phrases_of_word,
     save_text,
     update_card,
 )
@@ -68,6 +71,7 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
         "translation_locked": 0,
+        "phrase": None,
         "flagged": 0,
         "hidden": 0,
         "due_date": "2026-10-16",
@@ -200,6 +204,7 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
         "translation_locked": 0,
+        "phrase": None,
         "flagged": 1,
         "hidden": 0,
         "due_date": "2026-10-20",
@@ -260,14 +265,14 @@ def test_a_new_migration_runs_alone_on_a_database_that_is_up_to_date(monkeypatch
 
     def add_a_column(connection: sqlite3.Connection) -> None:
         ran.append("add a column")
-        connection.execute("ALTER TABLE cards ADD COLUMN phrase TEXT")
+        connection.execute("ALTER TABLE cards ADD COLUMN nickname TEXT")
 
     monkeypatch.setattr(database, "MIGRATIONS", [*MIGRATIONS, add_a_column])
     init_db(connection)
 
     assert ran == ["add a column"]
     assert database_version(connection) == version + 1
-    assert "phrase" in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
+    assert "nickname" in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
 
 
 def test_a_migration_that_fails_leaves_the_database_at_its_version(monkeypatch) -> None:
@@ -276,7 +281,7 @@ def test_a_migration_that_fails_leaves_the_database_at_its_version(monkeypatch) 
     version = database_version(connection)
 
     def fail_after_a_change(connection: sqlite3.Connection) -> None:
-        connection.execute("ALTER TABLE cards ADD COLUMN phrase TEXT")
+        connection.execute("ALTER TABLE cards ADD COLUMN nickname TEXT")
         raise RuntimeError("stop")
 
     monkeypatch.setattr(database, "MIGRATIONS", [*MIGRATIONS, fail_after_a_change])
@@ -284,7 +289,7 @@ def test_a_migration_that_fails_leaves_the_database_at_its_version(monkeypatch) 
         init_db(connection)
 
     assert database_version(connection) == version
-    assert "phrase" not in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
+    assert "nickname" not in {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
 
 
 def test_two_cards_made_the_same_day_never_have_the_same_due_time() -> None:
@@ -305,3 +310,58 @@ def test_a_database_made_by_the_released_version_has_no_hidden_card() -> None:
 
     assert get_card(connection, 1)["hidden"] == 0
     assert [card["id"] for card in list_due_cards(connection, date(2026, 10, 21))] == [1]
+
+
+def test_a_database_made_before_phrases_keeps_its_cards_and_they_have_no_phrase(monkeypatch) -> None:
+    monkeypatch.setattr(database, "MIGRATIONS", MIGRATIONS[:-1])
+    connection = connect()
+    init_db(connection)
+    text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"])
+    card_id = connection.execute(
+        "INSERT INTO cards (text_id, word, sentence, translation, due_date) VALUES (?, 'Haus', 'Das Haus ist alt.', "
+        "'The house is old.', ?)",
+        (text_id, TODAY.isoformat()),
+    ).lastrowid
+    connection.commit()
+    connection.close()
+
+    monkeypatch.setattr(database, "MIGRATIONS", MIGRATIONS)
+    reopened = open_database()
+
+    card = get_card(reopened, card_id)
+    assert card["sentence"] == "Das Haus ist alt." and card["phrase"] is None
+    assert database_version(reopened) == len(MIGRATIONS)
+
+
+def test_two_cards_cannot_have_the_same_word_and_the_same_phrase() -> None:
+    connection = open_database()
+    text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"])
+    add_card(connection, text_id, "Haus", "Das Haus ist alt.", "The house is old.", TODAY, "das alte Haus")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        add_card(connection, text_id, "Haus", "Ein Haus.", "A house.", TODAY, "das alte Haus")
+
+
+def test_cards_without_a_phrase_do_not_count_as_the_same_card() -> None:
+    connection = open_database()
+    text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"])
+
+    add_card(connection, text_id, "Haus", "Das Haus ist alt.", "The house is old.", TODAY)
+    add_card(connection, text_id, "Haus", "Ein Haus.", "A house.", TODAY)
+
+    assert len(list_cards(connection, text_id)) == 2
+
+
+def test_a_card_is_found_by_its_word_and_phrase_whatever_the_case_and_the_spaces() -> None:
+    connection = open_database()
+    text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus", "Zug"])
+    card_id = add_card(connection, text_id, "Haus", "Das Haus ist alt.", "The house is old.", TODAY, "das alte Haus")
+    add_card(connection, text_id, "Zug", "Der Zug kommt.", "The train comes.", TODAY, "das alte Haus")
+
+    assert find_card_by_phrase(connection, "haus", "Das  alte HAUS")["id"] == card_id
+    assert find_card_by_phrase(connection, "Haus", "das neue Haus") is None
+    assert find_card_by_phrase(connection, "Haus", "das alte Haus", except_card_id=card_id) is None
+    assert phrases_of_word(connection, "Haus") == ["das alte Haus"]
+    assert phrases_of_word(connection, "Haus", except_card_id=card_id) == []
+    assert meanings_of_word(connection, "Haus") == {"das alte Haus": "The house is old."}
+    assert meanings_of_word(connection, "Haus", except_card_id=card_id) == {}

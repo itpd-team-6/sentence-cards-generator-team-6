@@ -7,6 +7,7 @@ from app.config import Settings
 from app.llm import (
     MAX_JITTER_SECONDS,
     RETRY_WAIT_SECONDS,
+    CardExists,
     GeneratedSentence,
     LlmClient,
     LlmError,
@@ -396,3 +397,135 @@ def test_an_answer_without_a_sentence_for_a_locked_translation_is_an_error() -> 
 
     with pytest.raises(LlmError, match="without a sentence"):
         client_for(handler).write_sentence("Haus", "de", "en", locked_translation="The house is old.")
+
+
+def phrase_client(answer: str) -> LlmClient:
+    return client_for(lambda request: httpx2.Response(200, json=reply(answer)))
+
+
+def test_a_card_is_asked_for_a_minimal_phrase_with_the_word_in_its_meaning() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True)[-1]["content"]
+
+    assert "minimal phrase of three or four words" in prompt
+    assert '{"sentence": "...", "translation": "...", "phrase": "..."}' in prompt
+    assert "already has cards" not in prompt
+
+
+def test_the_cards_the_word_already_has_are_numbered_and_the_model_answers_for_each() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus", "Haus bauen"])
+    prompt = prompt[-1]["content"]
+
+    assert '1. "das alte Haus" 2. "Haus bauen".' in prompt
+    assert 'in the field "same_meaning"' in prompt
+    assert (
+        'Answer only with JSON, in this form: {"meaning": "...", "same_meaning": [true or false for each card], '
+        '"sentence": "...", "translation": "...", "phrase": "..."}'
+    ) in prompt
+
+
+def test_the_model_writes_the_meaning_of_the_word_before_it_answers_for_each_card() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus"])
+    prompt = prompt[-1]["content"]
+
+    assert prompt.index('in the field "meaning"') < prompt.index('in the field "same_meaning"')
+
+
+def test_the_translation_of_each_card_is_listed_with_its_phrase_when_it_is_known() -> None:
+    known = {"den Zug verpassen": "I miss the train.", "Sein nächster Zug": ""}
+    prompt = build_messages("Zug", "de", "en", None, None, ask_phrase=True, known_phrases=known)[-1]["content"]
+
+    assert '"den Zug verpassen" (card sentence: "I miss the train.")' in prompt
+    assert '"Sein nächster Zug"; ' not in prompt
+    assert prompt.count("card sentence:") == 1
+
+
+def test_the_meaning_to_compare_is_the_sense_of_the_word_and_not_the_situation_of_the_phrase() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus"])
+    prompt = prompt[-1]["content"]
+
+    assert "the sense of the word that a dictionary lists" in prompt
+    assert "a different situation, or a different verb or preposition next to the word is not a different meaning" in prompt
+
+
+def test_a_request_that_does_not_ask_for_a_phrase_is_the_same_as_before() -> None:
+    prompt = build_messages("Haus", "de", "en", None, None)[-1]["content"]
+
+    assert "phrase" not in prompt
+
+
+def test_a_new_sentence_for_a_card_with_a_phrase_keeps_the_meaning_of_that_phrase() -> None:
+    prompt = build_messages("Haus", "de", "en", None, "Das Haus ist alt.", meaning_phrase="das alte Haus")[-1]["content"]
+
+    assert 'Use the word with the same meaning as in this phrase: "das alte Haus"' in prompt
+
+
+def test_the_phrase_comes_back_with_the_sentence() -> None:
+    answer = '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": "das alte  Haus"}'
+
+    result = phrase_client(answer).write_sentence("Haus", "de", "en", ask_phrase=True)
+
+    assert result == GeneratedSentence("Das Haus ist alt.", "The house is old.", "das alte Haus")
+
+
+def test_a_locked_translation_and_a_phrase_can_be_asked_together() -> None:
+    answer = '{"sentence": "Das Haus ist sehr alt.", "phrase": "das alte Haus"}'
+
+    result = phrase_client(answer).write_sentence(
+        "Haus", "de", "en", locked_translation="The house is old.", ask_phrase=True
+    )
+
+    assert result == GeneratedSentence("Das Haus ist sehr alt.", "The house is old.", "das alte Haus")
+
+
+def test_an_answer_that_says_the_meaning_is_the_same_raises_card_exists_with_that_phrase() -> None:
+    answer = '{"meaning": "house", "same_meaning": [false, true], "sentence": "Das Haus ist alt."}'
+
+    with pytest.raises(CardExists) as raised:
+        phrase_client(answer).write_sentence(
+            "Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus", "Haus bauen"]
+        )
+
+    assert raised.value.phrase == "Haus bauen"
+    assert str(raised.value) == 'You already have a card for this word with the meaning of "Haus bauen".'
+
+
+@pytest.mark.parametrize("same_meaning", ["[false]", "[]", "null", '"false"', "[null]", "[false, true]", "[0]"])
+def test_an_answer_that_says_the_meaning_is_not_the_same_gives_the_new_card(same_meaning: str) -> None:
+    answer = (
+        '{"meaning": "financial institution", "same_meaning": ' + same_meaning + ', "sentence": "Ich gehe zur Bank.", '
+        '"translation": "I go to the bank.", "phrase": "zur Bank gehen"}'
+    )
+
+    result = phrase_client(answer).write_sentence(
+        "Bank", "de", "en", ask_phrase=True, known_phrases={"auf der Bank": "We sit on the bench."}
+    )
+
+    assert result == GeneratedSentence("Ich gehe zur Bank.", "I go to the bank.", "zur Bank gehen")
+
+
+def test_a_new_phrase_that_is_one_the_word_already_has_raises_card_exists() -> None:
+    answer = '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": "Das alte Haus"}'
+
+    with pytest.raises(CardExists):
+        phrase_client(answer).write_sentence("Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus"])
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        '{"existing": "ein ganz anderes Haus"}',
+        '{"sentence": "Das Haus ist alt.", "translation": "The house is old."}',
+        '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": 3}',
+        '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": "Haus"}',
+        '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": "das alte Heim"}',
+    ],
+)
+def test_an_answer_without_a_usable_phrase_is_an_error_when_a_phrase_was_asked(answer: str) -> None:
+    with pytest.raises(LlmError):
+        phrase_client(answer).write_sentence("Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus"])
+
+
+def test_a_phrase_in_the_answer_is_ignored_when_none_was_asked() -> None:
+    answer = '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": "das alte Haus"}'
+
+    assert phrase_client(answer).write_sentence("Haus", "de", "en").phrase is None
