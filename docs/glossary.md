@@ -16,11 +16,11 @@ A learning item created for a selected word, containing a generated sentence and
 
 **Defined by:** [Product vision goal](product-vision.md#goal) and [DEC-005](decisions.md#dec-005).
 
-### Card identifier
+### Context phrase
 
-The combination of a card's word and a short phrase of three or four words that uses that word with the same meaning, which must not identify a second card.
+A phrase of three or four words that uses a word with the meaning it has on its card, and that identifies the card together with that word.
 
-**Defined by:** [DEC-013](decisions.md#dec-013).
+**Defined by:** [FR-009](functional-requirements/fr/FR-009.md) and [DEC-013](decisions.md#dec-013).
 
 ## Study And Review
 
@@ -32,9 +32,9 @@ The learner's activity of studying cards and recording answers inside the Senten
 
 ### Study queue
 
-The cards presented for study in an order that the learner can change to study the words from a chosen text first.
+The cards presented for study, ordered by the date each card is due, with due times adjusted when the learner moves selected cards earlier.
 
-**Defined by:** [Product vision goal](product-vision.md#goal) and [DEC-002](decisions.md#dec-002).
+**Defined by:** [DEC-021](decisions.md#dec-021).
 
 ## External Services
 

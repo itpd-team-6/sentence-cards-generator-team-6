@@ -21,6 +21,7 @@ Follow the course rules through [the course SKILL.md](https://github.com/inno-it
 
 ## Conventions
 
+- Write project artifacts in English and refer to the project customer as `Customer`.
 - Start each change with a task issue and use a branch named `<issue-number>-<short-description>` with lowercase hyphenated words.
 - Write commit messages as one short imperative sentence starting with a capital letter, without a final period (for example, `Add glossary and agent instructions`).
 - Open a pull request against `main` that closes exactly one issue with `Closes #N`; do not push directly to `main`.
