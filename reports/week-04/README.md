@@ -3,7 +3,7 @@
 ## Project
 
 Sentence cards generator, team 6.
-Assignment 4, Requirements And Architecture: the quality requirements, the functional requirements, the architecture, the sprint plan and the first retrospective, and the second release.
+Assignment 4, Quality, Requirements, Architecture, And The Fourth Release: the quality and functional requirements, the architecture, the sprint plan and the first retrospective, and the second release.
 
 Our problem-space sentence: language learners (and their teachers) who study Russian, English or German from real texts want to turn the words they choose into flashcards with example sentences, translations and pronunciation, and review them with spaced repetition, without building each card by hand.
 
