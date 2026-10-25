@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.0) - 2026-10-25
+
 ### Changed
 
 - A card is identified by its word and a context phrase of three or four words that uses the word with the meaning it has in the text ([DEC-013](docs/decisions.md#dec-013)). When the learner marks a word that already has a card with the same meaning, the product makes no second card and says which word it is and the phrase of the card that exists; the same word with another meaning gets its own card. A new sentence keeps the phrase and the meaning of the word. The cards made before have no phrase and keep working.

@@ -8,12 +8,13 @@ An app that generates language-learning flashcards: the user uploads a text, sel
 
 ## Current week
 
-- [Week 03 report](reports/week-03/README.md)
+- [Week 04 report](reports/week-04/README.md)
 
 ## Earlier weeks
 
 - [Week 01 report](reports/week-01/README.md)
 - [Week 02 report](reports/week-02/README.md)
+- [Week 03 report](reports/week-03/README.md)
 
 ## Documentation
 
