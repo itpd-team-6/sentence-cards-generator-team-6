@@ -114,7 +114,7 @@ The Customer accepted `US-02` and `US-03`.
 
 The Customer did not accept `US-01`: `AC-03` failed, and the story stays open until the next meeting.
 
-- **Status:** Active
+- **Status:** Reversed by [DEC-030](#dec-030)
 - **Date:** 2026-10-17
 - **Made by:** Customer
 - **Source:** [the Week 3 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-03/meeting-report.md)
@@ -224,7 +224,7 @@ A card may have more than one word, a German noun with its article or a phrase, 
 
 The next stories are built in this order: `US-04`, then `US-07`, then `US-05`, then `US-06`.
 
-- **Status:** Active
+- **Status:** Reversed by [DEC-042](#dec-042)
 - **Date:** 2026-10-17
 - **Made by:** Customer
 - **Source:** [the Week 3 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-03/meeting-report.md)
@@ -306,3 +306,165 @@ The learner answers a card with one of four buttons, "Again", "Hard", "Good" and
   - A card that is new or was forgotten waits 1 day for "Hard", 2 for "Good" and 4 for "Easy". These three numbers are the team's choice: Anki uses minutes and learning steps there, which the product does not have yet. The first "Good" is now 2 days, where the product had 1.
   - The rule rounds half days up. Intervals of 1, 2, 4, 8 and 16 days give "Hard" 2, 3, 5, 10 and 19, "Good" 3, 4, 8, 16 and 32, and "Easy" 4, 5, 10, 21 and 42.
   - The ease of each card and the learning steps in minutes are not part of this rule.
+
+## DEC-030
+
+The Customer accepted `US-01`, so the story is closed.
+
+- **Status:** Active
+- **Date:** 2026-10-24
+- **Made by:** Customer
+- **Reverses:** [DEC-012](#dec-012)
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** in the Week 4 meeting the team showed the three acceptance criteria of `US-01` one at a time, and about the repeated request and the message when the model does not answer, which had failed `AC-03` in Week 3 ([`DEC-012`](#dec-012)), he said "Sounds reasonable. Let's keep it like this." (Customer, [00:12:14]); about the first criterion he said "this one did work, when we choose the right pair of languages" (Customer, [00:18:25]), and that the story "could have been clarified" about setting the first language: "maybe it could have been clarified that I have selected my first language in the settings, but it's okay" (Customer, [00:17:59]).
+  The team then wrote in the group chat "US-01: accepted." and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-031
+
+The Customer did not accept `US-04` yet: `AC-02` and `AC-03` are to be rewritten so that they are clear, and the story stays open.
+
+- **Status:** Active
+- **Date:** 2026-10-24
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** `AC-02` says that a card already studied keeps its review history and its interval when the learner moves it; the Customer asked "And what happens to its interval?" (Customer, [00:39:48]), and after the team explained that the interval is the wait before the card is studied again and proposed to write the criterion so that this is clear, he answered "Yes." (Customer, [00:42:34]).
+  `AC-03` says that the product refuses an order that is no longer valid; the Customer said "Not really. Could you please show it again?" (Customer, [00:44:31]), and asked why the study queue was not updated at once ([`DEC-032`](#dec-032)).
+  `AC-01` was shown with cards of two texts, and he said "Then this acceptance criterion is satisfied." (Customer, [00:50:00]).
+  The team then wrote in the group chat "US-04: not accepted yet. We will rewrite its acceptance criteria so they are clear (the interval and the refused order), and deleting a card will remove it from the study order at once." and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-032
+
+Deleting a card removes it from the study queue at once, so that the cards table and the study queue show the same state.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** the Customer asked "Why is there no immediate synchronization between the action here and the order?" (Customer, [00:45:28]) and said "if I delete in "Your cards" it should automatically disappear in the other table" (Customer, [00:45:28]); the team agreed that it should be completely synchronous, and he answered "Yeah, I would prefer this. So that there is a single source of truth, and you don't need to handle all kinds of errors." (Customer, [00:46:48]).
+  The team wrote in the group chat that "deleting a card will remove it from the study order at once" and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-033
+
+The product checks the length of each sentence that the language model writes against a minimum and a maximum, counts a sentence outside the limits as a missing one, and asks the model again by the rule of [`DEC-024`](#dec-024); the team chooses the two limits.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md)
+- **Why:** the Customer said "there is a lower bound and an upper bound on the length of a sentence that must be generated, so that all sentences have approximately the same length and can be studied in approximately the same time" (Customer, [00:20:23]), and from his own experience "you can't trust an LLM, you have to validate everything it sends back" (Customer, [00:22:54]); asked whether this is the issue he brings up, he answered "That's what I'd like to have in the service." (Customer, [00:24:04]).
+  He gave no numbers for the limits.
+
+## DEC-034
+
+The product sends the words of a text to the language model in several batches that are generated independently of each other; the cards of one batch appear together when the batch is done, and the product does not wait for the other batches.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md)
+- **Why:** the Customer said "It's okay if cards from a single batch are shown at the same time." (Customer, [00:15:57]), and since a text may have hundreds of selected words, "batches would be generated independently of each other and arrive at different times. No need to wait for all batches." (Customer, [00:15:57]).
+  The size of a batch is not decided; his examples were "for example 20 words together, or 50" (Customer, [00:15:57]).
+
+## DEC-035
+
+In the study queue the headings "Due today" and "Later" stay in view, and each of the two lists has its own scroll.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md)
+- **Why:** the Customer said "I think "Due today" should be a static element in this card, in this modal. So it shouldn't be inside the scrollable list." (Customer, [00:27:24]), because "when you scroll downwards, I forgot, I didn't see that it's due today" (Customer, [00:27:24]); and then "I think the scrolls for "Due today" and for "Later" should be separate scrolls, and "Due today" and "Later" should be static elements." (Customer, [00:28:04]).
+  The team wrote in the group chat "Keep "Due today" and "Later" fixed, with separate scrolling." and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-036
+
+The time that the product spends repeating a request to the language model is configurable, and its default is 20 seconds.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** the Customer said about the 19 seconds of [`DEC-024`](#dec-024) that "19 looks like a magic number" (Customer, [01:32:51]) and "Maybe make this number configurable and set it to some default." (Customer, [01:32:51]), and then "Okay, 20 seconds." (Customer, [01:32:51]).
+  The team wrote in the group chat "Make the repeat limit configurable (default 20 seconds)" and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-037
+
+The learner edits a sentence or a translation in a modal, and editing in place by double-clicking is not built.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md)
+- **Why:** the team asked whether double-clicking the sentence to change it in place is needed or the modal is enough, and the Customer said "I think the modal is enough. Maybe it will be even more convenient on mobile. You don't accidentally tap a sentence and start editing it while scrolling the cards." (Customer, [01:00:51])
+
+## DEC-038
+
+The product has a quality requirement that no user can see the key of another user, so that a teacher never sees the key of a student.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** about the quality requirements the Customer said "I suggest that you add another one: the teacher may never see the student's key." (Customer, [01:37:20]); the team asked "any user" and he answered "Yeah, yeah, basically like that." (Customer, [01:37:35]).
+  The team wrote in the group chat "Add a quality requirement that nobody sees another user's key" and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-039
+
+The product does not measure the time that the language model takes as a quality of the product; it measures the time that the product takes to show the cards after the answer of the model has arrived.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** about the quality requirement on the time of repeating the request, the Customer said "You shouldn't put it in the time behavior characteristic, because this time does not depend on you. It depends on this API." (Customer, [01:32:51]) and "What you can measure is that after the response has arrived, the cards are displayed within half a second, for example." (Customer, [01:32:51]).
+  Half a second was his example; the team chooses the limit.
+  The team wrote in the group chat "measure the time to show the cards after the model answers" and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-040
+
+A user who does not use the built-in key may keep their own key in the browser, the browser then makes the requests to the language model, and that key never goes to the server.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** about a student who does not want to send the key to the back end, the Customer said "So requests can be made from the front end, and some heavy processing can be outsourced to the back end. This way you never send the student's key to the back end" (Customer, [01:39:45]), and "Basically, if the user does not use a built-in API key, then their API key never goes to the server." (Customer, [01:42:37]); this holds for teachers too: "It's not only about students, it's also about teachers." (Customer, [01:42:37]).
+  The team answered "Okay, so we'll change the architecture so it supports the user's wish to not share his API key." (team, [01:42:12]), and wrote in the group chat "the user's key can stay in the browser"; the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+  The key that the service provides stays in the `.env` file of the server, as in [`ADR-003`](architecture/adr/ADR-003.md).
+
+## DEC-041
+
+The model that makes the audio runs in the back end, so that a learner of a hosted service gets audio without running a model; Piper is the closest of the three options, and the licence of each option is to be checked for commercial use.
+
+- **Status:** Active
+- **Date:** 2026-10-23
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** for a learner who does not control the machine, the Customer said "I think a more viable option, a more user-friendly option, is to deploy some model on the back end and generate audio for users." (Customer, [01:57:27]) and "Not sure if GPL3 permits commercial usage, so it should be checked." (Customer, [01:57:27]); about the three options shown he said "I think Piper is the closest one, although maybe there are more models that can handle this." (Customer, [01:59:49]) and "Yeah, but, yeah, for the first time it's okay." (Customer, [01:59:59]).
+  For a service that the learner runs on their own machine, "you can run a model to generate audio. You just run the model on your machine and then you get audio." (Customer, [01:53:39])
+  This keeps [`DEC-010`](#dec-010): the audio may still come from any outside source.
+  The team wrote in the group chat "the audio model runs in the backend" and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-042
+
+The next stories are built in this order: the audio of words and sentences, then the daily limits with asking for more cards, then the decks apart from the texts, then the teacher's review (`US-05`); `US-06` is not in this order and its place is not decided.
+
+- **Status:** Active
+- **Date:** 2026-10-24
+- **Made by:** Customer
+- **Reverses:** [DEC-023](#dec-023)
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** the team asked which story the Customer would miss first, and he said "Okay, so the big priority here: the words and the sentences should go first. Set daily limits, that daily limit should go next. Keeping decks apart from the texts is a short priority. And user story number five is the fourth one." (Customer, [01:49:09]).
+  The team then wrote in the group chat "About the next stories the order is audio first, then daily limits and request more cards, then decks, then the teacher's review." and the Customer answered "Confirmed" (Customer, chat, 2026-10-24 00:00).
+
+## DEC-043
+
+A card is still identified by its word and a short phrase ([`DEC-013`](#dec-013)); the team revises the prompt that asks the language model whether to make a new card, tries longer context phrases, and tries the format that the Customer proposed.
+
+- **Status:** Active
+- **Date:** 2026-10-24
+- **Made by:** Customer
+- **Source:** [the Week 4 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/meeting-transcript.md) and [the Customer's chat messages after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-04/evidence/customer-chat-confirmation.md)
+- **Why:** the team asked whether a misjudgment of the model is acceptable or the identifier should have more, and the Customer said "I think maybe the prompt provides too much context for an LLM and therefore it becomes confused and can misclassify sometimes." (Customer, [01:23:31]); the team answered that "we don't have to implement any modification to the ID itself, only to how the prompt is asked to the LLM" (team, [01:24:10]).
+  In the group chat the Customer wrote "Also, please experiment with longer context phrases" (Customer, chat, 2026-10-24 00:01) and "Please also revise the prompt that is sent to an LLM when it needs to decide whether to generate a new card." (Customer, chat, 2026-10-24 00:11), with the format of the prompt and an example in the same message.
+  What the product does when the model misjudges and makes a second card for the same meaning is not decided: the Customer said "So we have to decide what happens if it misclassifies." (Customer, [01:24:39]), and did not choose between asking the learner and making the card.
