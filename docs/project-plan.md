@@ -26,10 +26,12 @@ Released as [v0.1.0](https://github.com/itpd-team-6/sentence-cards-generator-tea
 
 ### SPRINT-04
 
-A learner moves a text to the front of the study queue, the retry of a failed sentence is built so that the Customer can accept `US-01` at the next meeting, and the changes the Customer asked for at the Week 3 meeting are built in the order the team plans at its weekly review.
+A learner moves the words of one text to the front of the study queue, and the Customer can accept `US-01` after the retry of a failed sentence is built.
 
-- **Due:** 2026-10-23
+- **Due:** 2026-10-24
 - **Sprint Backlog:** [the issues scheduled into SPRINT-04](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/2)
+- **Planned Velocity:** 10
+- **Actual Velocity:** 5; `US-04` did not finish and moved to `SPRINT-05`.
 
 #### REL-04
 
@@ -37,7 +39,7 @@ A learner moves a text to the front of the study queue, the retry of a failed se
 
 Every card has audio for its word and its sentence from an outside source, and a person can self-host the product by following the setup instructions.
 
-- **Due:** 2026-10-30
+- **Due:** 2026-10-31
 
 #### REL-05
 
@@ -46,7 +48,7 @@ Every card has audio for its word and its sentence from an outside source, and a
 A teacher reviews the cards of a student and sees the flagged ones first.
 This goal is provisional until the sprint is planned.
 
-- **Due:** 2026-11-06
+- **Due:** 2026-11-07
 
 #### REL-06
 
@@ -55,7 +57,7 @@ This goal is provisional until the sprint is planned.
 A person outside the team can install the product, use it from a pasted text to studying the cards, with what happened written down.
 This goal is provisional until the sprint is planned.
 
-- **Due:** 2026-11-13
+- **Due:** 2026-11-14
 
 #### REL-07
 
@@ -64,7 +66,7 @@ This goal is provisional until the sprint is planned.
 A learner uses the interface in Russian, English or German.
 This goal is provisional until the sprint is planned.
 
-- **Due:** 2026-11-20
+- **Due:** 2026-11-21
 
 #### REL-08
 
@@ -73,7 +75,7 @@ This goal is provisional until the sprint is planned.
 The product is polished and ready for the code freeze, with the result of each threshold goal written down.
 This goal is provisional until the sprint is planned.
 
-- **Due:** 2026-11-27
+- **Due:** 2026-11-28
 
 #### REL-09
 
