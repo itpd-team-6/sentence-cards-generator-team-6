@@ -35,6 +35,8 @@ A learner moves the words of one text to the front of the study queue, and the C
 
 #### REL-04
 
+Released as [v0.2.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.0) on 2026-10-25.
+
 ### SPRINT-05
 
 Every card has audio for its word and its sentence from an outside source, and a person can self-host the product by following the setup instructions.
