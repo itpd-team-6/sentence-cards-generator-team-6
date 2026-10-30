@@ -11,6 +11,24 @@
 A learner goes from a pasted text to studying generated cards in one working version, the minimum usable product of `US-01`, `US-02` and `US-03`.
 The study queue, the audio, the teacher review and the interface languages build on this slice in the sprints after it.
 
+### MLS-05
+
+- **Due:** 2026-10-31
+- **Sprints:** [SPRINT-04](#sprint-04), [SPRINT-05](#sprint-05)
+- **Advances:** [TOS-01](threshold-of-success.md#tos-01), [TOS-04](threshold-of-success.md#tos-04)
+
+A learner studies the words of one text first and the Customer opens the product in a browser on the university virtual machine, without installing anything.
+The audio and the daily limits build on this version in the sprints after it.
+
+### MLS-06
+
+- **Due:** 2026-11-07
+- **Sprints:** [SPRINT-06](#sprint-06)
+- **Advances:** [TOS-04](threshold-of-success.md#tos-04)
+
+Every card has audio for its word and its sentence from an outside source.
+The daily limits and the decks apart from the texts follow it.
+
 ## Sprints
 
 ### SPRINT-03
@@ -39,15 +57,17 @@ Released as [v0.2.0](https://github.com/itpd-team-6/sentence-cards-generator-tea
 
 ### SPRINT-05
 
-Every card has audio for its word and its sentence from an outside source, and a person can self-host the product by following the setup instructions.
+A learner studies the words of one text first, deleting a card removes it from the study order at once, and the Customer opens the product in a browser on the university virtual machine.
 
 - **Due:** 2026-10-31
+- **Sprint Backlog:** [the issues scheduled into SPRINT-05](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/3)
+- **Planned Velocity:** 8
 
 #### REL-05
 
 ### SPRINT-06
 
-A teacher reviews the cards of a student and sees the flagged ones first.
+Every card has audio for its word and its sentence from an outside source.
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-07
