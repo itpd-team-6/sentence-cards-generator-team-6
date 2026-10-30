@@ -468,3 +468,15 @@ A card is still identified by its word and a short phrase ([`DEC-013`](#dec-013)
 - **Why:** the team asked whether a misjudgment of the model is acceptable or the identifier should have more, and the Customer said "I think maybe the prompt provides too much context for an LLM and therefore it becomes confused and can misclassify sometimes." (Customer, [01:23:31]); the team answered that "we don't have to implement any modification to the ID itself, only to how the prompt is asked to the LLM" (team, [01:24:10]).
   In the group chat the Customer wrote "Also, please experiment with longer context phrases" (Customer, chat, 2026-10-24 00:01) and "Please also revise the prompt that is sent to an LLM when it needs to decide whether to generate a new card." (Customer, chat, 2026-10-24 00:11), with the format of the prompt and an example in the same message.
   What the product does when the model misjudges and makes a second card for the same meaning is not decided: the Customer said "So we have to decide what happens if it misclassifies." (Customer, [01:24:39]), and did not choose between asking the learner and making the card.
+
+## DEC-044
+
+The product on the university VM gets its language model from Cloudflare Workers AI, set only through `LLM_API_KEY`, `LLM_MODEL` and `LLM_BASE_URL`.
+
+- **Status:** Active
+- **Date:** 2026-10-30
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Gemini endpoint refuses requests from the VM's address with "User location is not supported for the API use.", so the model must come from a provider that the VM can reach.
+  Cloudflare Workers AI has an OpenAI-compatible endpoint, so [`ADR-003`](architecture/adr/ADR-003.md) needs no code change, and its pricing page lists a free allocation of 10,000 Neurons per day ([Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
+  The runbook [`deployment.md`](deployment.md) records the model, the endpoint shape and the quota.

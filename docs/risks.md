@@ -18,6 +18,7 @@ The product depends on a free language model from an outside provider, so a refu
 - **Trigger:** the product shows "The language model returned an error" for a request that worked before.
 - **Window:** from [SPRINT-04](project-plan.md#sprint-04) to the final project defense in Week 11.
 - **Mitigation:** the model, the key and the endpoint are set in `.env` per [`DEC-009`](decisions.md#dec-009), so the provider can be changed without changing the code.
+  The same refusal came from the university VM's address, so the model of the VM comes from Cloudflare Workers AI per [`DEC-044`](decisions.md#dec-044), and [`deployment.md`](deployment.md#the-language-model-provider) records its daily quota.
 - **Contingency:** change `LLM_BASE_URL`, `LLM_MODEL` and `LLM_API_KEY` in `.env` to another provider whose free model answers from that machine.
 
 ## RISK-02
