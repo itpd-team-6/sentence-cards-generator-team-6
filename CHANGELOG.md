@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A card deleted while a study session is open no longer blocks the session: it is skipped with a message and the session goes on with the next card ([DEC-032](docs/decisions.md#dec-032)).
+
 ## [0.2.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.0) - 2026-10-25
 
 ### Changed

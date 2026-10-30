@@ -1,4 +1,5 @@
-// The calls to the product's API. A failed call throws an Error whose message is safe to show the learner.
+// The calls to the product's API. A failed call throws an Error whose message is safe to show the learner, and whose
+// `status` is the HTTP status of the answer.
 async function call(url, options) {
   let response;
   try {
@@ -11,11 +12,13 @@ async function call(url, options) {
   }
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       typeof body?.detail === "string"
         ? body.detail
         : "The request failed. Try again.",
     );
+    error.status = response.status;
+    throw error;
   }
   return body;
 }

@@ -91,6 +91,16 @@ def test_a_card_without_a_sentence_is_not_studied() -> None:
         assert [item["word"] for item in client.get("/api/study/due").json()] == ["Haus"]
 
 
+def test_a_deleted_card_is_in_neither_the_session_nor_the_study_queue() -> None:
+    with study_client() as client:
+        add_cards(card("Zug", TODAY), card("Haus", TODAY))
+
+        assert client.delete("/api/cards/1").status_code == 204
+
+        assert [item["word"] for item in client.get("/api/study/due").json()] == ["Haus"]
+        assert [item["word"] for item in client.get("/api/study/queue").json()] == ["Haus"]
+
+
 def test_nothing_is_due_when_every_card_is_due_later() -> None:
     with study_client() as client:
         add_cards(card("Zug", TODAY + timedelta(days=1)))
