@@ -4,10 +4,10 @@ This carries out the Week 4 action point "Read the licence of Piper and of the v
 and tell the Customer whether they allow commercial use" (due 2026-10-30).
 The finding is written in [`docs/research/audio-options.md`](../../../docs/research/audio-options.md),
 in the "Licence of the voices" part of the Piper section.
-The message below is sent to the Customer in the group chat; the Customer's reply is added here word for word when it arrives.
+The message below is sent to the Customer in the group chat; its sending time is filled in below once it is sent, and the Customer's reply is added here word for word when it arrives.
 Times are in UTC+03:00.
 
-## Team message, 2026-10-30
+## Team message, 2026-10-30 (sent at <HH:MM>, filled in once sent)
 
 > Hi [the Customer], a short note from the Week 4 action point on the Piper licence.
 > The Piper engine is open source (MIT on the old repository, GPL-3.0 on the active one), and both allow commercial use.
