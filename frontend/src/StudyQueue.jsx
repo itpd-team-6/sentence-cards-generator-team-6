@@ -16,8 +16,18 @@ const toList = (cards) => [
 // Six dots: the handle the learner holds to move a card.
 function Handle() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
-      {[9, 15].flatMap((x) => [6, 12, 18].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.7" />))}
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      fill="currentColor"
+    >
+      {[9, 15].flatMap((x) =>
+        [6, 12, 18].map((y) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r="1.7" />
+        )),
+      )}
     </svg>
   );
 }
@@ -35,7 +45,11 @@ function Sentence({ card }) {
 
 // "Fri, 24 Oct": the day a card that is not due today will be studied.
 const dayOf = (isoDate) =>
-  new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 
 // The list as it is once `group` (card ids) is put where `index` points. `index` counts the places of the list as it is
 // now: 0 is before the first item and `list.length` after the last.
@@ -44,10 +58,15 @@ function placeGroup(list, group, index) {
   const moved = list.filter(inGroup);
   const rest = list.filter((item) => !inGroup(item));
   const before = list.slice(0, index).filter(inGroup).length;
-  return [...rest.slice(0, index - before), ...moved, ...rest.slice(index - before)];
+  return [
+    ...rest.slice(0, index - before),
+    ...moved,
+    ...rest.slice(index - before),
+  ];
 }
 
-const sameList = (first, second) => first.every((item, place) => item === second[place]);
+const sameList = (first, second) =>
+  first.every((item, place) => item === second[place]);
 
 // The study queue: every card with a sentence, in the order the session studies them. The cards above the line are due
 // today and the cards below it are due later, each with its date. The learner drags a card by its handle to any place,
@@ -77,11 +96,15 @@ export default function StudyQueue() {
 
   const cards = list.filter((item) => !item.divider);
   const dividerAt = list.indexOf(DIVIDER);
-  const textIds = [...new Set(cards.map((card) => card.text_id))].sort((a, b) => a - b);
+  const textIds = [...new Set(cards.map((card) => card.text_id))].sort(
+    (a, b) => a - b,
+  );
 
   // A ticked card moves with all the ticked cards; any other card moves alone.
   const groupOf = (card) =>
-    ticked.has(card.id) ? cards.filter((item) => ticked.has(item.id)).map((item) => item.id) : [card.id];
+    ticked.has(card.id)
+      ? cards.filter((item) => ticked.has(item.id)).map((item) => item.id)
+      : [card.id];
 
   function toggle(id) {
     const next = new Set(ticked);
@@ -90,13 +113,17 @@ export default function StudyQueue() {
   }
 
   // A text is ticked when all its cards are; a click ticks the cards of the text, or unticks them when all are ticked.
-  const cardsOfText = (textId) => cards.filter((card) => card.text_id === textId);
-  const tickedOfText = (textId) => cardsOfText(textId).filter((card) => ticked.has(card.id)).length;
+  const cardsOfText = (textId) =>
+    cards.filter((card) => card.text_id === textId);
+  const tickedOfText = (textId) =>
+    cardsOfText(textId).filter((card) => ticked.has(card.id)).length;
 
   function toggleText(textId) {
     const next = new Set(ticked);
     const all = tickedOfText(textId) === cardsOfText(textId).length;
-    cardsOfText(textId).forEach((card) => (all ? next.delete(card.id) : next.add(card.id)));
+    cardsOfText(textId).forEach((card) =>
+      all ? next.delete(card.id) : next.add(card.id),
+    );
     setTicked(next);
   }
 
@@ -125,11 +152,14 @@ export default function StudyQueue() {
   }
 
   function moveWithKeys(event, card) {
-    if (saving || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+    if (saving || (event.key !== "ArrowUp" && event.key !== "ArrowDown"))
+      return;
     event.preventDefault();
     const group = groupOf(card);
     const inGroup = (item) => !item.divider && group.includes(item.id);
-    const places = list.map((item, place) => (inGroup(item) ? place : -1)).filter((place) => place >= 0);
+    const places = list
+      .map((item, place) => (inGroup(item) ? place : -1))
+      .filter((place) => place >= 0);
     let index;
     if (event.key === "ArrowUp") {
       let target = places[0] - 1;
@@ -163,7 +193,8 @@ export default function StudyQueue() {
 
   function drop(event) {
     event.preventDefault();
-    if (drag?.over != null) move(placeGroup(list, drag.ids, drag.over), drag.ids);
+    if (drag?.over != null)
+      move(placeGroup(list, drag.ids, drag.over), drag.ids);
     setDrag(null);
   }
 
@@ -180,7 +211,11 @@ export default function StudyQueue() {
         </span>{" "}
         to reorder. Tick cards to move several.
       </p>
-      <div className="queue-pills" role="group" aria-label="Tick the cards of a text">
+      <div
+        className="queue-pills"
+        role="group"
+        aria-label="Tick the cards of a text"
+      >
         {textIds.length > 1 &&
           textIds.map((id) => {
             const count = tickedOfText(id);
@@ -194,7 +229,9 @@ export default function StudyQueue() {
                 disabled={saving}
                 onClick={() => toggleText(id)}
               >
-                {count > 0 && !all ? `Text ${id} · ${count}/${cardsOfText(id).length}` : `Text ${id}`}
+                {count > 0 && !all
+                  ? `Text ${id} · ${count}/${cardsOfText(id).length}`
+                  : `Text ${id}`}
               </button>
             );
           })}
@@ -204,12 +241,21 @@ export default function StudyQueue() {
           disabled={ticked.size === 0}
           onClick={() => setTicked(new Set())}
         >
-          {ticked.size > 0 ? `Clear selection (${ticked.size})` : "Clear selection"}
+          {ticked.size > 0
+            ? `Clear selection (${ticked.size})`
+            : "Clear selection"}
         </button>
       </div>
-      <div className="queue-scroll" tabIndex={0} role="region" aria-label="Study order">
+      <div
+        className="queue-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label="Study order"
+      >
         <ol className="queue">
-          <li className="queue-section">Due today{dividerAt === 0 && <span> · nothing yet</span>}</li>
+          <li className="queue-section">
+            Due today{dividerAt === 0 && <span> · nothing yet</span>}
+          </li>
           {list.map((item, index) => {
             const dropLine = drag?.over === index ? "drop-before" : "";
             if (item.divider) {
@@ -229,7 +275,9 @@ export default function StudyQueue() {
             return (
               <li
                 key={card.id}
-                className={[dropLine, drag?.ids.includes(card.id) && "dragging"].filter(Boolean).join(" ")}
+                className={[dropLine, drag?.ids.includes(card.id) && "dragging"]
+                  .filter(Boolean)
+                  .join(" ")}
                 onDragOver={(event) => dragOver(event, index)}
                 onDrop={drop}
               >
@@ -260,18 +308,23 @@ export default function StudyQueue() {
                   <span className="queue-word">{card.word}</span>
                   <Sentence card={card} />
                 </div>
-                {index > dividerAt && <span className="queue-date">{dayOf(card.due_date)}</span>}
+                {index > dividerAt && (
+                  <span className="queue-date">{dayOf(card.due_date)}</span>
+                )}
                 <span className="queue-text">{`Text ${card.text_id}`}</span>
               </li>
             );
           })}
           <li
-            className={drag?.over === list.length ? "queue-end drop-before" : "queue-end"}
+            className={
+              drag?.over === list.length ? "queue-end drop-before" : "queue-end"
+            }
             aria-hidden="true"
             onDragOver={(event) => {
               if (!drag || saving) return;
               event.preventDefault();
-              if (drag.over !== list.length) setDrag({ ...drag, over: list.length });
+              if (drag.over !== list.length)
+                setDrag({ ...drag, over: list.length });
             }}
             onDrop={drop}
           />

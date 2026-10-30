@@ -136,11 +136,16 @@ If a word gets a card with no sentence (the model did not answer), use the card'
   python -m pytest
   ```
 
-- Front end build, from `frontend`:
+- Front end checks and build, from `frontend` after `npm ci`:
 
   ```bash
+  npm run lint
+  npm run format:check
+  npm test
   npm run build
   ```
+
+  `npm run lint` runs ESLint, `npm run format:check` checks the formatting of `src` with Prettier, and `npm test` runs the Vitest tests.
 
 - The language model call, with the product running and `LLM_API_KEY` and `LLM_MODEL` set in `.env`:
 

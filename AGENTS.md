@@ -14,7 +14,7 @@ Follow the course rules through [the course SKILL.md](https://github.com/inno-it
 ## Checks
 
 - From `backend/`, run `python -m pytest` after changes to the backend.
-- From `frontend/`, run `npm ci` to install dependencies and `npm run build` to verify the frontend build.
+- From `frontend/`, run `npm ci` to install dependencies, then `npm run lint`, `npm run format:check`, `npm test` and `npm run build` to verify the frontend.
 - Run `npx prettier --check AGENTS.md docs/glossary.md` from the repository root with Prettier available; use `npx prettier --write AGENTS.md docs/glossary.md` to format these files when necessary.
 - The `markdownlint` and Lychee link checks run on pull requests and pushes to `main` in `.github/workflows/lychee.yml`. Locally, use `npx markdownlint-cli2 '**/*.md'` for Markdown linting and `lychee --no-progress --max-concurrency 2 --accept 200,206,429 './**/*.md'` for links when those tools are installed; the link check needs internet access.
 - For manual run instructions and API checks, see `docs/setup.md`.

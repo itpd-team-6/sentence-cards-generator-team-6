@@ -8,7 +8,11 @@ let lastNotice = 0;
 
 // A message for the learner: "error" (the default), "success" or "info". Each one has a number of its own, so that the
 // same words shown again start the clock again.
-export const newNotice = (text, kind = "error") => ({ text, kind, id: (lastNotice += 1) });
+export const newNotice = (text, kind = "error") => ({
+  text,
+  kind,
+  id: (lastNotice += 1),
+});
 
 // Calls `onDismiss` when the time has passed. The clock stops while `paused` and goes on with the time that was left.
 function useDismissAfter(notice, seconds, paused, onDismiss) {
@@ -50,7 +54,11 @@ function toastBox() {
 // the kind: "error" is a problem (red), "success" says that something worked (green), "info" is neutral. The icon says
 // the kind too, so the colour is never the only sign. A line at the bottom shrinks as the time passes, hovering the
 // message stops the clock, and the button closes it at once.
-export default function Notice({ notice, onDismiss, seconds = NOTICE_SECONDS }) {
+export default function Notice({
+  notice,
+  onDismiss,
+  seconds = NOTICE_SECONDS,
+}) {
   const [paused, setPaused] = useState(false);
   useDismissAfter(notice, seconds, paused, onDismiss);
 
@@ -68,13 +76,21 @@ export default function Notice({ notice, onDismiss, seconds = NOTICE_SECONDS }) 
         {ICONS[kind]}
       </span>
       <span className="toast-text">{notice.text}</span>
-      <button type="button" className="toast-close" aria-label="Dismiss this message" onClick={onDismiss}>
+      <button
+        type="button"
+        className="toast-close"
+        aria-label="Dismiss this message"
+        onClick={onDismiss}
+      >
         ×
       </button>
       <span
         className="toast-line"
         aria-hidden="true"
-        style={{ animationDuration: `${seconds}s`, animationPlayState: paused ? "paused" : "running" }}
+        style={{
+          animationDuration: `${seconds}s`,
+          animationPlayState: paused ? "paused" : "running",
+        }}
       />
     </div>,
     toastBox(),
