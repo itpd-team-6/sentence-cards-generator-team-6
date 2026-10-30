@@ -17,7 +17,7 @@ const inDays = (days) =>
   days === 0 ? "today" : days === 1 ? "1 day" : `${days} days`;
 
 // The study session: the cards that are due, one at a time. A card answered "Again" goes to the end of the session and
-// comes back; a card with any other answer leaves it.
+// comes back; a card with any other answer leaves it. A card deleted while the session is open is skipped.
 export default function StudyPage() {
   const [queue, setQueue] = useState(null); // null until a session starts; then the cards still to answer
   const [reviewed, setReviewed] = useState(0);
@@ -64,7 +64,19 @@ export default function StudyPage() {
             ),
       );
     } catch (error) {
-      setMessage(newNotice(error.message));
+      if (error.status === 404) {
+        // The card was deleted while the session was open: skip it and go on to the next one.
+        setQueue(rest);
+        setRevealed(false);
+        setFeedback(
+          newNotice(
+            `"${card.word}" was deleted, so the session goes on without it.`,
+            "info",
+          ),
+        );
+      } else {
+        setMessage(newNotice(error.message));
+      }
     } finally {
       setBusy(false);
     }
