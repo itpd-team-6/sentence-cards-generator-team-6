@@ -15,8 +15,11 @@
   --error-text: #ff8a9d; /* the tone of a problem message, kept red so that the accent is not read as an error */
   --radius: 12px;
   color-scheme: dark; /* the browser draws scrollbars and form parts in the dark theme too */
-  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-display: "Segoe UI Variable Display", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body:
+    "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display:
+    "Segoe UI Variable Display", "Avenir Next", "Segoe UI", system-ui,
+    sans-serif;
 }
 
 *,

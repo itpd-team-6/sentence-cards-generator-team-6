@@ -74,10 +74,15 @@ export function splitAtWords(sentence, word) {
   for (const part of word.split(/\s+/).filter(Boolean)) {
     const start = lower.indexOf(part.toLowerCase(), position);
     if (start === -1) continue;
-    if (start > position) segments.push({ text: sentence.slice(position, start), marked: false });
-    segments.push({ text: sentence.slice(start, start + part.length), marked: true });
+    if (start > position)
+      segments.push({ text: sentence.slice(position, start), marked: false });
+    segments.push({
+      text: sentence.slice(start, start + part.length),
+      marked: true,
+    });
     position = start + part.length;
   }
-  if (position < sentence.length) segments.push({ text: sentence.slice(position), marked: false });
+  if (position < sentence.length)
+    segments.push({ text: sentence.slice(position), marked: false });
   return segments;
 }

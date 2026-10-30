@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { changeCard, deleteCard, deleteCards, hideCards, newSentence, newSentences } from "./api.js";
+import {
+  changeCard,
+  deleteCard,
+  deleteCards,
+  hideCards,
+  newSentence,
+  newSentences,
+} from "./api.js";
 import Notice, { newNotice } from "./Notice.jsx";
 
 // What each icon of a card does. The legend shows these names, and the buttons are named after them for screen readers.
@@ -16,8 +23,16 @@ const ACTIONS = [
     name: "Lock translation",
     icon: "M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2",
   },
-  { id: "new", name: "New sentence", icon: "M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" },
-  { id: "delete", name: "Delete", icon: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v5M14 11v5" },
+  {
+    id: "new",
+    name: "New sentence",
+    icon: "M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5",
+  },
+  {
+    id: "delete",
+    name: "Delete",
+    icon: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v5M14 11v5",
+  },
 ];
 
 // A small line icon. The text next to it, or the name of the button, says what it means, so the icon is hidden from
@@ -49,11 +64,18 @@ const iconOf = (id) => ACTIONS.find((action) => action.id === id).icon;
 // "Working on 2 cards" with one, two and three dots in turn, until the answer comes. A learner who asked for less motion
 // sees the three dots still. The dots are hidden from screen readers, which read "Working on 2 cards".
 function Working({ count }) {
-  const still = useMemo(() => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false, []);
+  const still = useMemo(
+    () =>
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
+    [],
+  );
   const [dots, setDots] = useState(0);
   useEffect(() => {
     if (still) return undefined;
-    const timer = setInterval(() => setDots((current) => (current + 1) % 4), 400);
+    const timer = setInterval(
+      () => setDots((current) => (current + 1) % 4),
+      400,
+    );
     return () => clearInterval(timer);
   }, [still]);
   return (
@@ -83,8 +105,13 @@ export default function CardsTable({ cards, onCardsChange }) {
   const deleteDialog = useRef(null);
   const editDialog = useRef(null);
 
-  const setNote = (id, message) => setNotes((current) => ({ ...current, [id]: message ? newNotice(message) : null }));
-  const replace = (card) => onCardsChange(cards.map((item) => (item.id === card.id ? card : item)));
+  const setNote = (id, message) =>
+    setNotes((current) => ({
+      ...current,
+      [id]: message ? newNotice(message) : null,
+    }));
+  const replace = (card) =>
+    onCardsChange(cards.map((item) => (item.id === card.id ? card : item)));
   const working = (card, what) => busy?.id === card.id && busy.what === what;
 
   // Runs one action on a card. A failure leaves the card as it was and shows the message under it.
@@ -101,16 +128,29 @@ export default function CardsTable({ cards, onCardsChange }) {
   }
 
   const toggleFlag = (card) =>
-    act(card, "flag", async () => replace(await changeCard(card.id, { flagged: !card.flagged })));
+    act(card, "flag", async () =>
+      replace(await changeCard(card.id, { flagged: !card.flagged })),
+    );
 
   // A locked translation is not changed by the product, whatever happens to the sentence (DEC-014).
   const toggleLock = (card) =>
-    act(card, "lock", async () => replace(await changeCard(card.id, { translation_locked: !card.translation_locked })));
+    act(card, "lock", async () =>
+      replace(
+        await changeCard(card.id, {
+          translation_locked: !card.translation_locked,
+        }),
+      ),
+    );
 
   const toggleHidden = (card) =>
-    act(card, "hide", async () => replace(await changeCard(card.id, { hidden: !card.hidden })));
+    act(card, "hide", async () =>
+      replace(await changeCard(card.id, { hidden: !card.hidden })),
+    );
 
-  const untick = (ids) => setTicked((current) => new Set([...current].filter((id) => !ids.includes(id))));
+  const untick = (ids) =>
+    setTicked(
+      (current) => new Set([...current].filter((id) => !ids.includes(id))),
+    );
 
   const toggleTick = (card) =>
     setTicked((current) => {
@@ -119,7 +159,8 @@ export default function CardsTable({ cards, onCardsChange }) {
       return next;
     });
 
-  const allTicked = cards.length > 0 && cards.every((card) => ticked.has(card.id));
+  const allTicked =
+    cards.length > 0 && cards.every((card) => ticked.has(card.id));
   const chosen = cards.filter((card) => ticked.has(card.id));
   const asking = confirming && chosen.length > 0; // the question "delete these cards?" is on the screen
 
@@ -157,12 +198,20 @@ export default function CardsTable({ cards, onCardsChange }) {
     actOnChosen("sentences", async () => {
       const ids = chosen.map((card) => card.id);
       const answered = await newSentences(ids);
-      onCardsChange(cards.map((card) => answered.find((item) => item.id === card.id) ?? card));
+      onCardsChange(
+        cards.map(
+          (card) => answered.find((item) => item.id === card.id) ?? card,
+        ),
+      );
       setEditing(null);
       // One message for all the cards, with the reason the model gave for the first one, not one message for each.
       const failed = answered.filter((item) => item.error);
       if (failed.length) {
-        setBatchNotice(newNotice(`${failed.length} of ${ids.length} cards kept their sentence. ${failed[0].error}`));
+        setBatchNotice(
+          newNotice(
+            `${failed.length} of ${ids.length} cards kept their sentence. ${failed[0].error}`,
+          ),
+        );
       }
     });
 
@@ -172,7 +221,11 @@ export default function CardsTable({ cards, onCardsChange }) {
         chosen.map((card) => card.id),
         hidden,
       );
-      onCardsChange(cards.map((card) => answered.find((item) => item.id === card.id) ?? card));
+      onCardsChange(
+        cards.map(
+          (card) => answered.find((item) => item.id === card.id) ?? card,
+        ),
+      );
     });
 
   async function deleteChosen() {
@@ -233,7 +286,8 @@ export default function CardsTable({ cards, onCardsChange }) {
     const fields = {};
     if (phrase && phrase !== (card.phrase ?? "")) fields.phrase = phrase;
     if (sentence !== card.sentence) fields.sentence = sentence;
-    if (translation && translation !== card.translation) fields.translation = translation;
+    if (translation && translation !== card.translation)
+      fields.translation = translation;
     if (Object.keys(fields).length === 0) {
       setEditing(null);
       return;
@@ -273,7 +327,9 @@ export default function CardsTable({ cards, onCardsChange }) {
           ))}
         </ul>
       </div>
-      {batchNotice && <Notice notice={batchNotice} onDismiss={() => setBatchNotice(null)} />}
+      {batchNotice && (
+        <Notice notice={batchNotice} onDismiss={() => setBatchNotice(null)} />
+      )}
       {cards.map((card) => {
         const note = notes[card.id];
         // The message is away from the row, so it names the word it is about.
@@ -292,18 +348,33 @@ export default function CardsTable({ cards, onCardsChange }) {
         className="modal"
         aria-labelledby="delete-title"
         onClose={() => setConfirming(false)}
-        onClick={(event) => event.target === event.currentTarget && !busy && setConfirming(false)}
+        onClick={(event) =>
+          event.target === event.currentTarget && !busy && setConfirming(false)
+        }
       >
         <h3 id="delete-title">
           Delete {chosen.length} {chosen.length === 1 ? "card" : "cards"}?
         </h3>
         <p>This cannot be undone.</p>
         <div className="modal-actions">
-          <button type="button" className="secondary" autoFocus disabled={busy} onClick={() => setConfirming(false)}>
+          <button
+            type="button"
+            className="secondary"
+            autoFocus
+            disabled={busy}
+            onClick={() => setConfirming(false)}
+          >
             Cancel
           </button>
-          <button type="button" className="primary" disabled={busy} onClick={deleteChosen}>
-            {busy?.what === "delete" ? "Deleting..." : `Delete ${chosen.length}`}
+          <button
+            type="button"
+            className="primary"
+            disabled={busy}
+            onClick={deleteChosen}
+          >
+            {busy?.what === "delete"
+              ? "Deleting..."
+              : `Delete ${chosen.length}`}
           </button>
         </div>
       </dialog>
@@ -312,7 +383,9 @@ export default function CardsTable({ cards, onCardsChange }) {
         className="modal editor"
         aria-labelledby="edit-title"
         onClose={() => setEditing(null)}
-        onClick={(event) => event.target === event.currentTarget && !busy && setEditing(null)}
+        onClick={(event) =>
+          event.target === event.currentTarget && !busy && setEditing(null)
+        }
       >
         {editedCard && (
           <form
@@ -332,12 +405,16 @@ export default function CardsTable({ cards, onCardsChange }) {
               autoComplete="off"
               aria-describedby="edit-phrase-hint"
               value={editing.phrase}
-              placeholder={editedCard.phrase ? undefined : "No context phrase yet"}
-              onChange={(event) => setEditing({ ...editing, phrase: event.target.value })}
+              placeholder={
+                editedCard.phrase ? undefined : "No context phrase yet"
+              }
+              onChange={(event) =>
+                setEditing({ ...editing, phrase: event.target.value })
+              }
             />
             <p id="edit-phrase-hint" className="note">
-              Three or four words that show the meaning {editedCard.word} has on this card. A word has only one card for
-              each context phrase.
+              Three or four words that show the meaning {editedCard.word} has on
+              this card. A word has only one card for each context phrase.
             </p>
             <label className="field-label" htmlFor="edit-sentence">
               Sentence
@@ -345,7 +422,9 @@ export default function CardsTable({ cards, onCardsChange }) {
             <textarea
               id="edit-sentence"
               value={editing.sentence}
-              onChange={(event) => setEditing({ ...editing, sentence: event.target.value })}
+              onChange={(event) =>
+                setEditing({ ...editing, sentence: event.target.value })
+              }
             />
             <label className="field-label" htmlFor="edit-translation">
               Translation
@@ -354,7 +433,9 @@ export default function CardsTable({ cards, onCardsChange }) {
               id="edit-translation"
               aria-describedby="edit-translation-hint"
               value={editing.translation}
-              onChange={(event) => setEditing({ ...editing, translation: event.target.value })}
+              onChange={(event) =>
+                setEditing({ ...editing, translation: event.target.value })
+              }
             />
             <p id="edit-translation-hint" className="note">
               {editedCard.translation_locked
@@ -367,7 +448,12 @@ export default function CardsTable({ cards, onCardsChange }) {
               </p>
             )}
             <div className="modal-actions">
-              <button type="button" className="secondary" disabled={busy} onClick={() => setEditing(null)}>
+              <button
+                type="button"
+                className="secondary"
+                disabled={busy}
+                onClick={() => setEditing(null)}
+              >
                 Cancel
               </button>
               <button type="submit" className="primary" disabled={busy}>
@@ -377,7 +463,12 @@ export default function CardsTable({ cards, onCardsChange }) {
           </form>
         )}
       </dialog>
-      <div className="cards-scroll" tabIndex={0} role="region" aria-label="Your cards">
+      <div
+        className="cards-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label="Your cards"
+      >
         <table className="cards">
           <colgroup>
             <col className="col-select" />
@@ -394,9 +485,17 @@ export default function CardsTable({ cards, onCardsChange }) {
                   className="queue-check"
                   aria-label="Select all cards"
                   checked={allTicked}
-                  ref={(box) => box && (box.indeterminate = chosen.length > 0 && !allTicked)}
+                  ref={(box) =>
+                    box && (box.indeterminate = chosen.length > 0 && !allTicked)
+                  }
                   disabled={busy}
-                  onChange={() => setTicked(allTicked ? new Set() : new Set(cards.map((card) => card.id)))}
+                  onChange={() =>
+                    setTicked(
+                      allTicked
+                        ? new Set()
+                        : new Set(cards.map((card) => card.id)),
+                    )
+                  }
                 />
               </th>
               <th scope="col">Word</th>
@@ -406,12 +505,16 @@ export default function CardsTable({ cards, onCardsChange }) {
             </tr>
           </thead>
           {cards.map((card) => {
-            const regenerating = working(card, "new") || (busy?.what === "sentences" && ticked.has(card.id));
+            const regenerating =
+              working(card, "new") ||
+              (busy?.what === "sentences" && ticked.has(card.id));
             return (
               <tbody
                 key={card.id}
                 className={
-                  [card.flagged && "flagged", card.hidden && "hidden-card"].filter(Boolean).join(" ") || undefined
+                  [card.flagged && "flagged", card.hidden && "hidden-card"]
+                    .filter(Boolean)
+                    .join(" ") || undefined
                 }
               >
                 <tr>
@@ -426,18 +529,36 @@ export default function CardsTable({ cards, onCardsChange }) {
                   </td>
                   <th scope="row">
                     {card.word}
-                    {card.flagged && <span className="badge">Marked for review</span>}
-                    {card.hidden && <span className="badge hidden-badge">Hidden from study</span>}
+                    {card.flagged && (
+                      <span className="badge">Marked for review</span>
+                    )}
+                    {card.hidden && (
+                      <span className="badge hidden-badge">
+                        Hidden from study
+                      </span>
+                    )}
                   </th>
-                  <td data-label="Sentence">{card.sentence ?? <span className="empty">No sentence yet.</span>}</td>
+                  <td data-label="Sentence">
+                    {card.sentence ?? (
+                      <span className="empty">No sentence yet.</span>
+                    )}
+                  </td>
                   <td data-label="Translation">
                     <span className="translation-line">
-                      <span>{card.translation ?? <span className="empty">No translation yet.</span>}</span>
+                      <span>
+                        {card.translation ?? (
+                          <span className="empty">No translation yet.</span>
+                        )}
+                      </span>
                       <button
                         type="button"
                         className="secondary icon lock"
                         disabled={busy || !card.translation}
-                        title={card.translation_locked ? "Unlock the translation" : "Lock the translation"}
+                        title={
+                          card.translation_locked
+                            ? "Unlock the translation"
+                            : "Lock the translation"
+                        }
                         aria-label={
                           card.translation_locked
                             ? `Unlock the translation of ${card.word}`
@@ -446,7 +567,11 @@ export default function CardsTable({ cards, onCardsChange }) {
                         aria-pressed={card.translation_locked}
                         onClick={() => toggleLock(card)}
                       >
-                        <Icon path={card.translation_locked ? iconOf("lock") : OPEN_LOCK} />
+                        <Icon
+                          path={
+                            card.translation_locked ? iconOf("lock") : OPEN_LOCK
+                          }
+                        />
                       </button>
                     </span>
                   </td>
@@ -478,8 +603,14 @@ export default function CardsTable({ cards, onCardsChange }) {
                           type="button"
                           className="secondary icon"
                           disabled={busy}
-                          title={card.hidden ? "Show in study" : "Hide from study"}
-                          aria-label={card.hidden ? `Show ${card.word} in study` : `Hide ${card.word} from study`}
+                          title={
+                            card.hidden ? "Show in study" : "Hide from study"
+                          }
+                          aria-label={
+                            card.hidden
+                              ? `Show ${card.word} in study`
+                              : `Hide ${card.word} from study`
+                          }
                           aria-pressed={card.hidden}
                           onClick={() => toggleHidden(card)}
                         >
@@ -520,7 +651,11 @@ export default function CardsTable({ cards, onCardsChange }) {
         </table>
       </div>
       {chosen.length > 0 && (
-        <div className="bulk-bar" role="toolbar" aria-label="Select cards and act on the selected ones">
+        <div
+          className="bulk-bar"
+          role="toolbar"
+          aria-label="Select cards and act on the selected ones"
+        >
           <div className="bulk-group">
             <span className="bulk-count" aria-live="polite">
               {chosen.length} selected
@@ -549,7 +684,11 @@ export default function CardsTable({ cards, onCardsChange }) {
               disabled={busy || chosen.length === 0}
               onClick={askForNewSentences}
             >
-              {busy?.what === "sentences" ? <Working count={chosen.length} /> : "New sentences"}
+              {busy?.what === "sentences" ? (
+                <Working count={chosen.length} />
+              ) : (
+                "New sentences"
+              )}
             </button>
             <button
               type="button"
