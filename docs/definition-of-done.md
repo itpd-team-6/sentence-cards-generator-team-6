@@ -19,7 +19,7 @@ A story closes only on the Customer's acceptance, per [Showing Working Software]
 - A pull request closes exactly one task issue and links it.
 - The accountable reviewer ticks every task acceptance criterion before approving.
 - The approval comes from a member other than the author.
-- The repository checks are green: the link check and the Markdown check.
+- The repository checks are green: the link check, the Markdown check, the `actionlint` check over the workflow files, and the product-code checks (lint, format, build and tests).
 - A user-visible change updates the `[Unreleased]` section of [`CHANGELOG.md`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/CHANGELOG.md).
 - The acceptance criteria this pull request claims pass on its branch, and on `main` after it merges.
 - No secret, recording, or private-only material is committed.
