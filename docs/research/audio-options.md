@@ -8,11 +8,11 @@ Every claim below has the page it was read on, opened on 2026-10-23; prices, voi
 
 ## The options
 
-| Option                                     | Russian, English, German                              | Cost                                                    | Licence                                | Local machine or VPS                         |
-| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------- | -------------------------------------- | -------------------------------------------- |
-| [Piper](#option-1-piper)                   | All three have voices; Russian only at medium quality | No price: open source, run by the learner               | GPL-3.0 engine; each voice has its own | Local, as a program the learner runs         |
-| [Google Cloud TTS](#option-2-google-cloud) | All three are listed                                  | Free up to a monthly limit, then per million characters | Hosted service, not open source        | Neither: called over the network, billing on |
-| [Coqui XTTS](#option-3-coqui-xtts)         | All three are in its 17 languages                     | No price: run by the learner                            | Non-commercial model licence           | Local, as a program the learner runs         |
+| Option                                     | Russian, English, German                              | Cost                                                    | Licence                                                    | Local machine or VPS                         |
+| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------- |
+| [Piper](#option-1-piper)                   | All three have voices; Russian only at medium quality | No price: open source, run by the learner               | GPL-3.0 engine; each voice has its own, not all commercial | Local, as a program the learner runs         |
+| [Google Cloud TTS](#option-2-google-cloud) | All three are listed                                  | Free up to a monthly limit, then per million characters | Hosted service, not open source                            | Neither: called over the network, billing on |
+| [Coqui XTTS](#option-3-coqui-xtts)         | All three are in its 17 languages                     | No price: run by the learner                            | Non-commercial model licence                               | Local, as a program the learner runs         |
 
 ## Option 1: Piper
 
@@ -22,8 +22,22 @@ Piper is a text-to-speech engine that runs on the learner's own machine, so it i
   That repository was archived by its owner on 2025-10-06 and points to [`OHF-Voice/piper1-gpl`](https://github.com/OHF-Voice/piper1-gpl) as the place where development moved.
 - **Languages:** the [voice list](https://github.com/rhasspy/piper/blob/master/VOICES.md) has Russian (`ru_RU`: denis, dmitri, irina, ruslan, all medium quality), English (`en_US` and `en_GB`, many voices up to high quality) and German (`de_DE`: eight voices, `thorsten` in low, medium and high quality and the others in x_low, low or medium quality).
 - **Cost:** the engine is open source and carries no price; the pages read list no fee.
-- **Licence:** the archived repository is MIT, and the repository where development moved is [GPL-3.0](https://github.com/OHF-Voice/piper1-gpl).
-  The [voice list](https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/VOICES.md) of the new repository says each voice has a `MODEL_CARD` with its licensing information and that "some voices may have restrictive licenses", so the licence of the chosen voices must be read one by one.
+- **Licence of the engine:** the archived repository is MIT and the repository where development moved is [GPL-3.0](https://github.com/OHF-Voice/piper1-gpl), both of which allow commercial use.
+  The [voice list](https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/VOICES.md) of the new repository says each voice has a `MODEL_CARD` with its licensing information and that "some voices may have restrictive licenses", so the licence of each voice is read on its own `MODEL_CARD` below.
+- **Licence of the voices:** the voices live in [`rhasspy/piper-voices`](https://huggingface.co/rhasspy/piper-voices), where each voice carries a `MODEL_CARD` that names the licence of the dataset it was trained on.
+  The repository's own licence field is MIT, but a voice's `MODEL_CARD` can name a stricter dataset licence, so the table below reads one voice per language as an example, read on 2026-10-30, and whether that licence allows commercial use.
+  The team has not yet chosen which voices the product will use, so a chosen voice must have its own `MODEL_CARD` read before it is relied on.
+
+  | Language          | Voice (example)                                                                                                | Dataset licence                                                                                                     | Commercial use                                                                                   |
+  | ----------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+  | Russian (`ru_RU`) | [denis (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/denis/medium/MODEL_CARD)       | [CC0](https://creativecommons.org/publicdomain/zero/1.0/)                                                           | Yes                                                                                              |
+  | Russian (`ru_RU`) | [dmitri (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/dmitri/medium/MODEL_CARD)     | [CC0](https://creativecommons.org/publicdomain/zero/1.0/)                                                           | Yes                                                                                              |
+  | Russian (`ru_RU`) | [irina (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/MODEL_CARD)       | Unknown (named as `Unknown` on the `MODEL_CARD`)                                                                    | Not known to us, so treat as not allowed                                                         |
+  | Russian (`ru_RU`) | [ruslan (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/ruslan/medium/MODEL_CARD)     | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)                                               | No, the `NC` term forbids it                                                                     |
+  | English (`en_US`) | [lessac (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/lessac/medium/MODEL_CARD)     | [Blizzard 2013 research licence](https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html) | No, it is granted "exclusively for Research Purposes only" and excludes "any commercial purpose" |
+  | English (`en_GB`) | [alba (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_GB/alba/medium/MODEL_CARD)         | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)                                                           | Yes, with attribution                                                                            |
+  | German (`de_DE`)  | [thorsten (medium)](https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/medium/MODEL_CARD) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/)                                                           | Yes                                                                                              |
+
 - **Open source ([`CON-06`](../product-vision.md#con-06)):** the engine is.
 - **What a person who hosts the product needs:** the new repository installs with `pip install piper-tts` ([`OHF-Voice/piper1-gpl`](https://github.com/OHF-Voice/piper1-gpl)); the pages read state no hardware requirement, so what a VPS needs is not known to us.
 
@@ -57,3 +71,4 @@ XTTS is a text-to-speech model that runs on the learner's own machine, our choic
 - Is a non-commercial model licence acceptable under the "open source" constraint, or must the audio source be open source in the full sense?
 - Is it acceptable that an online service receives the words and sentences, given that the Customer wanted the local option "so that no data is sent anywhere"?
 - Is Piper's medium-quality Russian good enough for the learner, or is Russian the language where an online service is needed?
+- Does the product need a voice that allows commercial use, or is non-commercial use enough, given that some Piper voices (such as `ru_RU` ruslan and `en_US` lessac) forbid commercial use while others (such as `ru_RU` denis and `de_DE` thorsten) allow it?
