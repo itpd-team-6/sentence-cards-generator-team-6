@@ -14,7 +14,11 @@ REQUEST = {"word": "Haus", "text_language": "de", "first_language": "en"}
 
 def use_model(handler, **changes) -> None:
     """Make the API ask a fake model, which never leaves the test. The waits between repeated requests are skipped."""
-    values = {"llm_api_key": "test-key", "llm_model": "test-model", "llm_base_url": "https://llm.example/v1/"}
+    values = {
+        "llm_api_key": "test-key",
+        "llm_model": "test-model",
+        "llm_base_url": "https://llm.example/v1/",
+    }
     values.update(changes)
     transport = httpx2.MockTransport(handler)
     settings = Settings(_env_file=None, **values)
@@ -29,7 +33,11 @@ def forget_the_fake_model():
 
 
 def test_the_api_returns_the_sentence_and_its_translation() -> None:
-    use_model(lambda request: httpx2.Response(200, json={"choices": [{"message": {"content": GOOD_ANSWER}}]}))
+    use_model(
+        lambda request: httpx2.Response(
+            200, json={"choices": [{"message": {"content": GOOD_ANSWER}}]}
+        )
+    )
 
     response = TestClient(app).post("/api/sentences", json=REQUEST)
 
@@ -46,7 +54,9 @@ def test_the_api_passes_the_previous_sentence_to_the_model() -> None:
 
     use_model(handler)
 
-    TestClient(app).post("/api/sentences", json={**REQUEST, "previous_sentence": "Mein Haus ist klein."})
+    TestClient(app).post(
+        "/api/sentences", json={**REQUEST, "previous_sentence": "Mein Haus ist klein."}
+    )
 
     assert "Mein Haus ist klein." in bodies[0]["messages"][-1]["content"]
 
@@ -57,7 +67,9 @@ def test_a_model_that_does_not_answer_gives_an_error_the_page_can_show() -> None
     response = TestClient(app).post("/api/sentences", json=REQUEST)
 
     assert response.status_code == 502
-    assert response.json() == {"detail": "The language model is not available right now. Try again in a moment."}
+    assert response.json() == {
+        "detail": "The language model is not available right now. Try again in a moment."
+    }
 
 
 def test_a_missing_key_gives_an_error_the_page_can_show() -> None:

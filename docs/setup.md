@@ -130,11 +130,15 @@ If a word gets a card with no sentence (the model did not answer), use the card'
 
 ## Checks and tests
 
-- Backend tests, from `backend` with the environment active:
+- Backend checks and tests, from `backend` with the environment active:
 
   ```bash
+  ruff check .
+  ruff format --check .
   python -m pytest
   ```
+
+  `ruff check .` lints the code and `ruff format --check .` checks its formatting; `ruff format .` fixes the formatting.
 
 - Front end checks and build, from `frontend` after `npm ci`:
 

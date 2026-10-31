@@ -108,7 +108,9 @@ def test_updating_a_card_changes_only_that_card() -> None:
 def test_the_changes_survive_a_restart() -> None:
     connection = open_database()
     text_id = save_text(connection, "Hallo", "de", "en", ["Hallo"])
-    card_id = add_card(connection, text_id, "Hallo", "Hallo, wie geht's?", "Hello, how are you?", TODAY)
+    card_id = add_card(
+        connection, text_id, "Hallo", "Hallo, wie geht's?", "Hello, how are you?", TODAY
+    )
     update_card(connection, card_id, sentence="Hallo zusammen!")
     connection.close()
 
@@ -171,7 +173,9 @@ INSERT INTO cards VALUES (1, 1, 'Haus', 'Das Haus ist alt.', 'The house is old.'
 
 def get_card_before(connection: sqlite3.Connection, card_id: int) -> str:
     """The due date of a card in a database that has not been migrated yet."""
-    return connection.execute("SELECT due_date FROM cards WHERE id = ?", (card_id,)).fetchone()["due_date"]
+    return connection.execute("SELECT due_date FROM cards WHERE id = ?", (card_id,)).fetchone()[
+        "due_date"
+    ]
 
 
 def table_names(connection: sqlite3.Connection) -> set[str]:
@@ -222,16 +226,24 @@ def test_a_database_made_by_the_released_version_keeps_the_order_of_its_study_li
         INSERT INTO cards VALUES (3, 1, 'Das', 'Das Haus ist alt.', 'The house is old.', 0, '2026-10-18', 2);
         """
     )
-    in_order_before = sorted([1, 2, 3], key=lambda card_id: (get_card_before(connection, card_id), card_id))
+    in_order_before = sorted(
+        [1, 2, 3], key=lambda card_id: (get_card_before(connection, card_id), card_id)
+    )
 
     init_db(connection)
 
-    assert [card["id"] for card in list_due_cards(connection, date(2026, 10, 21))] == in_order_before == [2, 3, 1]
+    assert (
+        [card["id"] for card in list_due_cards(connection, date(2026, 10, 21))]
+        == in_order_before
+        == [2, 3, 1]
+    )
     assert get_card(connection, 2)["due_date"] == "2026-10-18"
     assert get_card(connection, 2)["due_at"] == "2026-10-18T00:00:00.002000"
 
 
-def test_a_database_made_before_the_interval_existed_keeps_its_cards_with_an_interval_of_0() -> None:
+def test_a_database_made_before_the_interval_existed_keeps_its_cards_with_an_interval_of_0() -> (
+    None
+):
     connection = connect()
     connection.executescript(
         RELEASED_TABLES.replace(",\n    interval_days INTEGER NOT NULL DEFAULT 0", "").replace(
@@ -312,7 +324,9 @@ def test_a_database_made_by_the_released_version_has_no_hidden_card() -> None:
     assert [card["id"] for card in list_due_cards(connection, date(2026, 10, 21))] == [1]
 
 
-def test_a_database_made_before_phrases_keeps_its_cards_and_they_have_no_phrase(monkeypatch) -> None:
+def test_a_database_made_before_phrases_keeps_its_cards_and_they_have_no_phrase(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(database, "MIGRATIONS", MIGRATIONS[:-1])
     connection = connect()
     init_db(connection)
@@ -336,7 +350,15 @@ def test_a_database_made_before_phrases_keeps_its_cards_and_they_have_no_phrase(
 def test_two_cards_cannot_have_the_same_word_and_the_same_phrase() -> None:
     connection = open_database()
     text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"])
-    add_card(connection, text_id, "Haus", "Das Haus ist alt.", "The house is old.", TODAY, "das alte Haus")
+    add_card(
+        connection,
+        text_id,
+        "Haus",
+        "Das Haus ist alt.",
+        "The house is old.",
+        TODAY,
+        "das alte Haus",
+    )
 
     with pytest.raises(sqlite3.IntegrityError):
         add_card(connection, text_id, "Haus", "Ein Haus.", "A house.", TODAY, "das alte Haus")
@@ -355,8 +377,18 @@ def test_cards_without_a_phrase_do_not_count_as_the_same_card() -> None:
 def test_a_card_is_found_by_its_word_and_phrase_whatever_the_case_and_the_spaces() -> None:
     connection = open_database()
     text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus", "Zug"])
-    card_id = add_card(connection, text_id, "Haus", "Das Haus ist alt.", "The house is old.", TODAY, "das alte Haus")
-    add_card(connection, text_id, "Zug", "Der Zug kommt.", "The train comes.", TODAY, "das alte Haus")
+    card_id = add_card(
+        connection,
+        text_id,
+        "Haus",
+        "Das Haus ist alt.",
+        "The house is old.",
+        TODAY,
+        "das alte Haus",
+    )
+    add_card(
+        connection, text_id, "Zug", "Der Zug kommt.", "The train comes.", TODAY, "das alte Haus"
+    )
 
     assert find_card_by_phrase(connection, "haus", "Das  alte HAUS")["id"] == card_id
     assert find_card_by_phrase(connection, "Haus", "das neue Haus") is None

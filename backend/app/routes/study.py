@@ -7,7 +7,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.database import InvalidMove, QueueOutOfDate, get_connection, list_due_cards, list_queue, reorder_queue
+from app.database import (
+    InvalidMove,
+    QueueOutOfDate,
+    get_connection,
+    list_due_cards,
+    list_queue,
+    reorder_queue,
+)
 from app.routes.cards import get_today
 from app.scheduler import Answer, answer_card, forecast
 
@@ -80,7 +87,10 @@ def due_cards(
 
 
 def queue_response(connection: sqlite3.Connection, today: date) -> list[QueueCard]:
-    return [QueueCard(**card, due_today=card["due_date"] <= today.isoformat()) for card in list_queue(connection)]
+    return [
+        QueueCard(**card, due_today=card["due_date"] <= today.isoformat())
+        for card in list_queue(connection)
+    ]
 
 
 @router.get("/api/study/queue")
@@ -109,7 +119,8 @@ def save_queue_order(
         reorder_queue(connection, order.card_ids, order.moved, order.today_count, today)
     except QueueOutOfDate:
         raise HTTPException(
-            status_code=409, detail="The cards have changed. Reload the list and move the cards again."
+            status_code=409,
+            detail="The cards have changed. Reload the list and move the cards again.",
         ) from None
     except InvalidMove as error:
         raise HTTPException(status_code=422, detail=str(error)) from None

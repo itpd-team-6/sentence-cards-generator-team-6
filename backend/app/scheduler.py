@@ -53,7 +53,9 @@ def forecast(interval_days: int, today: date) -> dict[Answer, tuple[int, date]]:
     return {answer: next_review(interval_days, answer, today) for answer in ANSWERS}
 
 
-def answer_card(connection: sqlite3.Connection, card_id: int, answer: Answer, today: date) -> dict | None:
+def answer_card(
+    connection: sqlite3.Connection, card_id: int, answer: Answer, today: date
+) -> dict | None:
     """Apply an answer to a card and keep the result. Returns the card, or None when it does not exist."""
     card = get_card(connection, card_id)
     if card is None:

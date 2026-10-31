@@ -90,7 +90,9 @@ class CardChange(BaseModel):
     @model_validator(mode="after")
     def something_changes(self) -> "CardChange":
         if not self.model_fields_set:
-            raise ValueError("Send at least one of: sentence, translation, phrase, translation_locked, flagged, hidden.")
+            raise ValueError(
+                "Send at least one of: sentence, translation, phrase, translation_locked, flagged, hidden."
+            )
         return self
 
 
@@ -228,25 +230,33 @@ def create_cards(
         try:
             result = ask_model(client, text, word, known_phrases=meanings_of_word(connection, word))
             check_phrase_is_free(connection, word, result.phrase)
-            add_card(connection, text_id, word, result.sentence, result.translation, today, result.phrase)
+            add_card(
+                connection, text_id, word, result.sentence, result.translation, today, result.phrase
+            )
         except CardExists as exists:
             existing.append(ExistingCard(word=word, phrase=exists.phrase))
         except LlmError as error:
             add_card(connection, text_id, word, None, None, today)
             errors[word] = str(error)
-    cards = [card_response(card, errors.get(card["word"])) for card in list_cards(connection, text_id)]
+    cards = [
+        card_response(card, errors.get(card["word"])) for card in list_cards(connection, text_id)
+    ]
     return CreatedCards(cards=cards, existing=existing)
 
 
 @router.get("/api/texts/{text_id}/cards")
-def read_cards(text_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> list[CardResponse]:
+def read_cards(
+    text_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> list[CardResponse]:
     if get_text(connection, text_id) is None:
         raise HTTPException(status_code=404, detail="There is no text with this id.")
     return [card_response(card) for card in list_cards(connection, text_id)]
 
 
 @router.get("/api/cards")
-def read_all_cards(connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> list[CardResponse]:
+def read_all_cards(
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+) -> list[CardResponse]:
     """Every card of every text, so the learner can review the cards they study, whatever text they came from."""
     return [card_response(card) for card in list_all_cards(connection)]
 
@@ -269,7 +279,11 @@ def replace_sentences(
         text = get_text(connection, card["text_id"])
         try:
             result = ask_model(
-                client, text, card, card["sentence"], meanings_of_word(connection, card["word"], card["id"])
+                client,
+                text,
+                card,
+                card["sentence"],
+                meanings_of_word(connection, card["word"], card["id"]),
             )
             check_phrase_is_free(connection, card["word"], result.phrase, card["id"])
         except LlmNotConfigured as error:
@@ -293,7 +307,9 @@ def hide_cards(
 
 
 @router.post("/api/cards/delete", status_code=204)
-def remove_cards(chosen: CardIds, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> Response:
+def remove_cards(
+    chosen: CardIds, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> Response:
     """Delete the chosen cards in one step. When a card does not exist, none is deleted."""
     if not delete_cards(connection, chosen.card_ids):
         raise HTTPException(status_code=404, detail="There is no card with one of these ids.")
@@ -336,7 +352,10 @@ def change_card(
             raise HTTPException(status_code=409, detail=str(error)) from None
     locked = bool(fields.get("translation_locked", card["translation_locked"]))
     if locked and not (fields.get("translation") or card["translation"]):
-        raise HTTPException(status_code=422, detail="A card without a translation cannot have its translation locked.")
+        raise HTTPException(
+            status_code=422,
+            detail="A card without a translation cannot have its translation locked.",
+        )
     if "sentence" in fields and "translation" not in fields and not locked:
         text = get_text(connection, card["text_id"])
         try:
@@ -367,7 +386,13 @@ def replace_sentence(
     card = find_card(connection, card_id)
     text = get_text(connection, card["text_id"])
     try:
-        result = ask_model(client, text, card, card["sentence"], meanings_of_word(connection, card["word"], card_id))
+        result = ask_model(
+            client,
+            text,
+            card,
+            card["sentence"],
+            meanings_of_word(connection, card["word"], card_id),
+        )
         check_phrase_is_free(connection, card["word"], result.phrase, card_id)
     except LlmNotConfigured as error:
         raise HTTPException(status_code=503, detail=str(error)) from None
@@ -380,7 +405,9 @@ def replace_sentence(
 
 
 @router.delete("/api/cards/{card_id}", status_code=204)
-def remove_card(card_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> Response:
+def remove_card(
+    card_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> Response:
     """Delete one card. The other cards of the text stay."""
     if not delete_card(connection, card_id):
         raise HTTPException(status_code=404, detail="There is no card with this id.")

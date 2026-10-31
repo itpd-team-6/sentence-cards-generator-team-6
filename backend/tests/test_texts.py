@@ -67,7 +67,9 @@ def test_the_text_language_and_the_first_language_must_differ() -> None:
 
 def test_a_selection_of_several_words_is_kept_as_one_marked_item() -> None:
     with TestClient(app) as client:
-        response = client.post("/api/texts", json={**TEXT, "words": ["stimmt  zu", "Zug", "stimmt zu"]})
+        response = client.post(
+            "/api/texts", json={**TEXT, "words": ["stimmt  zu", "Zug", "stimmt zu"]}
+        )
 
         assert response.status_code == 201
         assert response.json()["words"] == ["stimmt zu", "Zug"]
