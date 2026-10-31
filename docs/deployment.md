@@ -92,8 +92,27 @@ The release candidate goes to staging first, and the same commit then goes to pr
    git checkout <commit>
    ```
 
-5. Start staging on port `8001`, from its `backend` folder, with the command of [`setup.md`](setup.md#run) and the option `--host 0.0.0.0 --port 8001`.
-   Keep it running with a service or a terminal multiplexer, so it survives the end of the SSH session.
+5. Start staging with its `systemd` service, which runs the product from the `backend` folder of the copy on port `8001`, and starts it again if it fails, so it survives the end of the SSH session.
+   Production has the same service on port `8002`.
+   The first time only, create the file `/etc/systemd/system/sentence-cards-staging.service`, and the same file for production with `production` in the description, in the path and in the name, and port `8002`:
+
+   ```ini
+   [Unit]
+   Description=Sentence cards generator (staging)
+   After=network.target
+
+   [Service]
+   WorkingDirectory=/opt/sentence-cards/staging/backend
+   ExecStart=/opt/sentence-cards/staging/backend/.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8001
+   Restart=on-failure
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Then run `systemctl daemon-reload` and `systemctl enable --now sentence-cards-staging`.
+   After each update of the code, restart the service with `systemctl restart sentence-cards-staging`, and see that it runs with `systemctl status sentence-cards-staging`.
+
 6. Verify staging, as in [Verify a deployment](#verify-a-deployment).
 7. Only when staging passes, repeat steps 4 to 6 in `/opt/sentence-cards/production` with port `8002`.
    Before the update, copy the production database file, as [Roll back](#roll-back) needs it.
