@@ -1,4 +1,3 @@
-
 # Quality requirements
 
 This is the priority matrix: one row per quality requirement, sorted active first, then by business importance from High to Low, then by technical risk from High to Low, with `QR-nn` order breaking a tie.
@@ -6,7 +5,6 @@ Each row links its file under `qr/`, which carries the requirement's six-part sc
 
 The results and schedule of the quality requirement tests are in the [Quality Requirement Testing Plan](../project-plan.md#quality-requirement-testing-plan).
 
-| QR                   | Outcome
 | QR                   | Outcome                                                                                                                                                                                | Business importance | Technical risk | Characteristic         | Sub-characteristic | Status |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | -------------- | ---------------------- | ------------------ | ------ |
 | [QR-01](qr/QR-01.md) | When the language model gives no sentence for a marked word, the learner still gets a card for that word and can ask for its sentence again, and the other words keep their sentences. | High                | Medium         | Reliability            | Fault Tolerance    | Active |
