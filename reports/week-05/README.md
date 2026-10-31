@@ -3,7 +3,7 @@
 ## Project
 
 Sentence cards generator, team 6.
-Assignment 5, Deployment, Tests, Continuous Integration And The Fifth Release: the product on the university virtual machine, the tests of the quality requirements and their plan, the product continuous integration, the feature documentation, the validation meeting and the third release of the product.
+Assignment 5, Testing, Verification, Deployment, And The Week 5 Release: the product on the university virtual machine, the tests of the quality requirements and their plan, the product continuous integration, the feature documentation, the validation meeting and the third release of the product.
 
 Our problem-space sentence: language learners (and their teachers) who study Russian, English or German from real texts want to turn the words they choose into flashcards with example sentences, translations and pronunciation, and review them with spaced repetition, without building each card by hand.
 
