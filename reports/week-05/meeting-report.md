@@ -50,6 +50,7 @@
 - [DEC-051: The voices of the audio need no licence for commercial use, and they must be compatible with the MIT licence of the product.](../../docs/decisions.md#dec-051)
 - [DEC-052: `US-09` gets a fourth acceptance criterion about the browsers in which the product opens and works.](../../docs/decisions.md#dec-052)
 - [DEC-053: The Customer accepted `US-09` with its four acceptance criteria, so the story is closed.](../../docs/decisions.md#dec-053)
+- [DEC-054: The selection editor keeps the line breaks of the pasted text, and more than one line break in a row becomes one.](../../docs/decisions.md#dec-054)
 
 ## Action points
 

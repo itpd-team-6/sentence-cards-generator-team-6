@@ -586,3 +586,14 @@ The Customer accepted `US-09` with its four acceptance criteria, so the story is
 - **Source:** [the Week 5 validation meeting](../reports/week-05/meeting-report.md) and [the Customer's chat message after it](../reports/week-05/evidence/customer-chat-us-09-verdict.md)
 - **Why:** in the Week 5 meeting the team showed `AC-01`, `AC-02` and `AC-03` of `US-09` one at a time on the production instance, and the Customer said "Yes, I accessed it by the provided address, and I did not need to install anything." (Customer, [00:12:48]), "Yes, I agree that it passes." (Customer, [00:14:23]) and "More technical than necessary, or for other customers it would look too technical, I guess, but it is okay that you put it here." (Customer, [00:15:24]).
   The team added `AC-04` about the browsers after the meeting ([`DEC-052`](#dec-052)), tested it in Firefox and Chrome on a computer and in Chrome on a phone, and asked in the group chat "Since it is ok can we close US-09?" (nataliamotand, chat, 2026-10-31 16:37), and the Customer answered "Also works in Firefox on mobile phone. Yes, it's done" (Customer, chat, 2026-10-31 17:20).
+
+## DEC-054
+
+The selection editor keeps the line breaks of the pasted text, and more than one line break in a row becomes one.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Customer's chat message after the Week 5 meeting](../reports/week-05/evidence/customer-chat-line-breaks-request.md)
+- **Why:** the Customer wrote "Right now, the preview puts the text on a single line and wraps it. As a result, when I paste a song text which doesn't have any separators between lines, I can't see where one line ends and another one starts." (Customer, chat, 2026-10-31 18:24) and "For me, it'd be more convenient if newlines were preserved." (Customer, chat, 2026-10-31 18:24).
+  He also wrote "I think if there are more than one newline between lines, they can be replaced with only one." (Customer, chat, 2026-10-31 18:24).
