@@ -107,3 +107,12 @@ This goal is provisional until the sprint is planned.
 - **Review:** the team's weekly review, Wednesdays at 15:00 Moscow time; it reads [threshold-of-success.md](threshold-of-success.md) and [risks.md](risks.md).
 - **Checked by:** the accountable member of each scheduled issue reports its state, and the team walks the sprint backlog against the sprint's goal.
 - **Visible at:** the [project's table view](https://github.com/orgs/itpd-team-6/projects/1) and the [sprints' GitHub milestones](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestones).
+
+## Quality Requirement Testing Plan
+
+| QR | QRT | Status | Checked | Planned for sprint | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| [QR-01](quality-requirements/qr/QR-01.md) | [QRT-01](quality-requirements/qr/QR-01.md#qrt-01) | Passes | SPRINT-05 | SPRINT-05 | [Product CI run](https://github.com/itpd-team-6/sentence-cards-generator-team-6/actions/runs/41223520996) |
+| [QR-02](quality-requirements/qr/QR-02.md) | [QRT-01](quality-requirements/qr/QR-02.md#qrt-01) | Passes | SPRINT-05 | SPRINT-05 | [Product CI run](https://github.com/itpd-team-6/sentence-cards-generator-team-6/actions/runs/41223520996) |
+| [QR-03](quality-requirements/qr/QR-03.md) | [QRT-01](quality-requirements/qr/QR-03.md#qrt-01) | Not run | — | SPRINT-07 | — |
+| [QR-06](quality-requirements/qr/QR-06.md) | [QRT-01](quality-requirements/qr/QR-06.md#qrt-01) | Not run | — | To be scheduled | — |
