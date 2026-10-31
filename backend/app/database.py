@@ -96,7 +96,9 @@ def add_the_card_phrase(connection: sqlite3.Connection) -> None:
     this first, whatever the case of the letters (`find_card_by_phrase`), so the learner gets a clear message.
     """
     connection.execute("ALTER TABLE cards ADD COLUMN phrase TEXT")
-    connection.execute("CREATE UNIQUE INDEX cards_word_phrase ON cards (word, phrase) WHERE phrase IS NOT NULL")
+    connection.execute(
+        "CREATE UNIQUE INDEX cards_word_phrase ON cards (word, phrase) WHERE phrase IS NOT NULL"
+    )
 
 
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
@@ -196,7 +198,9 @@ def get_text(connection: sqlite3.Connection, text_id: int) -> dict | None:
     row = connection.execute("SELECT * FROM texts WHERE id = ?", (text_id,)).fetchone()
     if row is None:
         return None
-    words = connection.execute("SELECT word FROM marked_words WHERE text_id = ? ORDER BY id", (text_id,)).fetchall()
+    words = connection.execute(
+        "SELECT word FROM marked_words WHERE text_id = ? ORDER BY id", (text_id,)
+    ).fetchall()
     return {**dict(row), "words": [word["word"] for word in words]}
 
 
@@ -215,7 +219,9 @@ def add_card(
         (text_id, word, sentence, translation, today.isoformat(), phrase),
     )
     card_id = cursor.lastrowid
-    connection.execute("UPDATE cards SET due_at = ? WHERE id = ?", (default_due_time(today, card_id), card_id))
+    connection.execute(
+        "UPDATE cards SET due_at = ? WHERE id = ?", (default_due_time(today, card_id), card_id)
+    )
     connection.commit()
     return card_id
 
@@ -225,13 +231,23 @@ def get_card(connection: sqlite3.Connection, card_id: int) -> dict | None:
     return dict(row) if row else None
 
 
-def phrases_of_word(connection: sqlite3.Connection, word: str, except_card_id: int | None = None) -> list[str]:
+def phrases_of_word(
+    connection: sqlite3.Connection, word: str, except_card_id: int | None = None
+) -> list[str]:
     """The phrases of the cards for `word`, whatever the case of the word, in the order the cards were made."""
-    rows = connection.execute("SELECT id, word, phrase FROM cards WHERE phrase IS NOT NULL ORDER BY id").fetchall()
-    return [row["phrase"] for row in rows if row["word"].casefold() == word.casefold() and row["id"] != except_card_id]
+    rows = connection.execute(
+        "SELECT id, word, phrase FROM cards WHERE phrase IS NOT NULL ORDER BY id"
+    ).fetchall()
+    return [
+        row["phrase"]
+        for row in rows
+        if row["word"].casefold() == word.casefold() and row["id"] != except_card_id
+    ]
 
 
-def meanings_of_word(connection: sqlite3.Connection, word: str, except_card_id: int | None = None) -> dict[str, str]:
+def meanings_of_word(
+    connection: sqlite3.Connection, word: str, except_card_id: int | None = None
+) -> dict[str, str]:
     """Like `phrases_of_word`, with the translation of the card's sentence for each phrase ("" when it has none), so
     that the language model sees what the word means on each card and not only three or four words."""
     rows = connection.execute(
@@ -251,13 +267,19 @@ def find_card_by_phrase(
     "den Zug nehmen" and "Den Zug  nehmen" are the same phrase. `except_card_id` leaves out the card being changed."""
     for row in connection.execute("SELECT * FROM cards WHERE phrase IS NOT NULL ORDER BY id"):
         is_another_card = row["id"] != except_card_id
-        if is_another_card and row["word"].casefold() == word.casefold() and same_phrase(row["phrase"], phrase):
+        if (
+            is_another_card
+            and row["word"].casefold() == word.casefold()
+            and same_phrase(row["phrase"], phrase)
+        ):
             return dict(row)
     return None
 
 
 def list_cards(connection: sqlite3.Connection, text_id: int) -> list[dict]:
-    rows = connection.execute("SELECT * FROM cards WHERE text_id = ? ORDER BY id", (text_id,)).fetchall()
+    rows = connection.execute(
+        "SELECT * FROM cards WHERE text_id = ? ORDER BY id", (text_id,)
+    ).fetchall()
     return [dict(row) for row in rows]
 
 
@@ -333,12 +355,18 @@ def times_between(
         return [before + timedelta(seconds=place + 1) for place in range(count)]
     step = (after - before) / (count + 1)
     times = [before + step * (place + 1) for place in range(count)]
-    in_order = before < times[0] and all(a < b for a, b in zip(times, times[1:])) and times[-1] < after
+    in_order = (
+        before < times[0] and all(a < b for a, b in zip(times, times[1:])) and times[-1] < after
+    )
     return times if in_order else None
 
 
 def reorder_queue(
-    connection: sqlite3.Connection, card_ids: list[int], moved: list[int], today_count: int, today: date
+    connection: sqlite3.Connection,
+    card_ids: list[int],
+    moved: list[int],
+    today_count: int,
+    today: date,
 ) -> None:
     """Save a new order of the study queue, and the cards that are due today in it (DEC-021).
 
@@ -368,7 +396,9 @@ def reorder_queue(
     dates = {card["id"]: card["due_date"] for card in queue}
     for number, card_id in enumerate(card_ids):
         if card_id not in moved_ids and (dates[card_id] <= today_iso) != (number < today_count):
-            raise InvalidMove("A card that is not named as moved changed from today to later, or the reverse.")
+            raise InvalidMove(
+                "A card that is not named as moved changed from today to later, or the reverse."
+            )
 
     current = {card["id"]: datetime.fromisoformat(card["due_at"]) for card in queue}
     new_times: dict[int, datetime] = {}
@@ -386,7 +416,10 @@ def reorder_queue(
         times = times_between(before, after, len(run), [current[card_id] for card_id in run])
         if times is None:
             start = min(current.values())
-            new_times = {card_id: start + timedelta(milliseconds=number) for number, card_id in enumerate(card_ids)}
+            new_times = {
+                card_id: start + timedelta(milliseconds=number)
+                for number, card_id in enumerate(card_ids)
+            }
             break
         new_times.update(zip(run, times))
         first = last
@@ -403,7 +436,8 @@ def reorder_queue(
                 new_dates[card_id] = date_above
     for card_id, moment in new_times.items():
         connection.execute(
-            "UPDATE cards SET due_at = ? WHERE id = ?", (moment.isoformat(timespec="microseconds"), card_id)
+            "UPDATE cards SET due_at = ? WHERE id = ?",
+            (moment.isoformat(timespec="microseconds"), card_id),
         )
     for card_id, due_date in new_dates.items():
         connection.execute("UPDATE cards SET due_date = ? WHERE id = ?", (due_date, card_id))
@@ -422,7 +456,9 @@ def set_hidden(connection: sqlite3.Connection, card_ids: list[int], hidden: bool
     them does not exist."""
     ids = list(dict.fromkeys(card_ids))
     marks = ", ".join("?" for _ in ids)
-    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[0]
+    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[
+        0
+    ]
     if found != len(ids):
         return False
     connection.execute(f"UPDATE cards SET hidden = ? WHERE id IN ({marks})", [int(hidden), *ids])
@@ -434,7 +470,9 @@ def delete_cards(connection: sqlite3.Connection, card_ids: list[int]) -> bool:
     """Delete several cards in one step. Returns False, and deletes nothing, when one of them does not exist."""
     ids = list(dict.fromkeys(card_ids))
     marks = ", ".join("?" for _ in ids)
-    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[0]
+    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[
+        0
+    ]
     if found != len(ids):
         return False
     connection.execute(f"DELETE FROM cards WHERE id IN ({marks})", ids)

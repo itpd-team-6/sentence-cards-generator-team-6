@@ -22,7 +22,11 @@ GOOD_ANSWER = '{"sentence": "Das Haus ist alt.", "translation": "The house is ol
 
 
 def settings(**changes) -> Settings:
-    values = {"llm_api_key": API_KEY, "llm_model": "test-model", "llm_base_url": "https://llm.example/v1/"}
+    values = {
+        "llm_api_key": API_KEY,
+        "llm_model": "test-model",
+        "llm_base_url": "https://llm.example/v1/",
+    }
     values.update(changes)
     return Settings(_env_file=None, **values)
 
@@ -88,7 +92,9 @@ def test_asking_for_a_new_sentence_sends_the_previous_one_and_asks_for_another()
 def test_an_answer_in_a_code_fence_is_read() -> None:
     fenced = f"```json\n{GOOD_ANSWER}\n```"
 
-    result = client_for(lambda request: httpx2.Response(200, json=reply(fenced))).write_sentence("Haus", "de", "en")
+    result = client_for(lambda request: httpx2.Response(200, json=reply(fenced))).write_sentence(
+        "Haus", "de", "en"
+    )
 
     assert result.sentence == "Das Haus ist alt."
 
@@ -108,7 +114,9 @@ FAILURES = {
     "unreachable": unreachable,
     "not json": lambda request: httpx2.Response(200, text="<html>"),
     "no choices": lambda request: httpx2.Response(200, json={"choices": []}),
-    "answer without json": lambda request: httpx2.Response(200, json=reply("Sorry, I cannot do that.")),
+    "answer without json": lambda request: httpx2.Response(
+        200, json=reply("Sorry, I cannot do that.")
+    ),
     "answer without a translation": lambda request: httpx2.Response(
         200, json=reply('{"sentence": "Das Haus ist alt."}')
     ),
@@ -127,7 +135,9 @@ def test_a_failed_answer_raises_an_error_that_does_not_show_the_key(handler) -> 
     assert not isinstance(error.value, LlmNotConfigured)
 
 
-@pytest.mark.parametrize("changes", [{"llm_api_key": ""}, {"llm_model": ""}], ids=["no key", "no model"])
+@pytest.mark.parametrize(
+    "changes", [{"llm_api_key": ""}, {"llm_model": ""}], ids=["no key", "no model"]
+)
 def test_a_missing_key_or_model_is_reported_and_nothing_is_sent(changes) -> None:
     calls = []
 
@@ -142,7 +152,9 @@ def test_a_missing_key_or_model_is_reported_and_nothing_is_sent(changes) -> None
 
 
 def test_parse_answer_keeps_the_text_of_the_model_trimmed() -> None:
-    assert parse_answer('{"sentence": " Hallo. ", "translation": " Hello. "}') == GeneratedSentence("Hallo.", "Hello.")
+    assert parse_answer('{"sentence": " Hallo. ", "translation": " Hello. "}') == GeneratedSentence(
+        "Hallo.", "Hello."
+    )
 
 
 def test_a_sentence_is_translated_into_the_first_language() -> None:
@@ -150,7 +162,9 @@ def test_a_sentence_is_translated_into_the_first_language() -> None:
 
     def handler(request: httpx2.Request) -> httpx2.Response:
         seen["body"] = json.loads(request.content)
-        return httpx2.Response(200, json=reply('```json\n{"translation": " The house is old. "}\n```'))
+        return httpx2.Response(
+            200, json=reply('```json\n{"translation": " The house is old. "}\n```')
+        )
 
     translation = client_for(handler).translate_sentence("Das Haus ist alt.", "de", "en")
 
@@ -162,7 +176,9 @@ def test_a_sentence_is_translated_into_the_first_language() -> None:
 
 
 @pytest.mark.parametrize(
-    "content", ["Sorry.", '{"sentence": "x"}', '{"translation": " "}', '{"translation": 3}'], ids=str
+    "content",
+    ["Sorry.", '{"sentence": "x"}', '{"translation": " "}', '{"translation": 3}'],
+    ids=str,
 )
 def test_a_translation_that_cannot_be_read_raises_an_error(content) -> None:
     with pytest.raises(LlmError):
@@ -185,15 +201,21 @@ def test_translating_without_a_key_is_reported_and_nothing_is_sent() -> None:
 @pytest.mark.parametrize("status", [429, 500, 502, 503, 504])
 def test_a_busy_or_down_service_gets_a_message_that_says_to_try_again(status) -> None:
     with pytest.raises(LlmError) as error:
-        client_for(lambda request: httpx2.Response(status, text="boom")).write_sentence("Haus", "de", "en")
+        client_for(lambda request: httpx2.Response(status, text="boom")).write_sentence(
+            "Haus", "de", "en"
+        )
 
-    assert str(error.value) == "The language model is not available right now. Try again in a moment."
+    assert (
+        str(error.value) == "The language model is not available right now. Try again in a moment."
+    )
 
 
 @pytest.mark.parametrize("status", [400, 401, 403, 404])
 def test_a_refused_request_keeps_its_status_in_the_message(status) -> None:
     with pytest.raises(LlmError) as error:
-        client_for(lambda request: httpx2.Response(status, text="no")).write_sentence("Haus", "de", "en")
+        client_for(lambda request: httpx2.Response(status, text="no")).write_sentence(
+            "Haus", "de", "en"
+        )
 
     assert str(error.value) == f"The language model returned an error (status {status})."
 
@@ -211,7 +233,9 @@ TEMPORARY_FAILURES = {
 
 
 @pytest.mark.parametrize("failure", TEMPORARY_FAILURES.values(), ids=TEMPORARY_FAILURES.keys())
-def test_a_model_that_does_not_answer_for_now_is_asked_5_times_in_all_and_then_the_error_is_raised(failure) -> None:
+def test_a_model_that_does_not_answer_for_now_is_asked_5_times_in_all_and_then_the_error_is_raised(
+    failure,
+) -> None:
     requests = []
     waits: list[float] = []
 
@@ -226,11 +250,15 @@ def test_a_model_that_does_not_answer_for_now_is_asked_5_times_in_all_and_then_t
     assert len(waits) == 4
 
 
-def test_the_waits_between_requests_are_1_2_4_and_8_seconds_plus_a_random_time_of_up_to_1_second() -> None:
+def test_the_waits_between_requests_are_1_2_4_and_8_seconds_plus_a_random_time_of_up_to_1_second() -> (
+    None
+):
     waits: list[float] = []
 
     with pytest.raises(LlmError):
-        client_for(lambda request: httpx2.Response(503, text="busy"), waits).write_sentence("Haus", "de", "en")
+        client_for(lambda request: httpx2.Response(503, text="busy"), waits).write_sentence(
+            "Haus", "de", "en"
+        )
 
     assert RETRY_WAIT_SECONDS == (1, 2, 4, 8)
     for wait, base in zip(waits, RETRY_WAIT_SECONDS, strict=True):
@@ -298,7 +326,9 @@ def test_a_translation_is_not_repeated_when_the_model_does_not_answer() -> None:
 
 
 def error_answer(status, body):
-    return client_for(lambda request: httpx2.Response(status, json=body)).write_sentence("Haus", "de", "en")
+    return client_for(lambda request: httpx2.Response(status, json=body)).write_sentence(
+        "Haus", "de", "en"
+    )
 
 
 def test_the_reason_the_service_gives_for_an_error_is_added_to_the_message() -> None:
@@ -322,14 +352,18 @@ def test_a_long_reason_is_cut_and_the_key_is_never_shown() -> None:
     body = {"error": {"message": f"bad key {API_KEY} " + "x" * 400}}
 
     with pytest.raises(LlmError) as error:
-        client_for(lambda request: httpx2.Response(401, json=body)).write_sentence("Haus", "de", "en")
+        client_for(lambda request: httpx2.Response(401, json=body)).write_sentence(
+            "Haus", "de", "en"
+        )
 
     assert API_KEY not in str(error.value)
     assert len(str(error.value)) < 300
     assert str(error.value).endswith("...")
 
 
-@pytest.mark.parametrize("body", [{"error": 5}, {"other": "x"}, {"error": {"message": "   "}}, "plain"])
+@pytest.mark.parametrize(
+    "body", [{"error": 5}, {"other": "x"}, {"error": {"message": "   "}}, "plain"]
+)
 def test_an_error_with_no_readable_reason_keeps_the_short_message(body) -> None:
     with pytest.raises(LlmError) as error:
         error_answer(403, body)
@@ -386,7 +420,9 @@ def test_a_new_sentence_for_a_locked_translation_comes_back_with_that_translatio
     def handler(request: httpx2.Request) -> httpx2.Response:
         return httpx2.Response(200, json=reply('{"sentence": "Das Haus ist sehr alt."}'))
 
-    result = client_for(handler).write_sentence("Haus", "de", "en", locked_translation="The house is old.")
+    result = client_for(handler).write_sentence(
+        "Haus", "de", "en", locked_translation="The house is old."
+    )
 
     assert result == GeneratedSentence("Das Haus ist sehr alt.", "The house is old.")
 
@@ -396,7 +432,9 @@ def test_an_answer_without_a_sentence_for_a_locked_translation_is_an_error() -> 
         return httpx2.Response(200, json=reply('{"sentence": "  "}'))
 
     with pytest.raises(LlmError, match="without a sentence"):
-        client_for(handler).write_sentence("Haus", "de", "en", locked_translation="The house is old.")
+        client_for(handler).write_sentence(
+            "Haus", "de", "en", locked_translation="The house is old."
+        )
 
 
 def phrase_client(answer: str) -> LlmClient:
@@ -412,7 +450,15 @@ def test_a_card_is_asked_for_a_minimal_phrase_with_the_word_in_its_meaning() -> 
 
 
 def test_the_cards_the_word_already_has_are_numbered_and_the_model_answers_for_each() -> None:
-    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus", "Haus bauen"])
+    prompt = build_messages(
+        "Haus",
+        "de",
+        "en",
+        None,
+        None,
+        ask_phrase=True,
+        known_phrases=["das alte Haus", "Haus bauen"],
+    )
     prompt = prompt[-1]["content"]
 
     assert '1. "das alte Haus" 2. "Haus bauen".' in prompt
@@ -424,7 +470,9 @@ def test_the_cards_the_word_already_has_are_numbered_and_the_model_answers_for_e
 
 
 def test_the_model_writes_the_meaning_of_the_word_before_it_answers_for_each_card() -> None:
-    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus"])
+    prompt = build_messages(
+        "Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus"]
+    )
     prompt = prompt[-1]["content"]
 
     assert prompt.index('in the field "meaning"') < prompt.index('in the field "same_meaning"')
@@ -432,19 +480,28 @@ def test_the_model_writes_the_meaning_of_the_word_before_it_answers_for_each_car
 
 def test_the_translation_of_each_card_is_listed_with_its_phrase_when_it_is_known() -> None:
     known = {"den Zug verpassen": "I miss the train.", "Sein nächster Zug": ""}
-    prompt = build_messages("Zug", "de", "en", None, None, ask_phrase=True, known_phrases=known)[-1]["content"]
+    prompt = build_messages("Zug", "de", "en", None, None, ask_phrase=True, known_phrases=known)[
+        -1
+    ]["content"]
 
     assert '"den Zug verpassen" (card sentence: "I miss the train.")' in prompt
     assert '"Sein nächster Zug"; ' not in prompt
     assert prompt.count("card sentence:") == 1
 
 
-def test_the_meaning_to_compare_is_the_sense_of_the_word_and_not_the_situation_of_the_phrase() -> None:
-    prompt = build_messages("Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus"])
+def test_the_meaning_to_compare_is_the_sense_of_the_word_and_not_the_situation_of_the_phrase() -> (
+    None
+):
+    prompt = build_messages(
+        "Haus", "de", "en", None, None, ask_phrase=True, known_phrases=["das alte Haus"]
+    )
     prompt = prompt[-1]["content"]
 
     assert "the sense of the word that a dictionary lists" in prompt
-    assert "a different situation, or a different verb or preposition next to the word is not a different meaning" in prompt
+    assert (
+        "a different situation, or a different verb or preposition next to the word is not a different meaning"
+        in prompt
+    )
 
 
 def test_a_request_that_does_not_ask_for_a_phrase_is_the_same_as_before() -> None:
@@ -454,7 +511,9 @@ def test_a_request_that_does_not_ask_for_a_phrase_is_the_same_as_before() -> Non
 
 
 def test_a_new_sentence_for_a_card_with_a_phrase_keeps_the_meaning_of_that_phrase() -> None:
-    prompt = build_messages("Haus", "de", "en", None, "Das Haus ist alt.", meaning_phrase="das alte Haus")[-1]["content"]
+    prompt = build_messages(
+        "Haus", "de", "en", None, "Das Haus ist alt.", meaning_phrase="das alte Haus"
+    )[-1]["content"]
 
     assert 'Use the word with the same meaning as in this phrase: "das alte Haus"' in prompt
 
@@ -474,7 +533,9 @@ def test_a_locked_translation_and_a_phrase_can_be_asked_together() -> None:
         "Haus", "de", "en", locked_translation="The house is old.", ask_phrase=True
     )
 
-    assert result == GeneratedSentence("Das Haus ist sehr alt.", "The house is old.", "das alte Haus")
+    assert result == GeneratedSentence(
+        "Das Haus ist sehr alt.", "The house is old.", "das alte Haus"
+    )
 
 
 def test_an_answer_that_says_the_meaning_is_the_same_raises_card_exists_with_that_phrase() -> None:
@@ -486,13 +547,22 @@ def test_an_answer_that_says_the_meaning_is_the_same_raises_card_exists_with_tha
         )
 
     assert raised.value.phrase == "Haus bauen"
-    assert str(raised.value) == 'You already have a card for this word with the meaning of "Haus bauen".'
+    assert (
+        str(raised.value)
+        == 'You already have a card for this word with the meaning of "Haus bauen".'
+    )
 
 
-@pytest.mark.parametrize("same_meaning", ["[false]", "[]", "null", '"false"', "[null]", "[false, true]", "[0]"])
-def test_an_answer_that_says_the_meaning_is_not_the_same_gives_the_new_card(same_meaning: str) -> None:
+@pytest.mark.parametrize(
+    "same_meaning", ["[false]", "[]", "null", '"false"', "[null]", "[false, true]", "[0]"]
+)
+def test_an_answer_that_says_the_meaning_is_not_the_same_gives_the_new_card(
+    same_meaning: str,
+) -> None:
     answer = (
-        '{"meaning": "financial institution", "same_meaning": ' + same_meaning + ', "sentence": "Ich gehe zur Bank.", '
+        '{"meaning": "financial institution", "same_meaning": '
+        + same_meaning
+        + ', "sentence": "Ich gehe zur Bank.", '
         '"translation": "I go to the bank.", "phrase": "zur Bank gehen"}'
     )
 
@@ -507,7 +577,9 @@ def test_a_new_phrase_that_is_one_the_word_already_has_raises_card_exists() -> N
     answer = '{"sentence": "Das Haus ist alt.", "translation": "The house is old.", "phrase": "Das alte Haus"}'
 
     with pytest.raises(CardExists):
-        phrase_client(answer).write_sentence("Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus"])
+        phrase_client(answer).write_sentence(
+            "Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus"]
+        )
 
 
 @pytest.mark.parametrize(
@@ -522,7 +594,9 @@ def test_a_new_phrase_that_is_one_the_word_already_has_raises_card_exists() -> N
 )
 def test_an_answer_without_a_usable_phrase_is_an_error_when_a_phrase_was_asked(answer: str) -> None:
     with pytest.raises(LlmError):
-        phrase_client(answer).write_sentence("Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus"])
+        phrase_client(answer).write_sentence(
+            "Haus", "de", "en", ask_phrase=True, known_phrases=["das alte Haus"]
+        )
 
 
 def test_a_phrase_in_the_answer_is_ignored_when_none_was_asked() -> None:

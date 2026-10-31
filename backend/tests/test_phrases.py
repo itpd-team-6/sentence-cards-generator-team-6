@@ -3,7 +3,9 @@ import pytest
 from app.phrases import phrase_problem, same_phrase
 
 
-@pytest.mark.parametrize("phrase", ["den Zug nehmen", "Der Zug kommt an", "mit dem Zug", "zug fährt heute schon ab"])
+@pytest.mark.parametrize(
+    "phrase", ["den Zug nehmen", "Der Zug kommt an", "mit dem Zug", "zug fährt heute schon ab"]
+)
 def test_a_phrase_of_two_to_six_words_with_the_word_in_it_is_accepted(phrase: str) -> None:
     assert phrase_problem("Zug", phrase) is None
 

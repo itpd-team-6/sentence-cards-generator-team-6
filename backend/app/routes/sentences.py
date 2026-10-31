@@ -24,7 +24,9 @@ class SentenceResponse(BaseModel):
 
 
 @router.post("/api/sentences")
-def write_sentence(request: SentenceRequest, client: Annotated[LlmClient, Depends(get_llm_client)]) -> SentenceResponse:
+def write_sentence(
+    request: SentenceRequest, client: Annotated[LlmClient, Depends(get_llm_client)]
+) -> SentenceResponse:
     """A sentence with the word and its translation. When the model fails, the status is 502 or 503."""
     try:
         result = client.write_sentence(

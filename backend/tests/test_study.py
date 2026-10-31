@@ -13,7 +13,9 @@ def add_cards(*cards: tuple[str, str | None, str | None, date]) -> list[int]:
     """Put cards in the database (word, sentence, translation, due date); return their ids."""
     connection = connect()
     try:
-        text_id = save_text(connection, "Ich warte am Bahnhof.", "de", "en", [word for word, *_ in cards])
+        text_id = save_text(
+            connection, "Ich warte am Bahnhof.", "de", "en", [word for word, *_ in cards]
+        )
         return [
             add_card(connection, text_id, word, sentence, translation, due)
             for word, sentence, translation, due in cards
@@ -22,14 +24,21 @@ def add_cards(*cards: tuple[str, str | None, str | None, date]) -> list[int]:
         connection.close()
 
 
-def add_two_texts(first: list[str], second: list[str], due: date = TODAY) -> tuple[list[int], list[int]]:
+def add_two_texts(
+    first: list[str], second: list[str], due: date = TODAY
+) -> tuple[list[int], list[int]]:
     """Put two texts in the database, each with a card for each of its words, all due on `due`; return the card ids."""
     connection = connect()
     try:
         ids = []
         for words in (first, second):
             text_id = save_text(connection, "Ich warte am Bahnhof.", "de", "en", words)
-            ids.append([add_card(connection, text_id, word, f"{word}.", f"{word} (en).", due) for word in words])
+            ids.append(
+                [
+                    add_card(connection, text_id, word, f"{word}.", f"{word} (en).", due)
+                    for word in words
+                ]
+            )
         return ids[0], ids[1]
     finally:
         connection.close()
@@ -44,7 +53,12 @@ def teardown_function() -> None:
     app.dependency_overrides.clear()
 
 
-def card(word: str, due: date, sentence: str | None = "A sentence.", translation: str | None = "A translation."):
+def card(
+    word: str,
+    due: date,
+    sentence: str | None = "A sentence.",
+    translation: str | None = "A translation.",
+):
     return (word, sentence, translation, due)
 
 
@@ -113,14 +127,21 @@ def test_with_no_cards_at_all_the_session_is_empty() -> None:
         assert client.get("/api/study/due").json() == []
 
 
-def test_a_good_answer_takes_the_card_out_of_the_session_and_makes_it_due_later_than_today() -> None:
+def test_a_good_answer_takes_the_card_out_of_the_session_and_makes_it_due_later_than_today() -> (
+    None
+):
     with study_client() as client:
         add_cards(card("Zug", TODAY), card("Haus", TODAY))
 
         response = client.post("/api/cards/1/answer", json={"answer": "good"})
 
         assert response.status_code == 200
-        assert response.json() == {"id": 1, "word": "Zug", "due_date": "2026-10-18", "interval_days": 2}
+        assert response.json() == {
+            "id": 1,
+            "word": "Zug",
+            "due_date": "2026-10-18",
+            "interval_days": 2,
+        }
         assert [item["word"] for item in client.get("/api/study/due").json()] == ["Haus"]
 
 
@@ -130,7 +151,12 @@ def test_an_again_answer_leaves_the_card_due_today_so_it_comes_back_in_the_sessi
 
         response = client.post("/api/cards/1/answer", json={"answer": "again"})
 
-        assert response.json() == {"id": 1, "word": "Zug", "due_date": "2026-10-16", "interval_days": 0}
+        assert response.json() == {
+            "id": 1,
+            "word": "Zug",
+            "due_date": "2026-10-16",
+            "interval_days": 0,
+        }
         assert [item["word"] for item in client.get("/api/study/due").json()] == ["Zug"]
 
 
@@ -169,7 +195,12 @@ def test_each_answer_gives_the_card_the_due_date_that_its_button_said() -> None:
             )
         connection = connect()
         try:
-            assert [get_card(connection, card_id)["interval_days"] for card_id in ids] == [0, 10, 16, 21]
+            assert [get_card(connection, card_id)["interval_days"] for card_id in ids] == [
+                0,
+                10,
+                16,
+                21,
+            ]
         finally:
             connection.close()
 
@@ -205,10 +236,14 @@ def queue_ids(client: TestClient) -> list[int]:
     return [item["id"] for item in client.get("/api/study/due").json()]
 
 
-def save_order(client: TestClient, card_ids: list[int], moved: list[int], today_count: int | None = None):
+def save_order(
+    client: TestClient, card_ids: list[int], moved: list[int], today_count: int | None = None
+):
     """Save an order. Unless `today_count` says otherwise, every card of the order is due today."""
     count = len(card_ids) if today_count is None else today_count
-    return client.post("/api/study/queue/order", json={"card_ids": card_ids, "moved": moved, "today_count": count})
+    return client.post(
+        "/api/study/queue/order", json={"card_ids": card_ids, "moved": moved, "today_count": count}
+    )
 
 
 def due_dates(*card_ids: int) -> list[str]:
@@ -253,7 +288,9 @@ def test_a_card_that_is_due_on_an_earlier_day_comes_before_a_card_due_today() ->
         assert queue(client) == ["overdue", "today"]
 
 
-def test_the_cards_of_the_second_text_dragged_to_the_top_are_studied_before_the_first_text() -> None:
+def test_the_cards_of_the_second_text_dragged_to_the_top_are_studied_before_the_first_text() -> (
+    None
+):
     with study_client() as client:
         first, second = add_two_texts(["a1", "a2"], ["b1", "b2", "b3"])
 
@@ -316,7 +353,9 @@ def test_moving_a_card_does_not_change_its_interval_or_its_due_date() -> None:
         connection.close()
 
 
-def test_a_moved_card_that_is_answered_gets_the_due_date_of_the_scheduler_and_the_others_stay_in_place() -> None:
+def test_a_moved_card_that_is_answered_gets_the_due_date_of_the_scheduler_and_the_others_stay_in_place() -> (
+    None
+):
     with study_client() as client:
         _, second = add_two_texts(["a1", "a2"], ["b1", "b2", "b3"])
         save_order(client, [second[1], 1, 2, second[0], second[2]], moved=[second[1]])
@@ -337,7 +376,9 @@ def test_a_forgotten_moved_card_goes_back_to_its_default_place_of_the_day() -> N
         assert queue(client) == ["a1", "a2", "a3"]
 
 
-def test_an_order_for_cards_that_are_no_longer_in_the_queue_is_refused_and_changes_nothing() -> None:
+def test_an_order_for_cards_that_are_no_longer_in_the_queue_is_refused_and_changes_nothing() -> (
+    None
+):
     with study_client() as client:
         add_cards(card("a1", TODAY), card("a2", TODAY), card("a3", TODAY))
         client.delete("/api/cards/1")
@@ -376,7 +417,12 @@ def test_only_cards_of_the_queue_can_be_named_as_moved() -> None:
         assert save_order(client, [2, 1], moved=[99]).status_code == 422
         body = {"card_ids": [2, 1], "moved": [], "today_count": 2}
         assert client.post("/api/study/queue/order", json=body).status_code == 422
-        assert client.post("/api/study/queue/order", json={**body, "card_ids": [], "moved": [1]}).status_code == 422
+        assert (
+            client.post(
+                "/api/study/queue/order", json={**body, "card_ids": [], "moved": [1]}
+            ).status_code
+            == 422
+        )
 
 
 def test_dragging_a_card_between_the_same_two_neighbours_again_and_again_keeps_the_order() -> None:
@@ -405,7 +451,9 @@ def study_queue(client: TestClient) -> list[dict]:
     return client.get("/api/study/queue").json()
 
 
-def test_the_queue_has_every_card_with_a_sentence_in_study_order_and_says_which_are_due_today() -> None:
+def test_the_queue_has_every_card_with_a_sentence_in_study_order_and_says_which_are_due_today() -> (
+    None
+):
     with study_client() as client:
         add_cards(
             card("later 3 days", TODAY + timedelta(days=3)),
@@ -451,7 +499,10 @@ def test_a_later_card_dragged_above_the_separator_is_due_today_and_keeps_its_int
 def test_a_card_due_today_dragged_among_the_later_cards_gets_the_date_of_the_card_above() -> None:
     with study_client() as client:
         add_cards(
-            card("t1", TODAY), card("t2", TODAY), card("l1", TODAY + timedelta(days=1)), card("l2", TODAY + timedelta(days=3))
+            card("t1", TODAY),
+            card("t2", TODAY),
+            card("l1", TODAY + timedelta(days=1)),
+            card("l2", TODAY + timedelta(days=3)),
         )
 
         save_order(client, [2, 3, 1, 4], moved=[1], today_count=1)

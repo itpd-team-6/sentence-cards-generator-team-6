@@ -5,7 +5,9 @@ from app.config import REPOSITORY_ROOT, Settings
 
 def example_names() -> set[str]:
     lines = (REPOSITORY_ROOT / ".env.example").read_text(encoding="utf-8").splitlines()
-    return {line.split("=", 1)[0].strip() for line in lines if "=" in line and not line.startswith("#")}
+    return {
+        line.split("=", 1)[0].strip() for line in lines if "=" in line and not line.startswith("#")
+    }
 
 
 def test_env_example_lists_every_setting() -> None:

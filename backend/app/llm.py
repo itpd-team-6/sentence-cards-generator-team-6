@@ -71,12 +71,12 @@ def build_messages(
     if len(word.split()) > 1:
         # A card word of several words, such as a verb with a separable prefix: the words stay in this order and in
         # this form, and other words may stand between them.
-        contains = (
-            f'that contains all of these words, in this order and in this form, with other words allowed between them: "{word}"'
-        )
+        contains = f'that contains all of these words, in this order and in this form, with other words allowed between them: "{word}"'
     else:
         contains = f'that contains the word "{word}"'
-    lines = [f"Write one short, natural example sentence in {LANGUAGE_NAMES[text_language]} {contains}."]
+    lines = [
+        f"Write one short, natural example sentence in {LANGUAGE_NAMES[text_language]} {contains}."
+    ]
     if locked_translation:
         # The learner locked the translation: the new sentence must say what it says, and only the sentence is asked.
         lines.append(
@@ -116,13 +116,24 @@ def build_messages(
                 'one meaning, whether the phrase is "a football match" or "win the match", and "match" as a small '
                 "stick for lighting a fire is another."
             )
-    form = ['"meaning": "...", "same_meaning": [true or false for each card]'] if ask_phrase and known_phrases else []
-    form += ['"sentence": "..."'] if locked_translation else ['"sentence": "..."', '"translation": "..."']
+    form = (
+        ['"meaning": "...", "same_meaning": [true or false for each card]']
+        if ask_phrase and known_phrases
+        else []
+    )
+    form += (
+        ['"sentence": "..."']
+        if locked_translation
+        else ['"sentence": "..."', '"translation": "..."']
+    )
     if ask_phrase:
         form.append('"phrase": "..."')
     lines.append("Answer only with JSON, in this form: {" + ", ".join(form) + "}")
     return [
-        {"role": "system", "content": "You write example sentences for people who learn a language."},
+        {
+            "role": "system",
+            "content": "You write example sentences for people who learn a language.",
+        },
         {"role": "user", "content": "\n".join(lines)},
     ]
 
@@ -199,7 +210,10 @@ def build_translation_messages(
         'Answer only with JSON, in this form: {"translation": "..."}',
     ]
     return [
-        {"role": "system", "content": "You translate example sentences for people who learn a language."},
+        {
+            "role": "system",
+            "content": "You translate example sentences for people who learn a language.",
+        },
         {"role": "user", "content": "\n".join(lines)},
     ]
 
@@ -271,12 +285,20 @@ class LlmClient:
         )
         answer = self._ask_again_when_unavailable(messages)
         phrase = read_phrase(answer, word, known_phrases or []) if ask_phrase else None
-        result = parse_sentence(answer, locked_translation) if locked_translation else parse_answer(answer)
+        result = (
+            parse_sentence(answer, locked_translation)
+            if locked_translation
+            else parse_answer(answer)
+        )
         return replace(result, phrase=phrase)
 
-    def translate_sentence(self, sentence: str, text_language: Language, first_language: Language) -> str:
+    def translate_sentence(
+        self, sentence: str, text_language: Language, first_language: Language
+    ) -> str:
         """Ask the model to translate a sentence the learner wrote or edited. Raises `LlmError` like `write_sentence`."""
-        return parse_translation(self._ask(build_translation_messages(sentence, text_language, first_language)))
+        return parse_translation(
+            self._ask(build_translation_messages(sentence, text_language, first_language))
+        )
 
     def _ask_again_when_unavailable(self, messages: list[dict[str, str]]) -> str:
         """Like `_ask`, but a model that does not answer for now is asked again after a wait that grows each time."""
@@ -313,7 +335,9 @@ class LlmClient:
     def _ask(self, messages: list[dict[str, str]]) -> str:
         """Send the messages to the model and return the text of its answer."""
         if not self.settings.llm_api_key or not self.settings.llm_model:
-            raise LlmNotConfigured("The language model is not set up: add LLM_API_KEY and LLM_MODEL to .env.")
+            raise LlmNotConfigured(
+                "The language model is not set up: add LLM_API_KEY and LLM_MODEL to .env."
+            )
 
         url = self.settings.llm_base_url.rstrip("/") + "/chat/completions"
         payload = {
@@ -329,10 +353,14 @@ class LlmClient:
         except httpx2.HTTPError:
             raise LlmUnavailable("The language model could not be reached.") from None
         if response.status_code in UNAVAILABLE_STATUSES:
-            raise LlmUnavailable("The language model is not available right now. Try again in a moment.")
+            raise LlmUnavailable(
+                "The language model is not available right now. Try again in a moment."
+            )
         if response.status_code >= 400:
             reason = self._reason_of(response)
-            raise LlmError(f"The language model returned an error (status {response.status_code}).{reason}")
+            raise LlmError(
+                f"The language model returned an error (status {response.status_code}).{reason}"
+            )
         try:
             content = response.json()["choices"][0]["message"]["content"]
         except (ValueError, KeyError, IndexError, TypeError):

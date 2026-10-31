@@ -15,7 +15,9 @@ def open_database() -> sqlite3.Connection:
 
 def new_card(connection: sqlite3.Connection) -> int:
     text_id = save_text(connection, "Ich warte am Bahnhof.", "de", "en", ["Bahnhof"])
-    return add_card(connection, text_id, "Bahnhof", "Ich warte am Bahnhof.", "I wait at the station.", TODAY)
+    return add_card(
+        connection, text_id, "Bahnhof", "Ich warte am Bahnhof.", "I wait at the station.", TODAY
+    )
 
 
 def test_a_new_card_is_due_today_with_no_interval() -> None:
@@ -42,7 +44,10 @@ def test_each_answer_but_again_waits_longer_than_the_one_before_it_and_than_the_
     for interval in range(0, LONGEST_INTERVAL):
         wait = waits(interval)
 
-        assert interval < wait["hard"] < wait["good"] < wait["easy"] or wait["easy"] == LONGEST_INTERVAL
+        assert (
+            interval < wait["hard"] < wait["good"] < wait["easy"]
+            or wait["easy"] == LONGEST_INTERVAL
+        )
         assert wait["hard"] > interval
 
 

@@ -49,14 +49,20 @@ class TextResponse(BaseModel):
 
 
 @router.post("/api/texts", status_code=201)
-def create_text(request: TextRequest, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> TextResponse:
+def create_text(
+    request: TextRequest, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> TextResponse:
     """Save a text with its marked words. A request with no marked word is refused with 422."""
-    text_id = save_text(connection, request.text, request.text_language, request.first_language, request.words)
+    text_id = save_text(
+        connection, request.text, request.text_language, request.first_language, request.words
+    )
     return TextResponse(**get_text(connection, text_id))
 
 
 @router.get("/api/texts/{text_id}")
-def read_text(text_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]) -> TextResponse:
+def read_text(
+    text_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> TextResponse:
     text = get_text(connection, text_id)
     if text is None:
         raise HTTPException(status_code=404, detail="There is no text with this id.")

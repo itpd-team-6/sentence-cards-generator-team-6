@@ -10,8 +10,10 @@ permissions:
 
 # This workflow only checks the product. It has no deployment job:
 # the team deploys by hand (docs/deployment.md).
-# There is no separate type check step: the front end is JavaScript, not TypeScript,
-# and the back end has no type checker configured.
+# Checks that do not apply to this stack:
+# - Type checking, front end: the front end is JavaScript, not TypeScript.
+# - Type checking, back end: the back end has no type checker configured.
+# - Build, back end: the back end is Python run from source, so it has no build step.
 
 jobs:
   frontend:
@@ -53,5 +55,9 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Lint
+        run: ruff check .
+      - name: Format check
+        run: ruff format --check .
       - name: Tests
         run: python -m pytest

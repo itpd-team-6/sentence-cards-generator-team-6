@@ -39,4 +39,6 @@ def phrase_problem(word: str, phrase: str) -> str | None:
 
 def same_phrase(first: str, second: str) -> bool:
     """Two phrases are the same when they have the same words, whatever the case and the spaces."""
-    return [part.casefold() for part in first.split()] == [part.casefold() for part in second.split()]
+    return [part.casefold() for part in first.split()] == [
+        part.casefold() for part in second.split()
+    ]
