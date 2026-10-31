@@ -26,8 +26,8 @@ The audio and the daily limits build on this version in the sprints after it.
 - **Sprints:** [SPRINT-06](#sprint-06)
 - **Advances:** [TOS-04](threshold-of-success.md#tos-04)
 
-Every card has audio for its word and its sentence from an outside source.
-The daily limits and the decks apart from the texts follow it.
+A learner chooses which decks of cards to study, in a study queue with a list of decks and two tabs.
+The audio and the daily limits follow it.
 
 ## Sprints
 
@@ -66,9 +66,16 @@ A learner studies the words of one text first, deleting a card removes it from t
 
 #### REL-05
 
+- **Released:** [v0.2.1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.1) on 2026-10-31.
+- **Checked QRs:**
+  - [QR-01](quality-requirements/qr/QR-01.md)
+  - [QR-02](quality-requirements/qr/QR-02.md)
+
+  The [testing plan](#quality-requirement-testing-plan) carries each test's result.
+
 ### SPRINT-06
 
-Every card has audio for its word and its sentence from an outside source.
+A learner chooses which decks to study in the study queue, with its list of decks and its two tabs.
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-07
