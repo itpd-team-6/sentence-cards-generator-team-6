@@ -7,7 +7,7 @@ in the "Licence of the voices" part of the Piper section.
 The message below is sent to the Customer in the group chat; its sending time is filled in below once it is sent, and the Customer's reply is added here word for word when it arrives.
 Times are in UTC+03:00.
 
-## Team message, 2026-10-30 (sent at <HH:MM>, filled in once sent)
+## Team message, 2026-10-30 18:07
 
 > Hi [the Customer], a short note from the Week 4 action point on the Piper licence.
 > The Piper engine is open source (MIT on the old repository, GPL-3.0 on the active one), and both allow commercial use.
@@ -17,4 +17,10 @@ Times are in UTC+03:00.
 
 ## Customer reply
 
-_To be added word for word when the Customer answers._
+The Customer answered in the group chat.
+
+| Time             | Message                                                |
+| ---------------- | ------------------------------------------------------ |
+| 2026-10-31 11:30 | "It doesn't need a license that allows commercial use" |
+
+So a voice that allows only non-commercial use is acceptable, and the licence does not rule out any of the voices read above; the choice of voice is decided by quality, not by the licence.
