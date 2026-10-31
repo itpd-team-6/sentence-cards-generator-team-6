@@ -62,6 +62,7 @@ A learner studies the words of one text first, deleting a card removes it from t
 - **Due:** 2026-10-31
 - **Sprint Backlog:** [the issues scheduled into SPRINT-05](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/3)
 - **Planned Velocity:** 8
+- **Actual Velocity:** 8; `US-04` and `US-09` were accepted by the Customer and no story moved out.
 
 #### REL-05
 

@@ -449,7 +449,7 @@ The model that makes the audio runs in the back end, so that a learner of a host
 
 The next stories are built in this order: the audio of words and sentences, then the daily limits with asking for more cards, then the decks apart from the texts, then the teacher's review (`US-05`); `US-06` is not in this order and its place is not decided.
 
-- **Status:** Active
+- **Status:** Reversed by [DEC-047](#dec-047)
 - **Date:** 2026-10-24
 - **Made by:** Customer
 - **Reverses:** [DEC-023](#dec-023)
@@ -480,3 +480,109 @@ The product on the university VM gets its language model from Cloudflare Workers
 - **Why:** the Gemini endpoint refuses requests from the VM's address with "User location is not supported for the API use.", so the model must come from a provider that the VM can reach.
   Cloudflare Workers AI has an OpenAI-compatible endpoint, so [`ADR-003`](architecture/adr/ADR-003.md) needs no code change, and its pricing page lists a free allocation of 10,000 Neurons per day ([Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
   The runbook [`deployment.md`](deployment.md) records the model, the endpoint shape and the quota.
+
+## DEC-045
+
+The Customer accepted `US-04`, so the story is closed.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** in the Week 5 meeting the team showed `AC-02` and `AC-03` of `US-04` one at a time on the production instance, and the Customer said "Acceptance criterion 3 definitely passes. I saw the result." (Customer, [00:21:23]), "It also passed." (Customer, [00:22:22]) and "I think we can finalize this user story." (Customer, [00:22:28]).
+  `AC-01` had been accepted in the Week 4 meeting ([`DEC-031`](#dec-031)).
+
+## DEC-046
+
+The language model of the virtual machine is Mistral Small 3.1 from Cloudflare Workers AI, and the Customer expects that a user can later choose another provider with their own key.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** the team told the Customer that the Gemini endpoint refuses the address of the virtual machine ([`DEC-044`](#dec-044)) and asked whether he accepts Mistral Small 3.1 for the product he will use, and he said "Yes, it is okay." (Customer, [00:25:10]).
+  He added "But I expect that later the person will be able to choose another provider, like providing their own API key, so that they can access other models." (Customer, [00:25:14]), which is what [`DEC-040`](#dec-040) already records and which is not built yet.
+
+## DEC-047
+
+The next stories are built in this order: the decks apart from the texts, then the audio of words and sentences, then the daily limits with asking for more cards; the teacher's review is not in the order.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Reverses:** [DEC-042](#dec-042)
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** the team asked whether the order of [`DEC-042`](#dec-042) still holds, and the Customer said "Yes, I think the decks should come first, because it is more of an architectural change." (Customer, [00:44:08]), "Okay, not very architectural, but it may change the schema of your database." (Customer, [00:44:18]) and "The audio may come next." (Customer, [00:44:40]).
+  About the daily limits he said "So the daily limits will just be a little addition on top of it." (Customer, [00:45:10]), "Given that we decide how to handle the timestamps." (Customer, [00:45:18]).
+  The team then said back "Okay, so we are moving forward with the decks logic that we are going to implement." (nataliamotand, [00:45:27]) and "Then the audio, then asking for more cards, since it is not so big." (nataliamotand, [00:45:36]) and he answered "Yes, yes." (Customer, [00:45:47]).
+  About the teacher's review, see [`DEC-050`](#dec-050).
+
+## DEC-048
+
+The study queue gets a list of decks above the cards, a checkbox for each deck, a "select all" button with two states, and two tabs, one to choose which decks to study and one to re-order the cards; the queue shows only the cards of the selected decks.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** about the open question of the Week 4 meeting, whether the study queue shows the titles of decks and not of texts, the Customer said "I think what we can do is show a list of decks above this list of cards." (Customer, [00:46:56]), "I think it would be better to put them into a list, like Anki does right now, and let the user mark with checkboxes, or somehow else, the decks that they want to study." (Customer, [00:47:30]) and "I am more inclined towards not showing cards from non-selected decks" (Customer, [00:49:18]).
+  He suggested "we can provide a "select all" button" (Customer, [00:53:05]) that selects all decks the first time and none the second time (Customer, [00:53:17]).
+  When the team asked whether the choosing and the re-ordering could be two separate views (nataliamotand, [00:57:36]), he said "So maybe have separate tabs, one for re-prioritization and one for studying, filtering what to study." (Customer, [00:58:02]) and "Yes, I agree. Thank you for this idea." (Customer, [01:00:18]).
+  The team said it can implement it the next week and show it to him (nataliamotand, [00:59:37]).
+
+## DEC-049
+
+The product has a button that regenerates the cards that are empty or invalid, in place of a second flag "flag to regenerate".
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** about the open question of the Week 3 meeting, whether there should be one flag or two, the team explained that the second flag was mainly for the card that the product could not write after repeating the request (nataliamotand, [01:02:54]), and the Customer said "Okay, so we can pursue this direction with [inaudible], or we can reuse some button, or select empty cards or invalid cards and regenerate, something like this." (Customer, [01:03:14]).
+  The team said that then "the student does not have to look in the table and click more than one button" (nataliamotand, [01:03:43]), and the Customer answered "Okay, let's go with this option then." (Customer, [01:04:06]).
+
+## DEC-050
+
+The product does not build the teacher's side, so the teacher's review (`US-05`) is not built, and its place goes to a mobile version of the product that works offline, released as an installable file on GitHub for the first version.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** the Customer said "I would like to abandon this direction with the teacher in your project." (Customer, [01:05:01]), because of the accounts and the discovery of a teacher by a student (Customer, [01:04:24]), and "Honestly, I thought about trading the teacher functionality for offline usage of the application." (Customer, [01:06:40]).
+  About the way to release it he said "I think right now it is enough to release an installable file on GitHub." (Customer, [01:08:14]) and "For example, you release an APK file" (Customer, [01:08:22]).
+  The team said back that it is not focusing on the teacher interface anymore and is focusing on the offline mobile version (nataliamotand, [01:09:04]), and he answered "Yes, exactly." (Customer, [01:09:32]).
+  He also suggested "that local files are not editable while offline" (Customer, [01:10:19]); the team said it takes a look at this in the following sprints (nataliamotand, [01:10:45]).
+
+## DEC-051
+
+The voices of the audio need no licence for commercial use, and they must be compatible with the MIT licence of the product.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** the team reported that the licence of Piper allows commercial use for the engine and that each voice has its own licence (nataliamotand, [00:08:42]), and the Customer said "As far as I understand, it is not for all voices; for Russian, for example, it is not commercially usable." (Customer, [00:09:35]) and "But it is not a problem." (Customer, [00:09:44]).
+  He said "Right now, in general, I do not prioritize voices that have a commercial licence." (Customer, [00:10:11]) and "any option that works for us, and produces voice output of high enough quality, is okay, as far as it is compatible with our MIT licence." (Customer, [00:10:20]).
+
+## DEC-052
+
+`US-09` gets a fourth acceptance criterion about the browsers in which the product opens and works.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md)
+- **Why:** when the team asked whether there was a criterion that it did not put in `US-09` but the Customer thought necessary, he said "Maybe an acceptance criterion about browsers." (Customer, [00:16:04]) and "Or maybe that it opens in Firefox and Chrome, on mobile and desktop." (Customer, [00:16:11]), and about where to write it "Either way works for me." (Customer, [00:17:19]).
+  The team asked to add it after the meeting and to show it to him in the chat the same day, and he said "Okay, I will be available until the evening." (Customer, [00:17:54]).
+
+## DEC-053
+
+The Customer accepted `US-09` with its four acceptance criteria, so the story is closed.
+
+- **Status:** Active
+- **Date:** 2026-10-31
+- **Made by:** Customer
+- **Source:** [the Week 5 validation meeting](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/meeting-transcript.md) and [the Customer's chat message after it](https://github.com/itpd-team-6/sentence-cards-generator-team-6/blob/main/reports/week-05/evidence/customer-chat-us-09-verdict.md)
+- **Why:** in the Week 5 meeting the team showed `AC-01`, `AC-02` and `AC-03` of `US-09` one at a time on the production instance, and the Customer said "Yes, I accessed it by the provided address, and I did not need to install anything." (Customer, [00:12:48]), "Yes, I agree that it passes." (Customer, [00:14:23]) and "More technical than necessary, or for other customers it would look too technical, I guess, but it is okay that you put it here." (Customer, [00:15:24]).
+  The team added `AC-04` about the browsers after the meeting ([`DEC-052`](#dec-052)), tested it in Firefox and Chrome on a computer and in Chrome on a phone, and asked in the group chat "Since it is ok can we close US-09?" (nataliamotand, chat, 2026-10-31 16:37), and the Customer answered "Also works in Firefox on mobile phone. Yes, it's done" (Customer, chat, 2026-10-31 17:20).
