@@ -179,14 +179,26 @@ test("the session can be shuffled, and the box says so", async () => {
   expect(container.textContent).toContain("2 cards left in this session");
 });
 
-test("the Reorder box can be folded away and opened again", async () => {
+test("the Reorder box starts folded away, and it can be opened and folded again", async () => {
   await show();
   const split = container.querySelector(".study-split");
-  expect(split.classList.contains("collapsed")).toBe(false);
-
-  await act(async () => container.querySelector(".collapse-button").click());
   expect(split.classList.contains("collapsed")).toBe(true);
 
   await act(async () => container.querySelector(".collapse-button").click());
   expect(split.classList.contains("collapsed")).toBe(false);
+
+  await act(async () => container.querySelector(".collapse-button").click());
+  expect(split.classList.contains("collapsed")).toBe(true);
+});
+
+test("only a short note is drawn until the decks are loaded", async () => {
+  let arrive;
+  loadDecks.mockReturnValue(new Promise((resolve) => (arrive = resolve)));
+  await show();
+  expect(container.textContent).toContain("Loading the decks");
+  expect(container.querySelector(".study-split")).toBeNull();
+
+  await act(async () => arrive([deck(1, "Trains")]));
+  expect(container.textContent).not.toContain("Loading the decks");
+  expect(container.querySelector(".study-split")).not.toBeNull();
 });

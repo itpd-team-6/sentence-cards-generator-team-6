@@ -37,7 +37,8 @@ export default function StudyPage() {
   const [due, setDue] = useState([]); // the cards due today in the ticked decks, for the numbers of the Study box
   const [dueVersion, setDueVersion] = useState(0); // changes when the saved order may have changed what is due
   const [shuffle, setShuffle] = useState(false); // mixes the order of one session; the saved order does not change
-  const [folded, setFolded] = useState(false); // the Reorder box is folded away
+  const [decksFailed, setDecksFailed] = useState(false); // the decks could not be loaded
+  const [folded, setFolded] = useState(true); // the Reorder box starts folded away; the learner opens it
 
   useEffect(() => {
     loadDecks()
@@ -48,7 +49,10 @@ export default function StudyPage() {
           before.filter((id) => found.some((deck) => deck.id === id)),
         );
       })
-      .catch((error) => setMessage(newNotice(error.message)));
+      .catch((error) => {
+        setDecksFailed(true);
+        setMessage(newNotice(error.message));
+      });
   }, []);
 
   const tickedKey = ticked.join(",");
@@ -127,13 +131,33 @@ export default function StudyPage() {
   const card = queue?.[0];
   const tickedDecks = (decks ?? []).filter((deck) => ticked.includes(deck.id));
 
+  // Until the decks are known, only a short note: the boxes below need them, and drawing them half empty makes the
+  // page jump.
+  if (queue === null && decks === null) {
+    return (
+      <>
+        <section className="panel" aria-label="Decks" aria-busy={!decksFailed}>
+          <div className="pane-head">
+            <h2>Decks</h2>
+          </div>
+          <p className="hint" role="status">
+            {decksFailed
+              ? "The decks could not be loaded. Reload the page to try again."
+              : "Loading the decks..."}
+          </p>
+        </section>
+        {message && (
+          <Notice notice={message} onDismiss={() => setMessage(null)} />
+        )}
+      </>
+    );
+  }
+
   // Before a session: the decks, then Reorder (which can be folded away) next to Study.
   if (queue === null) {
     return (
       <>
-        {decks !== null && (
-          <StudyDecks decks={decks} ticked={ticked} onChange={tick} />
-        )}
+        <StudyDecks decks={decks} ticked={ticked} onChange={tick} />
         <div className={folded ? "study-split collapsed" : "study-split"}>
           <section className="panel reorder-panel" aria-label="Reorder">
             <button
