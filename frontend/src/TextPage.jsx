@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createCards, loadCards } from "./api.js";
 import CardsTable from "./CardsTable.jsx";
+import DeckPicker from "./DeckPicker.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
 import WordPicker from "./WordPicker.jsx";
 import { splitText, writtenForm } from "./words.js";
@@ -54,6 +55,11 @@ export default function TextPage() {
   const [saved, setSaved] = useState(null);
   const [cards, setCards] = useState(null);
   const [asking, setAsking] = useState(false);
+  const [deckIds, setDeckIds] = useState([]); // the decks the new cards go in
+  const [decksChanged, setDecksChanged] = useState(0);
+
+  // The decks are for one pair of languages, so the ticks go when the pair changes.
+  useEffect(() => setDeckIds([]), [textLanguage, firstLanguage]);
 
   // The cards are in the database, so they are there again after a refresh, whatever text they came from.
   useEffect(() => {
@@ -90,6 +96,10 @@ export default function TextPage() {
       );
       return;
     }
+    if (deckIds.length === 0) {
+      setMessage(newNotice("Choose at least one deck for the cards."));
+      return;
+    }
     setMessage(null);
     setAsking(true);
     try {
@@ -110,14 +120,15 @@ export default function TextPage() {
         return;
       }
       const savedText = await response.json();
-      const created = await createCards(savedText.id);
+      const created = await createCards(savedText.id, deckIds);
       setCards(await loadCards());
+      setDecksChanged((count) => count + 1);
       // When the model has answered, tell how many cards got a sentence, so the learner sees that the work is done.
       const made = created.cards.filter((card) => card.sentence).length;
       if (made > 0) {
         setSaved(
           newNotice(
-            `Saved text ${savedText.id} and made ${made} ${made === 1 ? "card" : "cards"}.`,
+            `Saved text ${savedText.id} and made ${made} ${made === 1 ? "card" : "cards"} in ${deckIds.length} ${deckIds.length === 1 ? "deck" : "decks"}.`,
             "success",
           ),
         );
@@ -217,12 +228,25 @@ export default function TextPage() {
           </div>
         )}
 
-        <div className="actions">
+        <DeckPicker
+          textLanguage={textLanguage}
+          firstLanguage={firstLanguage}
+          selected={deckIds}
+          onChange={setDeckIds}
+          reload={decksChanged}
+        />
+
+        <div className="actions footer-row">
+          <p className="hint">
+            {deckIds.length === 0
+              ? "Tick at least one deck to continue."
+              : `${cardWords.length} ${cardWords.length === 1 ? "word" : "words"} will become ${cardWords.length === 1 ? "a card" : "cards"} in ${deckIds.length} ${deckIds.length === 1 ? "deck" : "decks"}.`}
+          </p>
           <button
             type="button"
             className="primary"
             onClick={askForSentences}
-            disabled={asking}
+            disabled={asking || deckIds.length === 0}
             aria-busy={asking}
           >
             {asking && <span className="button-spinner" aria-hidden="true" />}

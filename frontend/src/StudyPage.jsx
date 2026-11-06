@@ -1,6 +1,13 @@
-import { useState } from "react";
-import { answerCard, loadDueCards } from "./api.js";
+import { useEffect, useState } from "react";
+import { answerCard, loadDecks, loadDueCards } from "./api.js";
+import DeckTag from "./DeckTag.jsx";
+import {
+  readTickedDecks,
+  shuffled,
+  writeTickedDecks,
+} from "./deckSelection.js";
 import Notice, { newNotice } from "./Notice.jsx";
+import StudyDecks from "./StudyDecks.jsx";
 import StudyQueue from "./StudyQueue.jsx";
 import { splitAtWords } from "./words.js";
 
@@ -25,14 +32,49 @@ export default function StudyPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
   const [feedback, setFeedback] = useState(null);
+  const [decks, setDecks] = useState(null); // null until the decks are loaded
+  const [ticked, setTicked] = useState(readTickedDecks); // the decks of this session, remembered in this browser
+  const [due, setDue] = useState([]); // the cards due today in the ticked decks, for the numbers of the Study box
+  const [dueVersion, setDueVersion] = useState(0); // changes when the saved order may have changed what is due
+  const [shuffle, setShuffle] = useState(false); // mixes the order of one session; the saved order does not change
+  const [folded, setFolded] = useState(false); // the Reorder box is folded away
+
+  useEffect(() => {
+    loadDecks()
+      .then((found) => {
+        setDecks(found);
+        // A deck that no longer exists is not ticked any more.
+        setTicked((before) =>
+          before.filter((id) => found.some((deck) => deck.id === id)),
+        );
+      })
+      .catch((error) => setMessage(newNotice(error.message)));
+  }, []);
+
+  const tickedKey = ticked.join(",");
+  useEffect(() => {
+    if (ticked.length === 0) {
+      setDue([]);
+      return;
+    }
+    loadDueCards(ticked)
+      .then(setDue)
+      .catch((error) => setMessage(newNotice(error.message)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `tickedKey` is `ticked` as a value that does not change at every render
+  }, [tickedKey, dueVersion, queue]);
+
+  function tick(deckIds) {
+    setTicked(deckIds);
+    writeTickedDecks(deckIds);
+  }
 
   async function start() {
     setBusy(true);
     setMessage(null);
     setFeedback(null);
     try {
-      const due = await loadDueCards();
-      setQueue(due);
+      const cards = await loadDueCards(ticked);
+      setQueue(shuffle ? shuffled(cards) : cards);
       setReviewed(0);
       setRevealed(false);
     } catch (error) {
@@ -83,29 +125,127 @@ export default function StudyPage() {
   }
 
   const card = queue?.[0];
+  const tickedDecks = (decks ?? []).filter((deck) => ticked.includes(deck.id));
+
+  // Before a session: the decks, then Reorder (which can be folded away) next to Study.
+  if (queue === null) {
+    return (
+      <>
+        {decks !== null && (
+          <StudyDecks decks={decks} ticked={ticked} onChange={tick} />
+        )}
+        <div className={folded ? "study-split collapsed" : "study-split"}>
+          <section className="panel reorder-panel" aria-label="Reorder">
+            <button
+              type="button"
+              className="collapse-button"
+              aria-expanded={!folded}
+              aria-label={
+                folded ? "Open the Reorder box" : "Fold the Reorder box"
+              }
+              title={folded ? "Open" : "Fold"}
+              onClick={() => setFolded(!folded)}
+            >
+              {folded ? "»" : "«"}
+            </button>
+            <div className="reorder-inner" inert={folded}>
+              <div className="pane-head">
+                <h2>Reorder</h2>
+              </div>
+              <p className="hint">
+                One saved order for all your cards. Cards of unticked decks are
+                only hidden, they keep their place.
+              </p>
+              {ticked.length === 0 ? (
+                <p className="empty-box">
+                  No deck ticked. Tick a deck above to see its cards.
+                </p>
+              ) : (
+                <StudyQueue
+                  deckIds={ticked}
+                  onSaved={() => setDueVersion((version) => version + 1)}
+                />
+              )}
+            </div>
+            <div className="rail" aria-hidden="true">
+              Reorder
+            </div>
+          </section>
+          <section className="panel study-panel" aria-label="Study">
+            <div className="pane-head">
+              <h2>Study</h2>
+            </div>
+            <div className="study-stats">
+              <div className="study-stat">
+                <b>{due.length}</b>
+                <span>due today</span>
+              </div>
+              <div className="study-stat">
+                <b>{ticked.length}</b>
+                <span>
+                  {ticked.length === 1 ? "deck ticked" : "decks ticked"}
+                </span>
+              </div>
+            </div>
+            {tickedDecks.length === 0 ? (
+              <p className="empty-box">
+                Tick a deck above to see what you will study.
+              </p>
+            ) : (
+              <div className="study-by-deck">
+                {tickedDecks.map((deck) => (
+                  <span className="deck-count" key={deck.id}>
+                    <DeckTag deck={deck} />
+                    <b>
+                      {
+                        due.filter((item) =>
+                          item.decks.some((other) => other.id === deck.id),
+                        ).length
+                      }
+                    </b>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="study-session">
+              <div className="study-session-left">
+                <label className="shuffle">
+                  <input
+                    type="checkbox"
+                    checked={shuffle}
+                    onChange={(event) => setShuffle(event.target.checked)}
+                  />
+                  Shuffle this session only
+                </label>
+                {due.length > 0 && (
+                  <span className="order-state">
+                    {shuffle ? "Shuffled" : "Saved order"}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="primary"
+                onClick={start}
+                disabled={busy || due.length === 0}
+              >
+                {busy ? "Looking for cards..." : "Start a session"}
+              </button>
+            </div>
+          </section>
+        </div>
+        {message && (
+          <Notice notice={message} onDismiss={() => setMessage(null)} />
+        )}
+      </>
+    );
+  }
 
   return (
     <section className="panel">
       <h2>Study</h2>
 
-      {queue === null && (
-        <>
-          <p className="hint">Study the cards that are due, one at a time.</p>
-          <div className="actions">
-            <button
-              type="button"
-              className="primary"
-              onClick={start}
-              disabled={busy}
-            >
-              {busy ? "Looking for cards..." : "Start a session"}
-            </button>
-          </div>
-          <StudyQueue />
-        </>
-      )}
-
-      {queue !== null && !card && (
+      {!card && (
         <>
           <p className="hint" role="status">
             {reviewed === 0
@@ -120,6 +260,13 @@ export default function StudyPage() {
               disabled={busy}
             >
               Start another session
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setQueue(null)}
+            >
+              Back to the decks
             </button>
           </div>
         </>

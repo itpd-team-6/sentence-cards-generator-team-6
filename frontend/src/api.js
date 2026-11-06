@@ -29,11 +29,36 @@ const json = (method, body) => ({
   body: JSON.stringify(body),
 });
 
-// A card for each marked word of the text that has none yet.
-export const createCards = (textId) =>
-  call(`/api/texts/${textId}/cards`, { method: "POST" });
+// The query string that keeps the cards of some decks: `deck_ids=1&deck_ids=2`. Without decks there is none.
+const deckQuery = (deckIds) =>
+  deckIds?.length
+    ? `?${deckIds.map((id) => `deck_ids=${encodeURIComponent(id)}`).join("&")}`
+    : "";
 
-// Every card of every text, the newest text first.
+// The decks, each with its number of cards. With both languages, only the decks of that language pair.
+export const loadDecks = (textLanguage, firstLanguage) =>
+  call(
+    textLanguage && firstLanguage
+      ? `/api/decks?text_language=${textLanguage}&first_language=${firstLanguage}`
+      : "/api/decks",
+  );
+
+// A new empty deck for a language pair. The title is 1 to 60 characters and free for the pair.
+export const createDeck = (title, textLanguage, firstLanguage) =>
+  call(
+    "/api/decks",
+    json("POST", {
+      title,
+      text_language: textLanguage,
+      first_language: firstLanguage,
+    }),
+  );
+
+// A card for each marked word of the text that has none yet, all of them in the decks `deckIds`.
+export const createCards = (textId, deckIds) =>
+  call(`/api/texts/${textId}/cards`, json("POST", { deck_ids: deckIds }));
+
+// Every card, the ones of the newest text first.
 export const loadCards = () => call("/api/cards");
 
 // `fields` has any of: sentence, translation, translation_locked, flagged, hidden.
@@ -58,22 +83,29 @@ export const hideCards = (cardIds, hidden) =>
 export const newSentences = (cardIds) =>
   call("/api/cards/new-sentences", json("POST", { card_ids: cardIds }));
 
-// The cards due today or earlier, with a sentence to show. Empty when nothing is due.
-export const loadDueCards = () => call("/api/study/due");
+// The cards due today or earlier, with a sentence to show, from the decks `deckIds`. Empty when nothing is due.
+export const loadDueCards = (deckIds) =>
+  call(`/api/study/due${deckQuery(deckIds)}`);
 
 // The learner's answer to a card, one of "again", "hard", "good" and "easy"; the answer has the card's next due date.
 export const answerCard = (cardId, answer) =>
   call(`/api/cards/${cardId}/answer`, json("POST", { answer }));
 
 // The study queue: every card with a sentence, in the order they are studied. The cards due today come first, and each
-// card says whether it is due today and its due date.
-export const loadQueue = () => call("/api/study/queue");
+// card says whether it is due today and its due date. Only the cards of the decks `deckIds`, each once.
+export const loadQueue = (deckIds) =>
+  call(`/api/study/queue${deckQuery(deckIds)}`);
 
 // Saves the order the learner gave the study queue. `cardIds` is the whole queue in the new order, `moved` the cards the
-// learner moved, and `todayCount` how many cards at the start of the order are due today; the answer is the queue as it
-// is now.
-export const saveQueueOrder = (cardIds, moved, todayCount) =>
+// learner moved, and `todayCount` how many cards at the start of the order are due today; `deckIds` are the decks the
+// learner ticked. The answer is the queue of those decks as it is now.
+export const saveQueueOrder = (cardIds, moved, todayCount, deckIds) =>
   call(
     "/api/study/queue/order",
-    json("POST", { card_ids: cardIds, moved, today_count: todayCount }),
+    json("POST", {
+      card_ids: cardIds,
+      moved,
+      today_count: todayCount,
+      deck_ids: deckIds,
+    }),
   );
