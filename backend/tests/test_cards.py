@@ -85,9 +85,28 @@ def model() -> FakeModel:
     app.dependency_overrides.clear()
 
 
+def deck_for(client: TestClient, text_id: int) -> int:
+    """A deck for the language pair of the text: the newest one of the pair, or a new one."""
+    text = client.get(f"/api/texts/{text_id}")
+    if text.status_code != 200:
+        return 1
+    pair = {key: text.json()[key] for key in ("text_language", "first_language")}
+    decks = client.get("/api/decks", params=pair).json()
+    if decks:
+        return decks[0]["id"]
+    return client.post("/api/decks", json={"title": "My deck", **pair}).json()["id"]
+
+
+def ask_for_cards(client: TestClient, text_id: int, deck_ids: list[int] | None = None):
+    """Ask for the cards of a text, in the given decks or in a deck of the text's language pair."""
+    if deck_ids is None:
+        deck_ids = [deck_for(client, text_id)]
+    return client.post(f"/api/texts/{text_id}/cards", json={"deck_ids": deck_ids})
+
+
 def make_cards(client: TestClient) -> list[dict]:
     text_id = client.post("/api/texts", json=TEXT).json()["id"]
-    response = client.post(f"/api/texts/{text_id}/cards")
+    response = ask_for_cards(client, text_id)
     assert response.status_code == 200
     return response.json()["cards"]
 
@@ -151,7 +170,7 @@ def test_a_model_that_is_not_set_up_leaves_every_word_without_a_sentence_and_wit
 def test_asking_again_does_not_touch_the_cards_that_exist(model) -> None:
     with TestClient(app) as client:
         first = make_cards(client)
-        second = client.post("/api/texts/1/cards").json()["cards"]
+        second = ask_for_cards(client, 1).json()["cards"]
 
         assert second == first
         assert len(model.calls) == 3
@@ -166,7 +185,7 @@ def test_the_model_gets_the_part_of_the_text_around_the_word(model) -> None:
 
 def test_a_text_that_does_not_exist_is_not_found(model) -> None:
     with TestClient(app) as client:
-        assert client.post("/api/texts/99/cards").status_code == 404
+        assert ask_for_cards(client, 99).status_code == 404
         assert client.get("/api/texts/99/cards").status_code == 404
 
 
@@ -511,17 +530,11 @@ def test_all_the_cards_of_all_the_texts_are_listed_with_the_newest_text_first(mo
         make_cards(client)
         other = {**TEXT, "text": "Der Hund schläft.", "words": ["Hund", "schläft"]}
         other_id = client.post("/api/texts", json=other).json()["id"]
-        client.post(f"/api/texts/{other_id}/cards")
+        ask_for_cards(client, other_id)
 
         cards = client.get("/api/cards").json()
 
-        assert [(card["text_id"], card["word"]) for card in cards] == [
-            (2, "Hund"),
-            (2, "schläft"),
-            (1, "Bahnhof"),
-            (1, "Zug"),
-            (1, "Haus"),
-        ]
+        assert [card["word"] for card in cards] == ["Hund", "schläft", "Bahnhof", "Zug", "Haus"]
         client.delete("/api/cards/1")
         assert "Bahnhof" not in [card["word"] for card in client.get("/api/cards").json()]
 
@@ -742,7 +755,7 @@ def test_a_card_word_of_several_words_gets_a_card_and_the_model_gets_the_passage
     }
     with TestClient(app) as client:
         text_id = client.post("/api/texts", json=text).json()["id"]
-        cards = client.post(f"/api/texts/{text_id}/cards").json()["cards"]
+        cards = ask_for_cards(client, text_id).json()["cards"]
 
     assert [card["word"] for card in cards] == ["stimmt zu", "Gesprächen"]
     assert "stimmt der Wiederaufnahme von Gesprächen zu" in model.calls[0]["context"]
@@ -770,7 +783,7 @@ def test_the_model_is_told_the_phrases_the_word_already_has(model) -> None:
         model.calls.clear()
         model.phrases = {"Zug": "ein langer Zug"}
         other = add_text(client, "Der Zug ist lang.", ["Zug"])
-        client.post(f"/api/texts/{other}/cards")
+        ask_for_cards(client, other)
 
         assert list(model.calls[0]["known_phrases"]) == ["den Zug nehmen"]
 
@@ -782,13 +795,13 @@ def test_no_card_is_made_when_the_word_already_has_a_card_with_the_same_meaning(
         model.same_meaning = {"Zug": "den Zug nehmen"}
         other = add_text(client, "Ich nehme den Zug.", ["Zug"])
 
-        response = client.post(f"/api/texts/{other}/cards")
+        response = ask_for_cards(client, other)
 
         assert response.status_code == 200
-        assert response.json() == {
-            "cards": [],
-            "existing": [{"word": "Zug", "phrase": "den Zug nehmen"}],
-        }
+        body = response.json()
+        assert body["existing"] == [{"word": "Zug", "phrase": "den Zug nehmen"}]
+        # No second card is made: the word of the new text points to the card the learner already has.
+        assert [(card["id"], card["phrase"]) for card in body["cards"]] == [(2, "den Zug nehmen")]
         assert len(client.get("/api/cards").json()) == 3
 
 
@@ -799,7 +812,7 @@ def test_a_word_with_a_different_meaning_gets_a_second_card(model) -> None:
         model.phrases = {"Zug": "ein Zug Wasser"}
         other = add_text(client, "Er trank in einem Zug.", ["Zug"])
 
-        response = client.post(f"/api/texts/{other}/cards").json()
+        response = ask_for_cards(client, other).json()
 
         assert response["existing"] == []
         assert [card["phrase"] for card in response["cards"]] == ["ein Zug Wasser"]
@@ -815,9 +828,10 @@ def test_a_phrase_the_model_repeats_makes_no_second_card_even_when_it_does_not_s
         model.phrases = {"Zug": "Den  Zug nehmen"}
         other = add_text(client, "Ich nehme den Zug.", ["Zug"])
 
-        response = client.post(f"/api/texts/{other}/cards").json()
+        response = ask_for_cards(client, other).json()
 
-        assert response == {"cards": [], "existing": [{"word": "Zug", "phrase": "den Zug nehmen"}]}
+        assert response["existing"] == [{"word": "Zug", "phrase": "den Zug nehmen"}]
+        assert [card["id"] for card in response["cards"]] == [2]
         assert len(client.get("/api/cards").json()) == 3
 
 
@@ -828,9 +842,9 @@ def test_the_other_words_of_the_text_still_get_their_cards_when_one_word_exists(
         model.same_meaning = {"Zug": "den Zug nehmen"}
         other = add_text(client, "Der Zug und der Hund.", ["Zug", "Hund"])
 
-        response = client.post(f"/api/texts/{other}/cards").json()
+        response = ask_for_cards(client, other).json()
 
-        assert [card["word"] for card in response["cards"]] == ["Hund"]
+        assert [card["word"] for card in response["cards"]] == ["Zug", "Hund"]
         assert [item["word"] for item in response["existing"]] == ["Zug"]
 
 
@@ -889,7 +903,7 @@ def test_a_phrase_another_card_of_the_word_has_is_refused_and_nothing_changes(mo
         make_cards(client)
         model.phrases = {"Zug": "ein Zug Wasser"}
         other = add_text(client, "Er trank in einem Zug.", ["Zug"])
-        client.post(f"/api/texts/{other}/cards")
+        ask_for_cards(client, other)
         before = client.get("/api/cards").json()
 
         response = client.patch("/api/cards/4", json={"phrase": "Den Zug nehmen"})
@@ -966,7 +980,7 @@ def test_the_retry_of_a_card_without_a_sentence_is_refused_when_the_word_already
         make_cards(client)
         model.failing = {"Zug": LlmError("The language model took too long to answer.")}
         other = add_text(client, "Ich nehme den Zug.", ["Zug"])
-        client.post(f"/api/texts/{other}/cards")
+        ask_for_cards(client, other)
         model.failing = {}
         model.same_meaning = {"Zug": "den Zug nehmen"}
         before = client.get("/api/cards").json()

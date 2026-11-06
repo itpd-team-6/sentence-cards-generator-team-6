@@ -5,20 +5,32 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.database import (
     add_card,
+    add_cards_to_decks,
+    card_of_marked_word,
     delete_card,
     delete_cards,
     find_card_by_phrase,
     get_card,
     get_connection,
+    get_deck,
     get_text,
+    link_word_to_card,
     list_all_cards,
     list_cards,
     meanings_of_word,
     set_hidden,
+    text_for_card,
     update_card,
 )
 from app.llm import (
@@ -44,9 +56,19 @@ def get_today() -> date:
     return date.today()
 
 
+class DeckRef(BaseModel):
+    """A deck a card is in."""
+
+    id: int
+    title: str
+
+
 class CardResponse(BaseModel):
     id: int
-    text_id: int
+    # A card has its own language pair and no text (DEC-020); the decks it is in say where it belongs.
+    text_language: str
+    first_language: str
+    decks: list[DeckRef]
     word: str
     # The context phrase that, with the word, identifies the card (DEC-013); None for a card made before phrases existed.
     phrase: str | None
@@ -70,6 +92,17 @@ class ExistingCard(BaseModel):
 class CreatedCards(BaseModel):
     cards: list[CardResponse]
     existing: list[ExistingCard]
+
+
+class CardsRequest(BaseModel):
+    """The decks the new cards go in. A card the learner already has for a word of the text is added to them too."""
+
+    deck_ids: list[int] = Field(min_length=1)
+
+    @field_validator("deck_ids")
+    @classmethod
+    def decks_appear_once(cls, deck_ids: list[int]) -> list[int]:
+        return list(dict.fromkeys(deck_ids))
 
 
 class CardChange(BaseModel):
@@ -187,11 +220,21 @@ def new_sentence_fields(card: dict, result: GeneratedSentence) -> dict:
     return fields
 
 
+def pair_of(card: dict) -> tuple[str, str]:
+    """The language pair of a card: its text language and its first language."""
+    return card["text_language"], card["first_language"]
+
+
 def check_phrase_is_free(
-    connection: sqlite3.Connection, word: str, phrase: str | None, card_id: int | None = None
+    connection: sqlite3.Connection,
+    word: str,
+    phrase: str | None,
+    card_id: int | None = None,
+    pair: tuple[str, str] | None = None,
 ) -> None:
-    """Raise `CardExists` when another card for the word already has this phrase, whatever the model said."""
-    other = find_card_by_phrase(connection, word, phrase, card_id) if phrase else None
+    """Raise `CardExists` when another card for the word, in the language pair, already has this phrase, whatever the
+    model said."""
+    other = find_card_by_phrase(connection, word, phrase, card_id, pair) if phrase else None
     if other:
         raise CardExists(other["phrase"])
 
@@ -206,37 +249,63 @@ def find_card(connection: sqlite3.Connection, card_id: int) -> dict:
 @router.post("/api/texts/{text_id}/cards")
 def create_cards(
     text_id: int,
+    request: CardsRequest,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
     today: Annotated[date, Depends(get_today)],
 ) -> CreatedCards:
     """A card for each marked word of the text that has none yet, with a sentence, its translation and its phrase.
 
-    The cards exist at once, without the learner confirming them. A word is identified by its phrase (DEC-013): when
-    the learner already has a card for the word with the same meaning, no card is made and the word is listed in
-    `existing` with the phrase of that card. When the model gives no sentence for a word, that card has no sentence
-    and carries an `error`; the other words keep their sentences. Calling this again does not touch the cards that
-    exist, so a word without a sentence is retried with the card's own call.
+    Every card of the text is put in the decks of the request, so the decks must exist and be for the language pair of
+    the text (404 and 422 otherwise, and nothing is made). The cards exist at once, without the learner confirming
+    them. A word is identified by its phrase (DEC-013): when the learner already has a card for the word with the same
+    meaning in this language pair, no card is made, the word points to that card, the card is put in the decks, and the
+    word is listed in `existing` with the phrase of that card. A word that already has a card is put in the decks and
+    its card is not touched. When the model gives no sentence for a word, that card has no sentence and carries an
+    `error`; the other words keep their sentences. A word without a sentence is retried with the card's own call.
     """
     text = get_text(connection, text_id)
     if text is None:
         raise HTTPException(status_code=404, detail="There is no text with this id.")
-    have_a_card = {card["word"] for card in list_cards(connection, text_id)}
+    pair = (text["text_language"], text["first_language"])
+    for deck_id in request.deck_ids:
+        deck = get_deck(connection, deck_id)
+        if deck is None:
+            raise HTTPException(status_code=404, detail=f"There is no deck with id {deck_id}.")
+        if (deck["text_language"], deck["first_language"]) != pair:
+            raise HTTPException(
+                status_code=422, detail="A deck only takes cards of its own language pair."
+            )
     errors: dict[str, str] = {}
     existing: list[ExistingCard] = []
     for word in text["words"]:
-        if word in have_a_card:
+        card = card_of_marked_word(connection, text_id, word)
+        if card:
+            add_cards_to_decks(connection, [card["id"]], request.deck_ids)
             continue
         try:
-            result = ask_model(client, text, word, known_phrases=meanings_of_word(connection, word))
-            check_phrase_is_free(connection, word, result.phrase)
+            result = ask_model(
+                client, text, word, known_phrases=meanings_of_word(connection, word, pair=pair)
+            )
+            check_phrase_is_free(connection, word, result.phrase, pair=pair)
             add_card(
-                connection, text_id, word, result.sentence, result.translation, today, result.phrase
+                connection,
+                text_id,
+                word,
+                result.sentence,
+                result.translation,
+                today,
+                result.phrase,
+                request.deck_ids,
             )
         except CardExists as exists:
+            other = find_card_by_phrase(connection, word, exists.phrase, pair=pair)
+            if other:
+                link_word_to_card(connection, text_id, word, other["id"])
+                add_cards_to_decks(connection, [other["id"]], request.deck_ids)
             existing.append(ExistingCard(word=word, phrase=exists.phrase))
         except LlmError as error:
-            add_card(connection, text_id, word, None, None, today)
+            add_card(connection, text_id, word, None, None, today, None, request.deck_ids)
             errors[word] = str(error)
     cards = [
         card_response(card, errors.get(card["word"])) for card in list_cards(connection, text_id)
@@ -257,7 +326,7 @@ def read_cards(
 def read_all_cards(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
 ) -> list[CardResponse]:
-    """Every card of every text, so the learner can review the cards they study, whatever text they came from."""
+    """Every card, so the learner can review the cards they study, whatever text or deck they came from."""
     return [card_response(card) for card in list_all_cards(connection)]
 
 
@@ -276,16 +345,16 @@ def replace_sentences(
     cards = [find_card(connection, card_id) for card_id in ids]
     errors: dict[int, str] = {}
     for card in cards:
-        text = get_text(connection, card["text_id"])
+        text = text_for_card(connection, card)
         try:
             result = ask_model(
                 client,
                 text,
                 card,
                 card["sentence"],
-                meanings_of_word(connection, card["word"], card["id"]),
+                meanings_of_word(connection, card["word"], card["id"], pair_of(card)),
             )
-            check_phrase_is_free(connection, card["word"], result.phrase, card["id"])
+            check_phrase_is_free(connection, card["word"], result.phrase, card["id"], pair_of(card))
         except LlmNotConfigured as error:
             raise HTTPException(status_code=503, detail=str(error)) from None
         except (LlmError, CardExists) as error:
@@ -347,7 +416,7 @@ def change_card(
         if problem:
             raise HTTPException(status_code=422, detail=problem)
         try:
-            check_phrase_is_free(connection, card["word"], fields["phrase"], card_id)
+            check_phrase_is_free(connection, card["word"], fields["phrase"], card_id, pair_of(card))
         except CardExists as error:
             raise HTTPException(status_code=409, detail=str(error)) from None
     locked = bool(fields.get("translation_locked", card["translation_locked"]))
@@ -357,7 +426,7 @@ def change_card(
             detail="A card without a translation cannot have its translation locked.",
         )
     if "sentence" in fields and "translation" not in fields and not locked:
-        text = get_text(connection, card["text_id"])
+        text = text_for_card(connection, card)
         try:
             fields["translation"] = client.translate_sentence(
                 fields["sentence"], text["text_language"], text["first_language"]
@@ -384,16 +453,16 @@ def replace_sentence(
     the card stays as it is.
     """
     card = find_card(connection, card_id)
-    text = get_text(connection, card["text_id"])
+    text = text_for_card(connection, card)
     try:
         result = ask_model(
             client,
             text,
             card,
             card["sentence"],
-            meanings_of_word(connection, card["word"], card_id),
+            meanings_of_word(connection, card["word"], card_id, pair_of(card)),
         )
-        check_phrase_is_free(connection, card["word"], result.phrase, card_id)
+        check_phrase_is_free(connection, card["word"], result.phrase, card_id, pair_of(card))
     except LlmNotConfigured as error:
         raise HTTPException(status_code=503, detail=str(error)) from None
     except CardExists as error:
@@ -408,7 +477,7 @@ def replace_sentence(
 def remove_card(
     card_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
 ) -> Response:
-    """Delete one card. The other cards of the text stay."""
+    """Delete one card. The other cards, and the decks it was in, stay."""
     if not delete_card(connection, card_id):
         raise HTTPException(status_code=404, detail="There is no card with this id.")
     return Response(status_code=204)

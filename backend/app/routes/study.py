@@ -4,7 +4,7 @@ import sqlite3
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.database import (
@@ -15,7 +15,7 @@ from app.database import (
     list_queue,
     reorder_queue,
 )
-from app.routes.cards import get_today
+from app.routes.cards import DeckRef, get_today
 from app.scheduler import Answer, answer_card, forecast
 
 router = APIRouter()
@@ -23,7 +23,9 @@ router = APIRouter()
 
 class StudyCard(BaseModel):
     id: int
-    text_id: int
+    text_language: str
+    first_language: str
+    decks: list[DeckRef]
     word: str
     sentence: str
     translation: str
@@ -54,6 +56,8 @@ class QueueOrder(BaseModel):
     card_ids: list[int] = Field(min_length=1)
     moved: list[int] = Field(min_length=1)
     today_count: int = Field(ge=0)
+    # The decks the learner has ticked; None is every deck. The order is the one for these decks' cards.
+    deck_ids: list[int] | None = None
 
 
 class AnswerBody(BaseModel):
@@ -71,9 +75,11 @@ class AnsweredCard(BaseModel):
 def due_cards(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     today: Annotated[date, Depends(get_today)],
+    deck_ids: Annotated[list[int] | None, Query()] = None,
 ) -> list[DueCard]:
     """The cards due today or earlier, in the order they are studied, each with the wait that every answer would give
-    it. The list is empty when nothing is due."""
+    it. The list is empty when nothing is due. With `deck_ids`, only the cards in at least one of those decks are
+    listed, each once."""
     return [
         DueCard(
             **card,
@@ -82,14 +88,16 @@ def due_cards(
                 for answer, (interval, due) in forecast(card["interval_days"], today).items()
             },
         )
-        for card in list_due_cards(connection, today)
+        for card in list_due_cards(connection, today, deck_ids)
     ]
 
 
-def queue_response(connection: sqlite3.Connection, today: date) -> list[QueueCard]:
+def queue_response(
+    connection: sqlite3.Connection, today: date, deck_ids: list[int] | None = None
+) -> list[QueueCard]:
     return [
         QueueCard(**card, due_today=card["due_date"] <= today.isoformat())
-        for card in list_queue(connection)
+        for card in list_queue(connection, deck_ids)
     ]
 
 
@@ -97,10 +105,11 @@ def queue_response(connection: sqlite3.Connection, today: date) -> list[QueueCar
 def study_queue(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     today: Annotated[date, Depends(get_today)],
+    deck_ids: Annotated[list[int] | None, Query()] = None,
 ) -> list[QueueCard]:
     """Every card with a sentence to show, in the order they are studied: the ones due today first, then the ones
-    due later, each with its date."""
-    return queue_response(connection, today)
+    due later, each with its date. With `deck_ids`, only the cards in at least one of those decks, each once."""
+    return queue_response(connection, today, deck_ids)
 
 
 @router.post("/api/study/queue/order")
@@ -116,7 +125,9 @@ def save_queue_order(
     ones the learner saw (a card was answered or made meanwhile), nothing changes.
     """
     try:
-        reorder_queue(connection, order.card_ids, order.moved, order.today_count, today)
+        reorder_queue(
+            connection, order.card_ids, order.moved, order.today_count, today, order.deck_ids
+        )
     except QueueOutOfDate:
         raise HTTPException(
             status_code=409,
@@ -124,7 +135,7 @@ def save_queue_order(
         ) from None
     except InvalidMove as error:
         raise HTTPException(status_code=422, detail=str(error)) from None
-    return queue_response(connection, today)
+    return queue_response(connection, today, order.deck_ids)
 
 
 @router.post("/api/cards/{card_id}/answer")

@@ -1,4 +1,4 @@
-"""Storage of texts, marked words and cards in one SQLite file.
+"""Storage of texts, marked words, cards and decks in one SQLite file.
 
 The tables are made by numbered migrations (`MIGRATIONS`): the database remembers the number of the last one it ran
 (`PRAGMA user_version`), and `init_db` runs the ones after it, once each and in order. To change the tables, add a
@@ -101,6 +101,101 @@ def add_the_card_phrase(connection: sqlite3.Connection) -> None:
     )
 
 
+def add_the_decks(connection: sqlite3.Connection) -> None:
+    """Add decks (DEC-020, DEC-047): a card keeps its own language pair instead of belonging to a text.
+
+    Each card gets the languages of its text and loses the link to it. The link moves to the text side: a marked word
+    points to its card (`marked_words.card_id`), so a text page can still show its words with their cards while the
+    card forgets the text. Every text that has cards becomes a deck titled "Text N" (the deck has the id of the text),
+    so the cards keep their grouping. The unique index now includes the languages: the same word and phrase in two
+    language pairs are two cards.
+
+    SQLite cannot drop a column that a foreign key uses, so `cards` is rebuilt. The column `marked_words.card_id` is
+    added after the rebuild, so dropping the old table does not clear it.
+    """
+    connection.execute("CREATE TEMP TABLE card_origin AS SELECT id AS card_id, text_id FROM cards")
+    connection.execute(
+        """
+        CREATE TABLE cards_new (
+            id INTEGER PRIMARY KEY,
+            text_language TEXT NOT NULL,
+            first_language TEXT NOT NULL,
+            word TEXT NOT NULL,
+            sentence TEXT,
+            translation TEXT,
+            flagged INTEGER NOT NULL DEFAULT 0,
+            due_date TEXT NOT NULL,
+            interval_days INTEGER NOT NULL DEFAULT 0,
+            due_at TEXT NOT NULL DEFAULT '',
+            hidden INTEGER NOT NULL DEFAULT 0,
+            translation_locked INTEGER NOT NULL DEFAULT 0,
+            phrase TEXT
+        )
+        """
+    )
+    connection.execute(
+        """
+        INSERT INTO cards_new (id, text_language, first_language, word, sentence, translation, flagged, due_date,
+                               interval_days, due_at, hidden, translation_locked, phrase)
+        SELECT cards.id, texts.text_language, texts.first_language, cards.word, cards.sentence, cards.translation,
+               cards.flagged, cards.due_date, cards.interval_days, cards.due_at, cards.hidden,
+               cards.translation_locked, cards.phrase
+        FROM cards JOIN texts ON texts.id = cards.text_id
+        """
+    )
+    connection.execute("DROP TABLE cards")
+    connection.execute("ALTER TABLE cards_new RENAME TO cards")
+    connection.execute(
+        "CREATE UNIQUE INDEX cards_word_phrase ON cards (word, phrase, text_language, first_language)"
+        " WHERE phrase IS NOT NULL"
+    )
+    connection.execute(
+        "ALTER TABLE marked_words ADD COLUMN card_id INTEGER REFERENCES cards(id) ON DELETE SET NULL"
+    )
+    connection.execute(
+        """
+        UPDATE marked_words SET card_id = (
+            SELECT card_origin.card_id FROM card_origin JOIN cards ON cards.id = card_origin.card_id
+            WHERE card_origin.text_id = marked_words.text_id AND cards.word = marked_words.word
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE decks (
+            id INTEGER PRIMARY KEY,
+            title TEXT NOT NULL,
+            text_language TEXT NOT NULL,
+            first_language TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        "CREATE UNIQUE INDEX decks_title_pair ON decks (lower(title), text_language, first_language)"
+    )
+    connection.execute(
+        """
+        CREATE TABLE card_decks (
+            card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+            deck_id INTEGER NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
+            PRIMARY KEY (card_id, deck_id)
+        )
+        """
+    )
+    connection.execute("CREATE INDEX card_decks_deck ON card_decks (deck_id)")
+    connection.execute(
+        """
+        INSERT INTO decks (id, title, text_language, first_language)
+        SELECT id, 'Text ' || id, text_language, first_language FROM texts
+        WHERE id IN (SELECT text_id FROM card_origin)
+        """
+    )
+    connection.execute(
+        "INSERT INTO card_decks (card_id, deck_id) SELECT card_id, text_id FROM card_origin"
+    )
+    connection.execute("DROP TABLE card_origin")
+
+
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
@@ -108,6 +203,7 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     add_the_hidden_mark,
     add_the_translation_lock,
     add_the_card_phrase,
+    add_the_decks,
 ]
 
 # The card fields a caller may change with `update_card`.
@@ -204,6 +300,150 @@ def get_text(connection: sqlite3.Connection, text_id: int) -> dict | None:
     return {**dict(row), "words": [word["word"] for word in words]}
 
 
+class InvalidDeckTitle(ValueError):
+    """The title of a deck is empty or longer than `DECK_TITLE_LENGTH` characters."""
+
+
+class DeckExists(ValueError):
+    """A deck with this title already exists for the language pair, whatever the case of the letters."""
+
+
+class UnknownDeck(ValueError):
+    """A deck id that does not exist."""
+
+
+class DeckPairMismatch(ValueError):
+    """A deck is for another language pair than the card (or the text) it is used with."""
+
+
+DECK_TITLE_LENGTH = 60
+
+
+def clean_deck_title(title: str) -> str:
+    """The title with its spaces made one, or `InvalidDeckTitle` when it is empty or too long."""
+    cleaned = " ".join(title.split())
+    if not cleaned or len(cleaned) > DECK_TITLE_LENGTH:
+        raise InvalidDeckTitle(f"A deck title is 1 to {DECK_TITLE_LENGTH} characters.")
+    return cleaned
+
+
+def find_deck_by_title(
+    connection: sqlite3.Connection, title: str, text_language: str, first_language: str
+) -> dict | None:
+    """The deck of the language pair with this title, whatever the case of the letters and the spaces, or None."""
+    wanted = " ".join(title.split()).casefold()
+    rows = connection.execute(
+        "SELECT * FROM decks WHERE text_language = ? AND first_language = ?",
+        (text_language, first_language),
+    )
+    for row in rows:
+        if " ".join(row["title"].split()).casefold() == wanted:
+            return dict(row)
+    return None
+
+
+def create_deck(
+    connection: sqlite3.Connection, title: str, text_language: str, first_language: str
+) -> dict:
+    """Make an empty deck for a language pair. Raises `InvalidDeckTitle` or `DeckExists`; then nothing is saved."""
+    cleaned = clean_deck_title(title)
+    if find_deck_by_title(connection, cleaned, text_language, first_language):
+        raise DeckExists("There is already a deck with this title for these languages.")
+    cursor = connection.execute(
+        "INSERT INTO decks (title, text_language, first_language) VALUES (?, ?, ?)",
+        (cleaned, text_language, first_language),
+    )
+    connection.commit()
+    return get_deck(connection, cursor.lastrowid)
+
+
+def get_deck(connection: sqlite3.Connection, deck_id: int) -> dict | None:
+    row = connection.execute(
+        "SELECT decks.*, (SELECT COUNT(*) FROM card_decks WHERE deck_id = decks.id) AS card_count"
+        " FROM decks WHERE id = ?",
+        (deck_id,),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def list_decks(
+    connection: sqlite3.Connection,
+    text_language: str | None = None,
+    first_language: str | None = None,
+) -> list[dict]:
+    """The decks, each with its number of cards, newest first. Both languages together keep only that language pair."""
+    rows = connection.execute(
+        "SELECT decks.*, (SELECT COUNT(*) FROM card_decks WHERE deck_id = decks.id) AS card_count FROM decks"
+        " WHERE (? IS NULL OR text_language = ?) AND (? IS NULL OR first_language = ?)"
+        " ORDER BY id DESC",
+        (text_language, text_language, first_language, first_language),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def link_to_decks(connection: sqlite3.Connection, card_ids: list[int], deck_ids: list[int]) -> None:
+    """Put each card in each deck, without saving. A card that is already in a deck stays there once.
+
+    Raises `UnknownDeck`, or `DeckPairMismatch` when a deck is for another language pair than a card.
+    """
+    for deck_id in dict.fromkeys(deck_ids):
+        deck = connection.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
+        if deck is None:
+            raise UnknownDeck(f"There is no deck with id {deck_id}.")
+        for card_id in card_ids:
+            card = connection.execute(
+                "SELECT text_language, first_language FROM cards WHERE id = ?", (card_id,)
+            ).fetchone()
+            if (card["text_language"], card["first_language"]) != (
+                deck["text_language"],
+                deck["first_language"],
+            ):
+                raise DeckPairMismatch("A deck only takes cards of its own language pair.")
+            connection.execute(
+                "INSERT OR IGNORE INTO card_decks (card_id, deck_id) VALUES (?, ?)",
+                (card_id, deck_id),
+            )
+
+
+def add_cards_to_decks(
+    connection: sqlite3.Connection, card_ids: list[int], deck_ids: list[int]
+) -> None:
+    """Put cards in decks and save. When something is wrong, nothing is saved."""
+    try:
+        link_to_decks(connection, card_ids, deck_ids)
+    except BaseException:
+        connection.rollback()
+        raise
+    connection.commit()
+
+
+def attach_decks(connection: sqlite3.Connection, cards: list[dict]) -> list[dict]:
+    """Add `decks` (id and title, newest deck first) to each card."""
+    if not cards:
+        return cards
+    marks = ", ".join("?" for _ in cards)
+    rows = connection.execute(
+        "SELECT card_decks.card_id, decks.id, decks.title FROM card_decks JOIN decks ON decks.id = card_decks.deck_id"
+        f" WHERE card_decks.card_id IN ({marks}) ORDER BY decks.id DESC",
+        [card["id"] for card in cards],
+    )
+    by_card: dict[int, list[dict]] = {card["id"]: [] for card in cards}
+    for row in rows:
+        by_card[row["card_id"]].append({"id": row["id"], "title": row["title"]})
+    return [{**card, "decks": by_card[card["id"]]} for card in cards]
+
+
+def deck_filter(deck_ids: list[int] | None) -> tuple[str, list[int]]:
+    """The SQL that keeps the cards in at least one of the decks, and its values. None keeps every card; an empty list
+    keeps none."""
+    if deck_ids is None:
+        return "", []
+    marks = ", ".join("?" for _ in deck_ids)
+    return f" AND cards.id IN (SELECT card_id FROM card_decks WHERE deck_id IN ({marks}))", list(
+        deck_ids
+    )
+
+
 def add_card(
     connection: sqlite3.Connection,
     text_id: int,
@@ -212,31 +452,107 @@ def add_card(
     translation: str | None,
     today: date,
     phrase: str | None = None,
+    deck_ids: list[int] | tuple[int, ...] = (),
 ) -> int:
-    """Add a card. A new card is due on `today`."""
-    cursor = connection.execute(
-        "INSERT INTO cards (text_id, word, sentence, translation, due_date, phrase) VALUES (?, ?, ?, ?, ?, ?)",
-        (text_id, word, sentence, translation, today.isoformat(), phrase),
-    )
-    card_id = cursor.lastrowid
-    connection.execute(
-        "UPDATE cards SET due_at = ? WHERE id = ?", (default_due_time(today, card_id), card_id)
-    )
+    """Add a card for a marked word of a text, in the given decks. A new card is due on `today`.
+
+    The card gets the languages of the text, and the marked word points to it. When a deck does not exist or is for
+    another language pair, nothing is saved.
+    """
+    text = connection.execute("SELECT * FROM texts WHERE id = ?", (text_id,)).fetchone()
+    try:
+        cursor = connection.execute(
+            "INSERT INTO cards (text_language, first_language, word, sentence, translation, due_date, phrase)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                text["text_language"],
+                text["first_language"],
+                word,
+                sentence,
+                translation,
+                today.isoformat(),
+                phrase,
+            ),
+        )
+        card_id = cursor.lastrowid
+        connection.execute(
+            "UPDATE cards SET due_at = ? WHERE id = ?", (default_due_time(today, card_id), card_id)
+        )
+        connection.execute(
+            "UPDATE marked_words SET card_id = ? WHERE text_id = ? AND word = ?",
+            (card_id, text_id, word),
+        )
+        link_to_decks(connection, [card_id], list(deck_ids))
+    except BaseException:
+        connection.rollback()
+        raise
     connection.commit()
     return card_id
 
 
-def get_card(connection: sqlite3.Connection, card_id: int) -> dict | None:
-    row = connection.execute("SELECT * FROM cards WHERE id = ?", (card_id,)).fetchone()
+def link_word_to_card(
+    connection: sqlite3.Connection, text_id: int, word: str, card_id: int
+) -> None:
+    """Make the marked word of a text point to an existing card, so the text shows that card for the word."""
+    connection.execute(
+        "UPDATE marked_words SET card_id = ? WHERE text_id = ? AND word = ?",
+        (card_id, text_id, word),
+    )
+    connection.commit()
+
+
+def card_of_marked_word(connection: sqlite3.Connection, text_id: int, word: str) -> dict | None:
+    """The card a marked word of a text points to, or None."""
+    row = connection.execute(
+        "SELECT cards.* FROM marked_words JOIN cards ON cards.id = marked_words.card_id"
+        " WHERE marked_words.text_id = ? AND marked_words.word = ?",
+        (text_id, word),
+    ).fetchone()
     return dict(row) if row else None
 
 
+def text_for_card(connection: sqlite3.Connection, card: dict) -> dict:
+    """What the model needs to write a sentence for a card: its languages and the newest text it was marked in.
+
+    A card forgets its text (DEC-020), so the text is only a source of context: a card whose marked word is gone
+    gets an empty text, and the model writes the sentence without a passage.
+    """
+    row = connection.execute(
+        "SELECT texts.text FROM marked_words JOIN texts ON texts.id = marked_words.text_id"
+        " WHERE marked_words.card_id = ? ORDER BY texts.id DESC LIMIT 1",
+        (card["id"],),
+    ).fetchone()
+    return {
+        "text": row["text"] if row else "",
+        "text_language": card["text_language"],
+        "first_language": card["first_language"],
+    }
+
+
+def get_card(connection: sqlite3.Connection, card_id: int) -> dict | None:
+    row = connection.execute("SELECT * FROM cards WHERE id = ?", (card_id,)).fetchone()
+    return attach_decks(connection, [dict(row)])[0] if row else None
+
+
+def pair_filter(pair: tuple[str, str] | None) -> tuple[str, list[str]]:
+    """The SQL that keeps the cards of a language pair (text language, first language), and its values."""
+    if pair is None:
+        return "", []
+    return " AND text_language = ? AND first_language = ?", [pair[0], pair[1]]
+
+
 def phrases_of_word(
-    connection: sqlite3.Connection, word: str, except_card_id: int | None = None
+    connection: sqlite3.Connection,
+    word: str,
+    except_card_id: int | None = None,
+    pair: tuple[str, str] | None = None,
 ) -> list[str]:
-    """The phrases of the cards for `word`, whatever the case of the word, in the order the cards were made."""
+    """The phrases of the cards for `word`, whatever the case of the word, in the order the cards were made.
+
+    With `pair`, only the cards of that language pair count."""
+    where, values = pair_filter(pair)
     rows = connection.execute(
-        "SELECT id, word, phrase FROM cards WHERE phrase IS NOT NULL ORDER BY id"
+        f"SELECT id, word, phrase FROM cards WHERE phrase IS NOT NULL{where} ORDER BY id", values
     ).fetchall()
     return [
         row["phrase"]
@@ -246,12 +562,17 @@ def phrases_of_word(
 
 
 def meanings_of_word(
-    connection: sqlite3.Connection, word: str, except_card_id: int | None = None
+    connection: sqlite3.Connection,
+    word: str,
+    except_card_id: int | None = None,
+    pair: tuple[str, str] | None = None,
 ) -> dict[str, str]:
     """Like `phrases_of_word`, with the translation of the card's sentence for each phrase ("" when it has none), so
     that the language model sees what the word means on each card and not only three or four words."""
+    where, values = pair_filter(pair)
     rows = connection.execute(
-        "SELECT id, word, phrase, translation FROM cards WHERE phrase IS NOT NULL ORDER BY id"
+        f"SELECT id, word, phrase, translation FROM cards WHERE phrase IS NOT NULL{where} ORDER BY id",
+        values,
     ).fetchall()
     return {
         row["phrase"]: row["translation"] or ""
@@ -261,11 +582,20 @@ def meanings_of_word(
 
 
 def find_card_by_phrase(
-    connection: sqlite3.Connection, word: str, phrase: str, except_card_id: int | None = None
+    connection: sqlite3.Connection,
+    word: str,
+    phrase: str,
+    except_card_id: int | None = None,
+    pair: tuple[str, str] | None = None,
 ) -> dict | None:
     """The card for `word` whose phrase is `phrase`, or None. The case of the letters and the spaces do not matter, so
-    "den Zug nehmen" and "Den Zug  nehmen" are the same phrase. `except_card_id` leaves out the card being changed."""
-    for row in connection.execute("SELECT * FROM cards WHERE phrase IS NOT NULL ORDER BY id"):
+    "den Zug nehmen" and "Den Zug  nehmen" are the same phrase. `except_card_id` leaves out the card being changed,
+    and `pair` keeps only the cards of a language pair."""
+    where, values = pair_filter(pair)
+    rows = connection.execute(
+        f"SELECT * FROM cards WHERE phrase IS NOT NULL{where} ORDER BY id", values
+    )
+    for row in rows:
         is_another_card = row["id"] != except_card_id
         if (
             is_another_card
@@ -277,42 +607,55 @@ def find_card_by_phrase(
 
 
 def list_cards(connection: sqlite3.Connection, text_id: int) -> list[dict]:
+    """The cards of the marked words of a text, in the order the words were marked."""
     rows = connection.execute(
-        "SELECT * FROM cards WHERE text_id = ? ORDER BY id", (text_id,)
+        "SELECT cards.* FROM cards JOIN marked_words ON marked_words.card_id = cards.id"
+        " WHERE marked_words.text_id = ? GROUP BY cards.id ORDER BY MIN(marked_words.id)",
+        (text_id,),
     ).fetchall()
-    return [dict(row) for row in rows]
+    return attach_decks(connection, [dict(row) for row in rows])
 
 
 def list_all_cards(connection: sqlite3.Connection) -> list[dict]:
-    """Every card of every text: the newest text first, and the words of a text in the order they were marked."""
-    rows = connection.execute("SELECT * FROM cards ORDER BY text_id DESC, id").fetchall()
-    return [dict(row) for row in rows]
+    """Every card: the ones of the newest text first, and the words of a text in the order they were made."""
+    rows = connection.execute(
+        "SELECT * FROM cards ORDER BY (SELECT MAX(text_id) FROM marked_words WHERE card_id = cards.id) DESC, id"
+    ).fetchall()
+    return attach_decks(connection, [dict(row) for row in rows])
 
 
-def list_due_cards(connection: sqlite3.Connection, today: date) -> list[dict]:
+def list_due_cards(
+    connection: sqlite3.Connection, today: date, deck_ids: list[int] | None = None
+) -> list[dict]:
     """The cards to study on `today`: due today or earlier, not hidden, and with a sentence and a translation to show.
 
     The card with the earliest due time comes first, and cards with the same due time come in the order they were
-    made. A card the model could not write a sentence for is left out until it has one.
+    made. A card the model could not write a sentence for is left out until it has one. With `deck_ids`, only the
+    cards in at least one of those decks are listed, each once.
     """
+    where, values = deck_filter(deck_ids)
     rows = connection.execute(
         "SELECT * FROM cards WHERE due_date <= ? AND hidden = 0 AND sentence IS NOT NULL AND translation IS NOT NULL"
-        " ORDER BY due_at, id",
-        (today.isoformat(),),
+        f"{where} ORDER BY due_at, id",
+        (today.isoformat(), *values),
     ).fetchall()
-    return [dict(row) for row in rows]
+    return attach_decks(connection, [dict(row) for row in rows])
 
 
-def list_queue(connection: sqlite3.Connection) -> list[dict]:
+def list_queue(connection: sqlite3.Connection, deck_ids: list[int] | None = None) -> list[dict]:
     """The study queue: every card that is not hidden and has a sentence and a translation to show, in study order.
 
     The card with the earliest due time comes first. The cards due today or earlier are the first ones of the queue
-    (`list_due_cards` gives only those); the others follow, each with the date it is due.
+    (`list_due_cards` gives only those); the others follow, each with the date it is due. With `deck_ids`, only the
+    cards in at least one of those decks are listed, each once.
     """
+    where, values = deck_filter(deck_ids)
     rows = connection.execute(
-        "SELECT * FROM cards WHERE hidden = 0 AND sentence IS NOT NULL AND translation IS NOT NULL ORDER BY due_at, id"
+        "SELECT * FROM cards WHERE hidden = 0 AND sentence IS NOT NULL AND translation IS NOT NULL"
+        f"{where} ORDER BY due_at, id",
+        values,
     ).fetchall()
-    return [dict(row) for row in rows]
+    return attach_decks(connection, [dict(row) for row in rows])
 
 
 def update_card(connection: sqlite3.Connection, card_id: int, **fields) -> bool:
@@ -367,6 +710,7 @@ def reorder_queue(
     moved: list[int],
     today_count: int,
     today: date,
+    deck_ids: list[int] | None = None,
 ) -> None:
     """Save a new order of the study queue, and the cards that are due today in it (DEC-021).
 
@@ -376,9 +720,11 @@ def reorder_queue(
     card in the first part is due today (it keeps its date when that is today or earlier); a moved card in the second
     part gets the date of the card above it, and at least tomorrow, so that moving a card changes its date to fit
     its place. The other cards, and the interval of every card, are not touched. When two cards are so close that
-    there is no time left between them, the whole queue gets new due times one millisecond apart, in the new order.
+    there is no time left between them, the cards of the order get new due times one millisecond apart, in the new
+    order. With `deck_ids`, the queue is the cards of those decks, each once; the order is the one saved for every
+    deck, since a card has one due time whatever the deck.
     """
-    queue = list_queue(connection)
+    queue = list_queue(connection, deck_ids)
     old_order = [card["id"] for card in queue]
     if len(set(card_ids)) != len(card_ids) or sorted(card_ids) != sorted(old_order):
         raise QueueOutOfDate("The cards in the queue are not the cards of this order.")
