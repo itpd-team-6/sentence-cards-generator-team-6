@@ -111,21 +111,39 @@ def test_the_migration_keeps_every_card_with_its_languages_and_its_study_data() 
     assert "text_id" not in zug
 
 
-def test_the_migration_makes_a_deck_for_each_text_that_has_cards() -> None:
+def test_the_migration_puts_the_cards_that_exist_in_one_deck_for_each_language_pair() -> None:
     connection = database_at_version_5()
 
     init_db(connection)
 
-    decks = {deck["id"]: deck for deck in list_decks(connection)}
-    assert sorted(decks) == [1, 2]
-    assert (decks[1]["title"], decks[1]["text_language"], decks[1]["first_language"]) == (
-        "Text 1",
-        "de",
-        "en",
-    )
-    assert (decks[1]["card_count"], decks[2]["card_count"]) == (2, 1)
-    assert [deck["id"] for deck in get_card(connection, 1)["decks"]] == [1]
-    assert [deck["id"] for deck in get_card(connection, 3)["decks"]] == [2]
+    decks = {(d["text_language"], d["first_language"]): d for d in list_decks(connection)}
+    assert sorted(decks) == [("de", "en"), ("en", "de")]
+    assert {deck["title"] for deck in decks.values()} == {"Earlier cards"}
+    assert decks[("de", "en")]["card_count"] == 2
+    assert decks[("en", "de")]["card_count"] == 1
+    assert [d["id"] for d in get_card(connection, 1)["decks"]] == [decks[("de", "en")]["id"]]
+    assert [d["id"] for d in get_card(connection, 2)["decks"]] == [decks[("de", "en")]["id"]]
+    assert [d["id"] for d in get_card(connection, 3)["decks"]] == [decks[("en", "de")]["id"]]
+
+
+def test_the_migration_makes_no_deck_for_a_language_pair_without_cards() -> None:
+    connection = database_at_version_5()
+    connection.execute("DELETE FROM cards WHERE id = 3")
+    connection.commit()
+
+    init_db(connection)
+
+    assert [(d["text_language"], d["first_language"]) for d in list_decks(connection)] == [
+        ("de", "en")
+    ]
+
+
+def test_a_database_without_cards_gets_no_deck() -> None:
+    connection = connect()
+
+    init_db(connection)
+
+    assert list_decks(connection) == []
 
 
 def test_the_migration_keeps_the_cards_of_each_text_on_the_text_page() -> None:
@@ -155,7 +173,7 @@ def test_a_card_stays_when_its_text_is_deleted() -> None:
     connection.commit()
 
     assert get_card(connection, 1)["word"] == "Zug"
-    assert [deck["id"] for deck in get_card(connection, 1)["decks"]] == [1]
+    assert [deck["title"] for deck in get_card(connection, 1)["decks"]] == ["Earlier cards"]
 
 
 def test_the_migration_runs_only_once() -> None:

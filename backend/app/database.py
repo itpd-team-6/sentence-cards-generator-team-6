@@ -106,9 +106,10 @@ def add_the_decks(connection: sqlite3.Connection) -> None:
 
     Each card gets the languages of its text and loses the link to it. The link moves to the text side: a marked word
     points to its card (`marked_words.card_id`), so a text page can still show its words with their cards while the
-    card forgets the text. Every text that has cards becomes a deck titled "Text N" (the deck has the id of the text),
-    so the cards keep their grouping. The unique index now includes the languages: the same word and phrase in two
-    language pairs are two cards.
+    card forgets the text. Decks start from zero and are not made from texts: the cards that exist go in one deck
+    titled "Earlier cards" for each language pair that has cards, so no card is left outside a deck (a session is
+    studied from decks). The unique index now includes the languages: the same word and phrase in two language
+    pairs are two cards.
 
     SQLite cannot drop a column that a foreign key uses, so `cards` is rebuilt. The column `marked_words.card_id` is
     added after the rebuild, so dropping the old table does not clear it.
@@ -185,13 +186,17 @@ def add_the_decks(connection: sqlite3.Connection) -> None:
     connection.execute("CREATE INDEX card_decks_deck ON card_decks (deck_id)")
     connection.execute(
         """
-        INSERT INTO decks (id, title, text_language, first_language)
-        SELECT id, 'Text ' || id, text_language, first_language FROM texts
-        WHERE id IN (SELECT text_id FROM card_origin)
+        INSERT INTO decks (title, text_language, first_language)
+        SELECT 'Earlier cards', text_language, first_language FROM cards
+        GROUP BY text_language, first_language ORDER BY text_language, first_language
         """
     )
     connection.execute(
-        "INSERT INTO card_decks (card_id, deck_id) SELECT card_id, text_id FROM card_origin"
+        """
+        INSERT INTO card_decks (card_id, deck_id)
+        SELECT cards.id, decks.id FROM cards JOIN decks
+        ON decks.text_language = cards.text_language AND decks.first_language = cards.first_language
+        """
     )
     connection.execute("DROP TABLE card_origin")
 

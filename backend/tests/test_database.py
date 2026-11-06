@@ -208,7 +208,7 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
         "id": 1,
         "text_language": "de",
         "first_language": "en",
-        "decks": [{"id": 1, "title": "Text 1"}],
+        "decks": [{"id": 1, "title": "Earlier cards"}],
         "word": "Haus",
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
