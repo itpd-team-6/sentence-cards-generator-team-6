@@ -31,3 +31,11 @@ Use the [study queue](glossary.md#study-queue) to focus on the cards you want to
 
 - **Stories:** [US-04](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/30)
 - **Behavior:** [FR-008](functional-requirements/fr/FR-008.md)
+
+## Keep cards in decks
+
+Group your [cards](glossary.md#card) in [decks](glossary.md#deck) that you name, choose the decks when you ask for the cards of a text, and study only the decks you tick.
+
+- **Stories:** [US-11](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/201)
+- **Behavior:** [FR-012](functional-requirements/fr/FR-012.md), [FR-013](functional-requirements/fr/FR-013.md), [FR-014](functional-requirements/fr/FR-014.md)
+- **Decisions:** [DEC-020](decisions.md#dec-020), [DEC-047](decisions.md#dec-047), [DEC-048](decisions.md#dec-048)

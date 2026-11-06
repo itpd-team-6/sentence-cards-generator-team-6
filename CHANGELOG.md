@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Decks ([DEC-020](docs/decisions.md#dec-020), [DEC-047](docs/decisions.md#dec-047)): the learner makes decks with a title and a pair of languages, chooses the decks the cards of a text go in, and studies only the decks ticked on the Study page.
+  A card has its own pair of languages and no longer belongs to a text, and it can be in several decks of its pair; deleting a text keeps its cards.
+  The Study box counts the cards due today in each ticked deck, can be shuffled, and remembers the ticked decks in the browser.
+
+### Changed
+
+- The cards that exist before this version are put in one deck titled "Earlier cards" for each pair of languages, and the database is migrated once at the start.
+  Back up the database before the first start of this version.
+- The Reorder box of the Study page starts folded, and lists the cards due today and the cards due later in two scroll boxes, so that the learner can drag a card from one to the other.
+
 ## [0.2.1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.1) - 2026-10-31
 
 ### Fixed
