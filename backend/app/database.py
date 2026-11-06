@@ -235,7 +235,9 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     """Open the database, creating its folder if needed. The tables are created by `init_db`."""
     file = database_file(path)
     file.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(file)
+    # One connection serves one request, but FastAPI may open it, use it and close it in
+    # different worker threads, so SQLite must not insist on a single thread.
+    connection = sqlite3.connect(file, check_same_thread=False)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
