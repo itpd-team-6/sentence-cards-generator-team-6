@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import LibraryMenu from "./LibraryMenu.jsx";
 import StudyPage from "./StudyPage.jsx";
 import TextPage from "./TextPage.jsx";
 
@@ -20,7 +21,10 @@ export default function App() {
 
   return (
     <main className="app">
-      <h1>Sentence cards generator</h1>
+      <header className="app-header">
+        <h1>Sentence cards generator</h1>
+        <LibraryMenu />
+      </header>
       <nav className="tabs" aria-label="Pages">
         {PAGES.map((item) => (
           <button

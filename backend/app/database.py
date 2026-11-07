@@ -5,10 +5,14 @@ The tables are made by numbered migrations (`MIGRATIONS`): the database remember
 function at the end of the list; never edit one that has been released.
 """
 
+import re
 import sqlite3
+import threading
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
+
+from fastapi import HTTPException, Request
 
 from app.config import REPOSITORY_ROOT, get_settings
 from app.phrases import same_phrase
@@ -267,9 +271,50 @@ def init_db(connection: sqlite3.Connection) -> None:
         connection.commit()
 
 
-def get_connection() -> Iterator[sqlite3.Connection]:
-    """A connection for one request, closed afterwards. Use it with `Depends`."""
-    connection = connect()
+LIBRARY_HEADER = "X-Library-Code"
+LIBRARY_CODE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+
+# The libraries that this process already brought to the latest version, so that it does it once for each.
+_ready_libraries: set[str] = set()
+_ready_lock = threading.Lock()
+
+
+def library_code(request: Request) -> str | None:
+    """The code the request carries in `X-Library-Code`, or None when it carries none. A code that is not a
+    lowercase UUID is refused (400), so a code can never name a file outside the libraries folder."""
+    code = request.headers.get(LIBRARY_HEADER)
+    if code is None:
+        return None
+    if not LIBRARY_CODE.fullmatch(code):
+        raise HTTPException(status_code=400, detail="The library code is not valid.")
+    return code
+
+
+def library_file(code: str) -> Path:
+    """The database file of the library with this code, next to the default database file."""
+    return database_file().parent / "libraries" / f"{code}.db"
+
+
+def library_exists(code: str) -> bool:
+    return library_file(code).is_file()
+
+
+def get_connection(request: Request) -> Iterator[sqlite3.Connection]:
+    """A connection for one request, closed afterwards. Use it with `Depends`.
+
+    A request with a library code gets the database file of that library, made at the first request with the code.
+    A request without a code gets the default database file (`DATABASE_PATH`), the one the product had before the
+    libraries, which the API tools and the tests use.
+    """
+    code = library_code(request)
+    if code is None:
+        connection = connect()
+    else:
+        connection = connect(str(library_file(code)))
+        with _ready_lock:
+            if code not in _ready_libraries:
+                init_db(connection)
+                _ready_libraries.add(code)
     try:
         yield connection
     finally:

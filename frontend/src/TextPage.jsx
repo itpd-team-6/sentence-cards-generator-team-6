@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createCards, loadCards } from "./api.js";
+import { libraryHeaders } from "./library.js";
 import CardsTable from "./CardsTable.jsx";
 import DeckPicker from "./DeckPicker.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
@@ -105,7 +106,7 @@ export default function TextPage() {
     try {
       const response = await fetch("/api/texts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...libraryHeaders() },
         body: JSON.stringify({
           text,
           text_language: textLanguage,

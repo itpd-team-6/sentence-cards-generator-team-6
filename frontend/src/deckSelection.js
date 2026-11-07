@@ -19,6 +19,15 @@ export function writeTickedDecks(deckIds) {
   }
 }
 
+// The decks of one library are not the decks of another, so the ticks are forgotten when the learner opens another.
+export function clearTickedDecks() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // Nothing was remembered.
+  }
+}
+
 // The order of the cards of a session, mixed. It is a copy: the order saved in the product does not change.
 export function shuffled(items, random = Math.random) {
   const copy = [...items];

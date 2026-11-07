@@ -10,12 +10,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Decks ([DEC-020](docs/decisions.md#dec-020), [DEC-047](docs/decisions.md#dec-047)): the learner makes decks with a title and a pair of languages, chooses the decks the cards of a text go in, and studies only the decks ticked on the Study page.
   A card has its own pair of languages and no longer belongs to a text, and it can be in several decks of its pair; deleting a text keeps its cards.
   The Study box counts the cards due today in each ticked deck, can be shuffled, and remembers the ticked decks in the browser.
+- Libraries ([ADR-006](docs/architecture/adr/ADR-006.md)): each browser gets a library of its own, with its texts, cards and decks, so that a learner no longer sees the cards of another.
+  The "My library" menu shows the library code, and the learner copies it or saves it as a file, and enters it in another browser to open the same library.
+  The product keeps no e-mail address, so a lost code cannot be recovered.
+- Product analytics ([ADR-007](docs/architecture/adr/ADR-007.md)): the product records four events about its use, `text_saved`, `cards_generated`, `card_answered` and `sentence_replaced`, and sends them to OpenObserve when `ANALYTICS_ENABLED` is true.
+  The events carry no text, word, name or e-mail address, and identify the learner by a one-way hash of the library code; the setting is off by default.
 
 ### Changed
 
 - The cards that exist before this version are put in one deck titled "Earlier cards" for each pair of languages, and the database is migrated once at the start.
   Back up the database before the first start of this version.
 - The Study page no longer moves when the learner ticks or unticks a deck, and it no longer has notes about the ticked decks: the empty states are blank and the boxes keep their height.
+- The cards, decks and texts that exist before this version stay in the default database file, which the web page no longer opens: each browser starts with an empty library.
+  Back up the folder `data/libraries` with the database file.
 - The Reorder box of the Study page starts folded, and lists the cards due today and the cards due later in two scroll boxes, so that the learner can drag a card from one to the other.
 
 ## [0.2.1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.1) - 2026-10-31

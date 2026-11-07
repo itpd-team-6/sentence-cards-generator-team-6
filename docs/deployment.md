@@ -54,6 +54,7 @@ Staging and production each keep their own `.env` on the VM, so their secrets ar
 | `LLM_BASE_URL`  | The provider endpoint of `DEC-044`   | The provider endpoint of `DEC-044`      |
 | `DATABASE_PATH` | `data/cards.db` in the staging copy  | `data/cards.db` in the production copy  |
 
+Each learner's library is a database file in the folder `libraries` next to the `DATABASE_PATH` file, named by its library code ([`ADR-006`](architecture/adr/ADR-006.md)).
 The two environments run the same code, so only the secrets and the data differ.
 
 ## The language model provider
@@ -115,7 +116,7 @@ The release candidate goes to staging first, and the same commit then goes to pr
 
 6. Verify staging, as in [Verify a deployment](#verify-a-deployment).
 7. Only when staging passes, repeat steps 4 to 6 in `/opt/sentence-cards/production` with port `8002`.
-   Before the update, copy the production database file, as [Roll back](#roll-back) needs it.
+   Before the update, copy the production database file and the folder `libraries` next to it, as [Roll back](#roll-back) needs them.
 
 ## Verify a deployment
 
@@ -134,6 +135,6 @@ A deployment that fails this check is rolled back.
 A deployment that fails its verification returns to the previous release:
 
 1. Stop the service of the failed environment.
-2. Restore the database file that was copied before the update, because a new migration may have changed the file and the older code does not read it.
+2. Restore the database file and the folder `libraries` that were copied before the update, because a new migration may have changed the files and the older code does not read them.
 3. Check out the previous release tag in the environment's copy of the code, rebuild it as in [`setup.md`](setup.md#install), and start it again.
 4. Verify it again, as in [Verify a deployment](#verify-a-deployment).

@@ -1,9 +1,14 @@
+import { LIBRARY_HEADER, libraryHeaders } from "./library.js";
+
 // The calls to the product's API. A failed call throws an Error whose message is safe to show the learner, and whose
 // `status` is the HTTP status of the answer.
-async function call(url, options) {
+async function call(url, options = {}) {
   let response;
   try {
-    response = await fetch(url, options);
+    response = await fetch(url, {
+      ...options,
+      headers: { ...libraryHeaders(), ...options.headers },
+    });
   } catch {
     throw new Error("The product could not be reached. Is it running?");
   }
@@ -109,3 +114,7 @@ export const saveQueueOrder = (cardIds, moved, todayCount, deckIds) =>
       deck_ids: deckIds,
     }),
   );
+
+// How many cards and decks the library with this code has. A code without a library gives a 404.
+export const checkLibrary = (code) =>
+  call("/api/library", { headers: { [LIBRARY_HEADER]: code } });
