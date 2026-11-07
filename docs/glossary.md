@@ -28,6 +28,18 @@ A named group of cards that share one pair of languages, the language of the tex
 
 **Defined by:** [FR-012](functional-requirements/fr/FR-012.md), [DEC-020](decisions.md#dec-020) and [DEC-047](decisions.md#dec-047).
 
+### Library
+
+The texts, cards and decks of one learner, kept apart from those of every other learner and opened again with a library code.
+
+**Defined by:** [FR-015](functional-requirements/fr/FR-015.md) and [ADR-006](architecture/adr/ADR-006.md).
+
+### Library code
+
+A random identifier, a version 4 UUID, that the browser makes and sends with every request, and that names the library the product opens.
+
+**Defined by:** [FR-015](functional-requirements/fr/FR-015.md).
+
 ## Study And Review
 
 ### Review

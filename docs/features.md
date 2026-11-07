@@ -39,3 +39,12 @@ Group your [cards](glossary.md#card) in [decks](glossary.md#deck) that you name,
 - **Stories:** [US-11](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/201)
 - **Behavior:** [FR-012](functional-requirements/fr/FR-012.md), [FR-013](functional-requirements/fr/FR-013.md), [FR-014](functional-requirements/fr/FR-014.md)
 - **Decisions:** [ADR-002](architecture/adr/ADR-002.md)
+
+## Keep my library apart from other learners
+
+Open the product in your own browser and you get a [library](glossary.md#library) that no other learner sees.
+Use the "My library" menu to copy its code or save it as a file, and enter the code in another browser to open your library there.
+
+- **Stories:** [US-12](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/206)
+- **Behavior:** [FR-015](functional-requirements/fr/FR-015.md)
+- **Decisions:** [ADR-006](architecture/adr/ADR-006.md)
