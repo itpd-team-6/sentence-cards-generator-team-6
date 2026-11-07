@@ -4,8 +4,9 @@
 
 The Customer accepts a working version that takes a learner from a pasted text to studying generated cards, by the end of Week 9.
 
-- **Status:** Open
-- **Measure:** the Customer's recorded acceptance of `US-01`, `US-02` and `US-03`, each as a `DEC-nnn`, by the end of Week 9. `US-02` and `US-03` are accepted in [`DEC-011`](decisions.md#dec-011), and `US-01` stays open in [`DEC-012`](decisions.md#dec-012).
+- **Status:** Achieved
+- **Measure:** the Customer's recorded acceptance of `US-01`, `US-02` and `US-03`, each as a `DEC-nnn`, by the end of Week 9.
+- **Outcome:** `US-02` and `US-03` are accepted in [`DEC-011`](decisions.md#dec-011) and `US-01` is accepted in [`DEC-030`](decisions.md#dec-030), which reverses [`DEC-012`](decisions.md#dec-012), so the Customer's acceptance of the three stories is recorded as the measure asks.
 
 ## TOS-02
 
