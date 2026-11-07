@@ -18,3 +18,4 @@
 | [FR-014](fr/FR-014.md) | Study Only The Decks The Learner Ticks                               | `frontend`, `backend`             | Active |
 | [FR-015](fr/FR-015.md) | Keep The Library Of Each Learner Apart, With A Code To Open It Again | `frontend`, `backend`, `database` | Active |
 | [FR-016](fr/FR-016.md) | Record An Event For Each Step Of The Core Task                       | `backend`                         | Active |
+| [FR-017](fr/FR-017.md) | Expose The Quality Signal Of Each Request With Its Environment       | `backend`                         | Active |
