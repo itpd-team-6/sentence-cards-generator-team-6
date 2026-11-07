@@ -24,8 +24,7 @@ A phrase of three or four words that uses a word with the meaning it has on its 
 
 ### Deck
 
-A named group of cards for one pair of languages, the language of the texts and the learner's first language.
-A card has its own pair of languages and no text, and it can be in several decks of its pair.
+A named group of cards that share one pair of languages, the language of the texts and the learner's first language, where a card can be in several decks of its pair.
 
 **Defined by:** [FR-012](functional-requirements/fr/FR-012.md), [DEC-020](decisions.md#dec-020) and [DEC-047](decisions.md#dec-047).
 

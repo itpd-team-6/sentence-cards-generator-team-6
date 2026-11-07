@@ -15,6 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The cards that exist before this version are put in one deck titled "Earlier cards" for each pair of languages, and the database is migrated once at the start.
   Back up the database before the first start of this version.
+- The Study page no longer moves when the learner ticks or unticks a deck, and it no longer has notes about the ticked decks: the empty states are blank and the boxes keep their height.
 - The Reorder box of the Study page starts folded, and lists the cards due today and the cards due later in two scroll boxes, so that the learner can drag a card from one to the other.
 
 ## [0.2.1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.1) - 2026-10-31
