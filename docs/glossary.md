@@ -61,3 +61,29 @@ The cards presented for study, ordered by the date each card is due, with due ti
 An external source configured to supply pronunciation audio for a card's word and sentence, either through a self-hosted text-to-speech model or an online service.
 
 **Defined by:** [DEC-010](decisions.md#dec-010) and [Product vision boundary BND-01](product-vision.md#bnd-01).
+
+## Product Analytics
+
+### Focus metric
+
+The one number that the value of the product is read from, which the metric tree puts at its top.
+
+**Defined by:** [the analytics plan](analytics.md#the-value-and-the-metrics).
+
+### Input metric
+
+A number that a step of the team can change and that feeds the metric above it in the metric tree.
+
+**Defined by:** [the analytics plan](analytics.md#the-metric-tree).
+
+### Counter-metric
+
+The number that guards the focus metric against buying it with harm, and that does not feed it.
+
+**Defined by:** [the analytics plan](analytics.md#the-metric-tree).
+
+### Metric tree
+
+The nested list that shows the focus metric, its counter-metric and the input metrics under it, each linked to its section.
+
+**Defined by:** [the analytics plan](analytics.md#the-metric-tree).

@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.analytics import Tracker, get_tracker
 from app.database import (
     InvalidMove,
     QueueOutOfDate,
@@ -144,10 +145,12 @@ def answer(
     body: AnswerBody,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     today: Annotated[date, Depends(get_today)],
+    tracker: Annotated[Tracker, Depends(get_tracker)],
 ) -> AnsweredCard:
     """Record the learner's answer, one of "again", "hard", "good" and "easy". The scheduler sets the next due date:
     today again for "again", and later than today for the others."""
     card = answer_card(connection, card_id, body.answer, today)
     if card is None:
         raise HTTPException(status_code=404, detail="There is no card with this id.")
+    tracker.record("card_answered", answer=body.answer)
     return AnsweredCard(**card)
