@@ -156,7 +156,30 @@ The address of OpenObserve and its passwords are private-only and are not in thi
 
 7. Build the dashboard of each environment in its organization with the charts of [the analytics plan](analytics.md#the-dashboard), each running the query of its metric.
 
-The observability pipeline is written with the observability plan.
+### The observability pipeline
+
+The signals, the labels and the queries are in [the observability plan](observability.md); this section only installs and configures them.
+
+1. Open OpenObserve from a campus machine, and make the organizations `observability_staging` and `observability_production` under IAM, Organizations.
+2. In each of the two organizations make one user for the product, with its own password, and keep the password only in the `.env` of the matching environment.
+3. Set the retention of the metric and of the stream `backend_requests` of each organization to 90 days.
+4. Install the new requirements of the `backend` on the VM, and in the `.env` of each environment set the variables below, with the organization and the user of that environment, and restart its service:
+
+   | Setting                                 | Staging                                   | Production                                   |
+   | --------------------------------------- | ----------------------------------------- | -------------------------------------------- |
+   | `OBSERVABILITY_ENABLED`                 | `true`                                    | `true`                                       |
+   | `OBSERVABILITY_URL`                     | OpenObserve as the VM reaches it          | OpenObserve as the VM reaches it             |
+   | `OBSERVABILITY_ORG`                     | the identifier of `observability_staging` | the identifier of `observability_production` |
+   | `OBSERVABILITY_USER`                    | the user of the staging organization      | the user of the production organization      |
+   | `OBSERVABILITY_PASSWORD`                | its password, kept private                | its password, kept private                   |
+   | `OBSERVABILITY_METRIC_INTERVAL_SECONDS` | `10`                                      | `10`                                         |
+   | `OBSERVABILITY_LOG_BATCH_SECONDS`       | `1`                                       | `1`                                          |
+
+   The metric interval and the log batch interval meet the windows of [`SLI-01`](observability.md#sli-01).
+
+5. The query endpoint for the metric is `$OPENOBSERVE_URL/api/<organization>/prometheus/api/v1/query` and for the log it is `$OPENOBSERVE_URL/api/<organization>/_search?type=logs`, with the user and the password of the organization sent as basic authentication; [`scripts/check-sli.mjs`](../scripts/check-sli.mjs) reads them from the environment.
+6. Build the dashboard of each environment in its organization with the chart of [the observability plan](observability.md#the-dashboard).
+7. Check the pipeline in staging with `node scripts/check-sli.mjs`, which is the test [`QRT-01` of `QR-07`](quality-requirements/qr/QR-07.md#qrt-01).
 
 ## Verify a deployment
 
