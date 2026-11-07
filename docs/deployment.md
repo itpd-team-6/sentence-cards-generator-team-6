@@ -118,6 +118,46 @@ The release candidate goes to staging first, and the same commit then goes to pr
 7. Only when staging passes, repeat steps 4 to 6 in `/opt/sentence-cards/production` with port `8002`.
    Before the update, copy the production database file and the folder `libraries` next to it, as [Roll back](#roll-back) needs them.
 
+## The telemetry pipelines
+
+The product sends two kinds of telemetry to OpenObserve, which runs on the VM: the product analytics, described in [the analytics plan](analytics.md), and the observability signals.
+One OpenObserve instance carries four organizations, `analytics_staging`, `analytics_production`, `observability_staging` and `observability_production`, so the data of each environment and each kind stays apart.
+The address of OpenObserve and its passwords are private-only and are not in this repository.
+
+### The analytics pipeline
+
+1. Install OpenObserve on the VM as a `systemd` service named `openobserve`, listening on port `5080`, from a folder of its own (`/opt/openobserve`) that has its data folder and its `.env`.
+   The program is copied to the VM from a computer that can download it, because the VM cannot reach the download site.
+2. Open OpenObserve from a campus machine, and make the organizations `analytics_staging` and `analytics_production` under IAM, Organizations.
+3. In each of the two organizations make one user for the product, with its own password, and keep the password only in the `.env` of the matching environment.
+4. Set the retention of the stream `events` of each organization to 90 days, as [the analytics plan](analytics.md#the-pipeline) says.
+5. In the `.env` of each environment set the variables below, with the organization and the user of that environment, and restart its service:
+
+   | Setting              | Staging                               | Production                               |
+   | -------------------- | ------------------------------------- | ---------------------------------------- |
+   | `ANALYTICS_ENABLED`  | `true`                                | `true`                                   |
+   | `ANALYTICS_URL`      | OpenObserve as the VM reaches it      | OpenObserve as the VM reaches it         |
+   | `ANALYTICS_ORG`      | the identifier of `analytics_staging` | the identifier of `analytics_production` |
+   | `ANALYTICS_STREAM`   | `events`                              | `events`                                 |
+   | `ANALYTICS_USER`     | the user of the staging organization  | the user of the production organization  |
+   | `ANALYTICS_PASSWORD` | its password, kept private            | its password, kept private               |
+
+   `ANALYTICS_ORG` is the identifier that OpenObserve shows next to the name of the organization, because the address of the ingestion uses it.
+
+6. Check the pipeline with a test event in staging only, tagged `source=smoke`:
+
+   ```bash
+   curl -X POST "$ANALYTICS_URL/api/$ANALYTICS_ORG/events/_json" -u "$ANALYTICS_USER:$ANALYTICS_PASSWORD" \
+     -H "Content-Type: application/json" \
+     -d '[{"event": "text_saved", "learner_id": "smoke-test", "source": "smoke", "words_marked": 1}]'
+   ```
+
+   The event list of the staging dashboard shows it, and the charts leave it out.
+
+7. Build the dashboard of each environment in its organization with the charts of [the analytics plan](analytics.md#the-dashboard), each running the query of its metric.
+
+The observability pipeline is written with the observability plan.
+
 ## Verify a deployment
 
 After each production deploy, a member opens the deployed product from a campus machine and takes the core task: paste a text, mark a word, ask for sentences, and study the cards.

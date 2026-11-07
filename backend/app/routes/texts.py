@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from app.analytics import Tracker, get_tracker
 from app.database import get_connection, get_text, save_text
 
 router = APIRouter()
@@ -50,11 +51,19 @@ class TextResponse(BaseModel):
 
 @router.post("/api/texts", status_code=201)
 def create_text(
-    request: TextRequest, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+    request: TextRequest,
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+    tracker: Annotated[Tracker, Depends(get_tracker)],
 ) -> TextResponse:
     """Save a text with its marked words. A request with no marked word is refused with 422."""
     text_id = save_text(
         connection, request.text, request.text_language, request.first_language, request.words
+    )
+    tracker.record(
+        "text_saved",
+        text_language=request.text_language,
+        first_language=request.first_language,
+        words_marked=len(request.words),
     )
     return TextResponse(**get_text(connection, text_id))
 

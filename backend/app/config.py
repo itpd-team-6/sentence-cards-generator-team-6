@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     database_path: str = "data/cards.db"
+    # The analytics backend (OpenObserve). Events are sent only when `analytics_enabled` is true.
+    analytics_enabled: bool = False
+    analytics_url: str = ""
+    analytics_org: str = ""
+    analytics_stream: str = "events"
+    analytics_user: str = ""
+    analytics_password: str = ""
 
 
 def get_settings() -> Settings:

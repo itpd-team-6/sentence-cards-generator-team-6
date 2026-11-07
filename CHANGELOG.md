@@ -13,6 +13,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Libraries ([ADR-006](docs/architecture/adr/ADR-006.md)): each browser gets a library of its own, with its texts, cards and decks, so that a learner no longer sees the cards of another.
   The "My library" menu shows the library code, and the learner copies it or saves it as a file, and enters it in another browser to open the same library.
   The product keeps no e-mail address, so a lost code cannot be recovered.
+- Product analytics ([ADR-007](docs/architecture/adr/ADR-007.md)): the product records four events about its use, `text_saved`, `cards_generated`, `card_answered` and `sentence_replaced`, and sends them to OpenObserve when `ANALYTICS_ENABLED` is true.
+  The events carry no text, word, name or e-mail address, and identify the learner by a one-way hash of the library code; the setting is off by default.
 
 ### Changed
 

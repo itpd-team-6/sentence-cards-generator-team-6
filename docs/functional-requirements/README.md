@@ -17,3 +17,4 @@
 | [FR-013](fr/FR-013.md) | Put The Cards Of A Text In The Decks The Learner Chooses             | `frontend`, `backend`             | Active |
 | [FR-014](fr/FR-014.md) | Study Only The Decks The Learner Ticks                               | `frontend`, `backend`             | Active |
 | [FR-015](fr/FR-015.md) | Keep The Library Of Each Learner Apart, With A Code To Open It Again | `frontend`, `backend`, `database` | Active |
+| [FR-016](fr/FR-016.md) | Record An Event For Each Step Of The Core Task                       | `backend`                         | Active |

@@ -48,3 +48,11 @@ Use the "My library" menu to copy its code or save it as a file, and enter the c
 - **Stories:** [US-12](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/206)
 - **Behavior:** [FR-015](functional-requirements/fr/FR-015.md)
 - **Decisions:** [ADR-006](architecture/adr/ADR-006.md)
+
+## Measure how the product is used
+
+The product records four events about its use, such as a card the learner answered, without any text, name or e-mail address, and shows them on a dashboard for each environment, so that the team can see whether learners study the cards they make.
+
+- **Stories:** [US-13](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/208)
+- **Behavior:** [FR-016](functional-requirements/fr/FR-016.md)
+- **Decisions:** [ADR-007](architecture/adr/ADR-007.md)

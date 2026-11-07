@@ -14,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 
+from app.analytics import Tracker, get_tracker
 from app.database import (
     add_card,
     add_cards_to_decks,
@@ -253,6 +254,7 @@ def create_cards(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
     today: Annotated[date, Depends(get_today)],
+    tracker: Annotated[Tracker, Depends(get_tracker)],
 ) -> CreatedCards:
     """A card for each marked word of the text that has none yet, with a sentence, its translation and its phrase.
 
@@ -278,6 +280,7 @@ def create_cards(
             )
     errors: dict[str, str] = {}
     existing: list[ExistingCard] = []
+    made = 0
     for word in text["words"]:
         card = card_of_marked_word(connection, text_id, word)
         if card:
@@ -298,6 +301,7 @@ def create_cards(
                 result.phrase,
                 request.deck_ids,
             )
+            made += 1
         except CardExists as exists:
             other = find_card_by_phrase(connection, word, exists.phrase, pair=pair)
             if other:
@@ -310,6 +314,12 @@ def create_cards(
     cards = [
         card_response(card, errors.get(card["word"])) for card in list_cards(connection, text_id)
     ]
+    tracker.record(
+        "cards_generated",
+        words_asked=len(text["words"]),
+        cards_made=made,
+        words_failed=len(errors),
+    )
     return CreatedCards(cards=cards, existing=existing)
 
 
@@ -335,6 +345,7 @@ def replace_sentences(
     chosen: CardIds,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
+    tracker: Annotated[Tracker, Depends(get_tracker)],
 ) -> list[CardResponse]:
     """Ask the model for another sentence for each of the chosen cards, one after the other.
 
@@ -361,6 +372,8 @@ def replace_sentences(
             errors[card["id"]] = str(error)
             continue
         update_card(connection, card["id"], **new_sentence_fields(card, result))
+    if len(ids) > len(errors):
+        tracker.record("sentence_replaced", how="new_sentence", cards=len(ids) - len(errors))
     return [card_response(get_card(connection, card_id), errors.get(card_id)) for card_id in ids]
 
 
@@ -391,6 +404,7 @@ def change_card(
     change: CardChange,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
+    tracker: Annotated[Tracker, Depends(get_tracker)],
 ) -> CardResponse:
     """Edit the sentence, the translation or the phrase, lock the translation, set the flag, or hide the card.
 
@@ -438,6 +452,8 @@ def change_card(
     if "sentence" in fields or "translation" in fields:
         fields.setdefault("flagged", 0)
     update_card(connection, card_id, **fields)
+    if "sentence" in fields:
+        tracker.record("sentence_replaced", how="edited", cards=1)
     return card_response(get_card(connection, card_id))
 
 
@@ -446,6 +462,7 @@ def replace_sentence(
     card_id: int,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     client: Annotated[LlmClient, Depends(get_llm_client)],
+    tracker: Annotated[Tracker, Depends(get_tracker)],
 ) -> CardResponse:
     """Ask the model for another sentence for the card's word, and its translation, unless the translation is locked.
 
@@ -470,6 +487,7 @@ def replace_sentence(
     except LlmError as error:
         raise HTTPException(status_code=502, detail=str(error)) from None
     update_card(connection, card_id, **new_sentence_fields(card, result))
+    tracker.record("sentence_replaced", how="new_sentence", cards=1)
     return card_response(get_card(connection, card_id))
 
 
