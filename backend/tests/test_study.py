@@ -83,7 +83,9 @@ def test_the_session_has_the_sentence_and_the_translation_of_each_card() -> None
         assert client.get("/api/study/due").json() == [
             {
                 "id": 1,
-                "text_id": 1,
+                "text_language": "de",
+                "first_language": "en",
+                "decks": [],
                 "word": "Zug",
                 "sentence": "Der Zug kommt.",
                 "translation": "The train comes.",

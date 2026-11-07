@@ -13,3 +13,6 @@
 | [FR-009](fr/FR-009.md) | Identify A Card By Its Word And A Short Phrase                   | `backend`             | Active |
 | [FR-010](fr/FR-010.md) | Edit The Short Phrase Of A Card                                  | `frontend`, `backend` | Active |
 | [FR-011](fr/FR-011.md) | Ask The Language Model From The Browser With The User's Own Key  | `frontend`, `backend` | Active |
+| [FR-012](fr/FR-012.md) | Make Decks And Keep Each Card In Decks Of Its Language Pair      | `frontend`, `backend` | Active |
+| [FR-013](fr/FR-013.md) | Put The Cards Of A Text In The Decks The Learner Chooses         | `frontend`, `backend` | Active |
+| [FR-014](fr/FR-014.md) | Study Only The Decks The Learner Ticks                           | `frontend`, `backend` | Active |

@@ -16,6 +16,7 @@ from app.database import (
     get_card,
     get_text,
     init_db,
+    list_all_cards,
     list_cards,
     list_due_cards,
     meanings_of_word,
@@ -66,7 +67,9 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
     }
     assert get_card(reopened, card_id) == {
         "id": card_id,
-        "text_id": text_id,
+        "text_language": "de",
+        "first_language": "en",
+        "decks": [],
         "word": "Haus",
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
@@ -203,7 +206,9 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
     assert get_text(connection, 1)["words"] == ["Haus"]
     assert get_card(connection, 1) == {
         "id": 1,
-        "text_id": 1,
+        "text_language": "de",
+        "first_language": "en",
+        "decks": [{"id": 1, "title": "Earlier cards"}],
         "word": "Haus",
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
@@ -371,7 +376,7 @@ def test_cards_without_a_phrase_do_not_count_as_the_same_card() -> None:
     add_card(connection, text_id, "Haus", "Das Haus ist alt.", "The house is old.", TODAY)
     add_card(connection, text_id, "Haus", "Ein Haus.", "A house.", TODAY)
 
-    assert len(list_cards(connection, text_id)) == 2
+    assert len(list_all_cards(connection)) == 2
 
 
 def test_a_card_is_found_by_its_word_and_phrase_whatever_the_case_and_the_spaces() -> None:

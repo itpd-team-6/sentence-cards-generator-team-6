@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { loadQueue, saveQueueOrder } from "./api.js";
 import Notice, { newNotice } from "./Notice.jsx";
+import DeckTag from "./DeckTag.jsx";
 import { splitAtWords } from "./words.js";
 
 // The line between the cards due today and the cards due later. It is an item of the list, so a card is due today when
@@ -73,7 +74,7 @@ const sameList = (first, second) =>
 // across the line too, or presses the up or down arrow on the handle; ticked cards move together. The order is saved
 // when the card is dropped: the cards that moved get due times between their new neighbours and, when they cross the
 // line, a new date; the others keep theirs.
-export default function StudyQueue() {
+export default function StudyQueue({ deckIds, onSaved }) {
   const [list, setList] = useState([]);
   const [ticked, setTicked] = useState(new Set());
   const [saving, setSaving] = useState(false);
@@ -83,11 +84,14 @@ export default function StudyQueue() {
   const [focusId, setFocusId] = useState(null);
   const handles = useRef({});
 
+  // The queue is the one of the ticked decks, so it is loaded again when the ticks change.
+  const deckKey = deckIds.join(",");
   useEffect(() => {
-    loadQueue()
+    loadQueue(deckIds)
       .then((cards) => setList(toList(cards)))
       .catch((error) => setNotice(newNotice(error.message)));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `deckKey` is `deckIds` as a value that does not change at every render
+  }, [deckKey]);
 
   // After a card moves with the keyboard, the focus goes back to its handle.
   useEffect(() => {
@@ -96,9 +100,6 @@ export default function StudyQueue() {
 
   const cards = list.filter((item) => !item.divider);
   const dividerAt = list.indexOf(DIVIDER);
-  const textIds = [...new Set(cards.map((card) => card.text_id))].sort(
-    (a, b) => a - b,
-  );
 
   // A ticked card moves with all the ticked cards; any other card moves alone.
   const groupOf = (card) =>
@@ -112,20 +113,13 @@ export default function StudyQueue() {
     setTicked(next);
   }
 
-  // A text is ticked when all its cards are; a click ticks the cards of the text, or unticks them when all are ticked.
-  const cardsOfText = (textId) =>
-    cards.filter((card) => card.text_id === textId);
-  const tickedOfText = (textId) =>
-    cardsOfText(textId).filter((card) => ticked.has(card.id)).length;
-
-  function toggleText(textId) {
-    const next = new Set(ticked);
-    const all = tickedOfText(textId) === cardsOfText(textId).length;
-    cardsOfText(textId).forEach((card) =>
-      all ? next.delete(card.id) : next.add(card.id),
+  // The decks of a card, the ones the learner ticked first. The others are shown dashed (see `DeckTag`).
+  const decksOf = (card) =>
+    [...card.decks].sort(
+      (a, b) =>
+        Number(deckIds.includes(b.id)) - Number(deckIds.includes(a.id)) ||
+        b.id - a.id,
     );
-    setTicked(next);
-  }
 
   // Shows the new order at once and saves it; when it cannot be saved, the list goes back to the order it had.
   async function move(next, movedIds) {
@@ -140,9 +134,11 @@ export default function StudyQueue() {
         next.filter((item) => !item.divider).map((item) => item.id),
         movedIds,
         next.indexOf(DIVIDER),
+        deckIds,
       );
       setList(toList(answer));
       setSaved(newNotice("Order saved.", "success"));
+      onSaved?.();
     } catch (error) {
       setList(before);
       setNotice(newNotice(`The move was not saved. ${error.message}`));
@@ -198,12 +194,91 @@ export default function StudyQueue() {
     setDrag(null);
   }
 
-  if (cards.length === 0 && !notice) return null;
+  if (cards.length === 0 && !notice) {
+    return <p className="hint">No card in these decks has a sentence yet.</p>;
+  }
 
-  let number = 0;
+  // The cards above the line are due today and the cards below it are due later; each group has its own scroll box.
+  // `index` is the place of the card in `list`, which is what the drop line and the saved order count.
+  const entries = list
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => !item.divider);
+  const today = entries.filter(({ index }) => index < dividerAt);
+  const later = entries.filter(({ index }) => index > dividerAt);
+
+  function renderCard({ item: card, index }, number) {
+    const dropLine = drag?.over === index ? "drop-before" : "";
+    return (
+      <li
+        key={card.id}
+        className={[dropLine, drag?.ids.includes(card.id) && "dragging"]
+          .filter(Boolean)
+          .join(" ")}
+        onDragOver={(event) => dragOver(event, index)}
+        onDrop={drop}
+      >
+        <span
+          className="queue-handle"
+          role="button"
+          tabIndex={0}
+          draggable={!saving}
+          ref={(element) => {
+            handles.current[card.id] = element;
+          }}
+          aria-label={`Move ${card.word}. Press the up or down arrow to move it.`}
+          onDragStart={(event) => startDragging(event, card)}
+          onDragEnd={() => setDrag(null)}
+          onKeyDown={(event) => moveWithKeys(event, card)}
+        >
+          <Handle />
+        </span>
+        <input
+          type="checkbox"
+          className="queue-check"
+          aria-label={`Select ${card.word}`}
+          checked={ticked.has(card.id)}
+          onChange={() => toggle(card.id)}
+        />
+        <span className="queue-number">{number}</span>
+        <div className="queue-body">
+          <span className="queue-tags">
+            {decksOf(card).map((deck) => (
+              <DeckTag
+                key={deck.id}
+                deck={deck}
+                off={!deckIds.includes(deck.id)}
+              />
+            ))}
+          </span>
+          <span className="queue-word">{card.word}</span>
+          <Sentence card={card} />
+        </div>
+        {index > dividerAt && (
+          <span className="queue-date">{dayOf(card.due_date)}</span>
+        )}
+      </li>
+    );
+  }
+
+  // The end of a group is a place to drop too: it is the only place of a group that has no card.
+  function renderEnd(index, empty) {
+    return (
+      <li
+        className={drag?.over === index ? "queue-end drop-before" : "queue-end"}
+        onDragOver={(event) => {
+          if (!drag || saving) return;
+          event.preventDefault();
+          if (drag.over !== index) setDrag({ ...drag, over: index });
+        }}
+        onDrop={drop}
+      >
+        {empty && <span className="queue-empty">{empty}</span>}
+      </li>
+    );
+  }
+
   return (
     <div className="queue-box">
-      <h3>Study order</h3>
       <p className="hint">
         Drag{" "}
         <span className="queue-hint-handle">
@@ -211,30 +286,7 @@ export default function StudyQueue() {
         </span>{" "}
         to reorder. Tick cards to move several.
       </p>
-      <div
-        className="queue-pills"
-        role="group"
-        aria-label="Tick the cards of a text"
-      >
-        {textIds.length > 1 &&
-          textIds.map((id) => {
-            const count = tickedOfText(id);
-            const all = count === cardsOfText(id).length;
-            return (
-              <button
-                type="button"
-                key={id}
-                className={count > 0 && !all ? "queue-pill part" : "queue-pill"}
-                aria-pressed={all}
-                disabled={saving}
-                onClick={() => toggleText(id)}
-              >
-                {count > 0 && !all
-                  ? `Text ${id} · ${count}/${cardsOfText(id).length}`
-                  : `Text ${id}`}
-              </button>
-            );
-          })}
+      <div className="queue-pills">
         <button
           type="button"
           className="queue-pill queue-clear"
@@ -246,89 +298,39 @@ export default function StudyQueue() {
             : "Clear selection"}
         </button>
       </div>
-      <div
-        className="queue-scroll"
-        tabIndex={0}
-        role="region"
-        aria-label="Study order"
-      >
-        <ol className="queue">
-          <li className="queue-section">
-            Due today{dividerAt === 0 && <span> · nothing yet</span>}
-          </li>
-          {list.map((item, index) => {
-            const dropLine = drag?.over === index ? "drop-before" : "";
-            if (item.divider) {
-              return (
-                <li
-                  key="divider"
-                  className={`queue-section ${dropLine}`}
-                  onDragOver={(event) => dragOver(event, index)}
-                  onDrop={drop}
-                >
-                  Later
-                </li>
-              );
-            }
-            const card = item;
-            number += 1;
-            return (
-              <li
-                key={card.id}
-                className={[dropLine, drag?.ids.includes(card.id) && "dragging"]
-                  .filter(Boolean)
-                  .join(" ")}
-                onDragOver={(event) => dragOver(event, index)}
-                onDrop={drop}
-              >
-                <span
-                  className="queue-handle"
-                  role="button"
-                  tabIndex={0}
-                  draggable={!saving}
-                  ref={(element) => {
-                    handles.current[card.id] = element;
-                  }}
-                  aria-label={`Move ${card.word}. Press the up or down arrow to move it.`}
-                  onDragStart={(event) => startDragging(event, card)}
-                  onDragEnd={() => setDrag(null)}
-                  onKeyDown={(event) => moveWithKeys(event, card)}
-                >
-                  <Handle />
-                </span>
-                <input
-                  type="checkbox"
-                  className="queue-check"
-                  aria-label={`Select ${card.word}`}
-                  checked={ticked.has(card.id)}
-                  onChange={() => toggle(card.id)}
-                />
-                <span className="queue-number">{number}</span>
-                <div className="queue-body">
-                  <span className="queue-word">{card.word}</span>
-                  <Sentence card={card} />
-                </div>
-                {index > dividerAt && (
-                  <span className="queue-date">{dayOf(card.due_date)}</span>
-                )}
-                <span className="queue-text">{`Text ${card.text_id}`}</span>
-              </li>
-            );
-          })}
-          <li
-            className={
-              drag?.over === list.length ? "queue-end drop-before" : "queue-end"
-            }
-            aria-hidden="true"
-            onDragOver={(event) => {
-              if (!drag || saving) return;
-              event.preventDefault();
-              if (drag.over !== list.length)
-                setDrag({ ...drag, over: list.length });
-            }}
-            onDrop={drop}
-          />
-        </ol>
+      <div className="queue-group">
+        <h3 className="queue-heading">
+          Due today <span>{today.length}</span>
+        </h3>
+        <div
+          className="queue-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Cards due today"
+        >
+          <ol className="queue">
+            {today.map((entry, place) => renderCard(entry, place + 1))}
+            {renderEnd(dividerAt, today.length === 0 && "Nothing due today")}
+          </ol>
+        </div>
+      </div>
+      <div className="queue-group">
+        <h3 className="queue-heading">
+          Later <span>{later.length}</span>
+        </h3>
+        <div
+          className="queue-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Cards due later"
+        >
+          <ol className="queue">
+            {later.map((entry, place) =>
+              renderCard(entry, today.length + place + 1),
+            )}
+            {renderEnd(list.length, later.length === 0 && "Nothing later")}
+          </ol>
+        </div>
       </div>
       {saved && <Notice notice={saved} onDismiss={() => setSaved(null)} />}
       {notice && <Notice notice={notice} onDismiss={() => setNotice(null)} />}
