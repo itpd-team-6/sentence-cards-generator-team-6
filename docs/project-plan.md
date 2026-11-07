@@ -117,6 +117,7 @@ This goal is provisional until the sprint is planned.
 | [QR-02](quality-requirements/qr/QR-02.md) | [QRT-01](quality-requirements/qr/QR-02.md#qrt-01) | Passes       | [SPRINT-05](#sprint-05) | [SPRINT-05](#sprint-05) | [Product CI run](https://github.com/itpd-team-6/sentence-cards-generator-team-6/actions/runs/41223520996) |
 | [QR-03](quality-requirements/qr/QR-03.md) | [QRT-01](quality-requirements/qr/QR-03.md#qrt-01) | Not verified | None                    | [SPRINT-07](#sprint-07) | None                                                                                                      |
 | [QR-06](quality-requirements/qr/QR-06.md) | [QRT-01](quality-requirements/qr/QR-06.md#qrt-01) | Not verified | None                    | [SPRINT-07](#sprint-07) | None                                                                                                      |
+| [QR-07](quality-requirements/qr/QR-07.md) | [QRT-01](quality-requirements/qr/QR-07.md#qrt-01) | Not verified | None                    | [SPRINT-06](#sprint-06) | None                                                                                                      |
 
 ## Progress Monitoring
 

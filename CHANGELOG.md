@@ -15,6 +15,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   The product keeps no e-mail address, so a lost code cannot be recovered.
 - Product analytics ([ADR-007](docs/architecture/adr/ADR-007.md)): the product records four events about its use, `text_saved`, `cards_generated`, `card_answered` and `sentence_replaced`, and sends them to OpenObserve when `ANALYTICS_ENABLED` is true.
   The events carry no text, word, name or e-mail address, and identify the learner by a one-way hash of the library code; the setting is off by default.
+- Observability ([ADR-008](docs/architecture/adr/ADR-008.md)): the product writes one log line for each request to the API, with the request identifier, the route, the outcome and the duration, sends the request durations as a histogram to OpenObserve when `OBSERVABILITY_ENABLED` is true, and answers each request with an `X-Request-ID` header.
+  The signals carry no text, word, name or e-mail address; the setting is off by default.
 
 ### Changed
 
