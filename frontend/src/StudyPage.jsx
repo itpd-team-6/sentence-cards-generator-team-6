@@ -176,20 +176,10 @@ export default function StudyPage() {
               <div className="pane-head">
                 <h2>Reorder</h2>
               </div>
-              <p className="hint">
-                One saved order for all your cards. Cards of unticked decks are
-                only hidden, they keep their place.
-              </p>
-              {ticked.length === 0 ? (
-                <p className="empty-box">
-                  No deck ticked. Tick a deck above to see its cards.
-                </p>
-              ) : (
-                <StudyQueue
-                  deckIds={ticked}
-                  onSaved={() => setDueVersion((version) => version + 1)}
-                />
-              )}
+              <StudyQueue
+                deckIds={ticked}
+                onSaved={() => setDueVersion((version) => version + 1)}
+              />
             </div>
             <div className="rail" aria-hidden="true">
               Reorder
@@ -211,26 +201,20 @@ export default function StudyPage() {
                 </span>
               </div>
             </div>
-            {tickedDecks.length === 0 ? (
-              <p className="empty-box">
-                Tick a deck above to see what you will study.
-              </p>
-            ) : (
-              <div className="study-by-deck">
-                {tickedDecks.map((deck) => (
-                  <span className="deck-count" key={deck.id}>
-                    <DeckTag deck={deck} />
-                    <b>
-                      {
-                        due.filter((item) =>
-                          item.decks.some((other) => other.id === deck.id),
-                        ).length
-                      }
-                    </b>
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="study-by-deck">
+              {tickedDecks.map((deck) => (
+                <span className="deck-count" key={deck.id}>
+                  <DeckTag deck={deck} />
+                  <b>
+                    {
+                      due.filter((item) =>
+                        item.decks.some((other) => other.id === deck.id),
+                      ).length
+                    }
+                  </b>
+                </span>
+              ))}
+            </div>
             <div className="study-session">
               <div className="study-session-left">
                 <label className="shuffle">
@@ -241,11 +225,13 @@ export default function StudyPage() {
                   />
                   Shuffle this session only
                 </label>
-                {due.length > 0 && (
-                  <span className="order-state">
-                    {shuffle ? "Shuffled" : "Saved order"}
-                  </span>
-                )}
+                <span
+                  className="order-state"
+                  style={{ visibility: due.length > 0 ? "visible" : "hidden" }}
+                  aria-hidden={due.length === 0}
+                >
+                  {shuffle ? "Shuffled" : "Saved order"}
+                </span>
               </div>
               <button
                 type="button"

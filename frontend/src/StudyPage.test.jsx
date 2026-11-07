@@ -94,7 +94,7 @@ test("skips a card that was deleted while the session was open", async () => {
 test("no deck is ticked the first time, so a session cannot start", async () => {
   await show();
 
-  expect(container.textContent).toContain("No deck ticked");
+  expect(container.textContent).toContain("0decks ticked");
   expect(button("Start a session").disabled).toBe(true);
   expect(loadDueCards).not.toHaveBeenCalled();
 });

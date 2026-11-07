@@ -32,36 +32,29 @@ export default function StudyDecks({ decks, ticked, onChange }) {
         )}
       </div>
       {decks.length === 0 ? (
-        <p className="hint">
-          You have no deck yet. Make one when you add a text, then tick it here.
-        </p>
+        <p className="hint">No decks yet.</p>
       ) : (
-        <>
-          <div className="deckbar">
-            {decks.map((deck) => (
-              <button
-                type="button"
-                key={deck.id}
-                className="dchip"
-                aria-pressed={ticked.includes(deck.id)}
-                onClick={() => toggle(deck.id)}
-              >
-                <span className="dchip-dot" aria-hidden="true" />
-                <span className="dchip-name">{deck.title}</span>
-                <span className="dchip-count">{deck.card_count}</span>
-                {pairs.size > 1 && (
-                  <span className="dchip-pair">
-                    {LANGUAGE_CODES[deck.text_language]} to{" "}
-                    {LANGUAGE_CODES[deck.first_language]}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-          <p className="hint">
-            Both boxes show only the cards of the ticked decks.
-          </p>
-        </>
+        <div className="deckbar">
+          {decks.map((deck) => (
+            <button
+              type="button"
+              key={deck.id}
+              className="dchip"
+              aria-pressed={ticked.includes(deck.id)}
+              onClick={() => toggle(deck.id)}
+            >
+              <span className="dchip-dot" aria-hidden="true" />
+              <span className="dchip-name">{deck.title}</span>
+              <span className="dchip-count">{deck.card_count}</span>
+              {pairs.size > 1 && (
+                <span className="dchip-pair">
+                  {LANGUAGE_CODES[deck.text_language]} to{" "}
+                  {LANGUAGE_CODES[deck.first_language]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       )}
     </section>
   );

@@ -935,12 +935,6 @@ textarea {
   color: var(--accent-soft-text);
 }
 
-.queue-hint-handle {
-  display: inline-flex;
-  vertical-align: middle;
-  color: var(--text);
-}
-
 /* The same scroll box as the cards page: a thin bar at the edge of the panel, whose space is always reserved. */
 .queue-scroll {
   max-height: 18rem;
@@ -1647,8 +1641,9 @@ textarea {
   border-top: 0;
 }
 
+/* A fixed height, so the box does not change size when decks are ticked or the cards load. */
 .reorder-panel .queue-scroll {
-  max-height: 13rem;
+  height: 11rem;
   margin-right: -0.5rem;
   padding-right: 0.5rem;
 }
@@ -1691,10 +1686,19 @@ textarea {
   font-size: 0.8rem;
 }
 
+/* One row of a fixed height, with or without ticked decks, so ticking a deck never moves the page. */
 .study-by-deck {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 0.5rem;
+  height: 2.75rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.study-by-deck > * {
+  flex: 0 0 auto;
 }
 
 .deck-count {

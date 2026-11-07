@@ -87,6 +87,11 @@ export default function StudyQueue({ deckIds, onSaved }) {
   // The queue is the one of the ticked decks, so it is loaded again when the ticks change.
   const deckKey = deckIds.join(",");
   useEffect(() => {
+    // With no deck ticked there is nothing to load, and the lists stay empty.
+    if (deckIds.length === 0) {
+      setList(toList([]));
+      return;
+    }
     loadQueue(deckIds)
       .then((cards) => setList(toList(cards)))
       .catch((error) => setNotice(newNotice(error.message)));
@@ -194,10 +199,6 @@ export default function StudyQueue({ deckIds, onSaved }) {
     setDrag(null);
   }
 
-  if (cards.length === 0 && !notice) {
-    return <p className="hint">No card in these decks has a sentence yet.</p>;
-  }
-
   // The cards above the line are due today and the cards below it are due later; each group has its own scroll box.
   // `index` is the place of the card in `list`, which is what the drop line and the saved order count.
   const entries = list
@@ -279,13 +280,6 @@ export default function StudyQueue({ deckIds, onSaved }) {
 
   return (
     <div className="queue-box">
-      <p className="hint">
-        Drag{" "}
-        <span className="queue-hint-handle">
-          <Handle />
-        </span>{" "}
-        to reorder. Tick cards to move several.
-      </p>
       <div className="queue-pills">
         <button
           type="button"
