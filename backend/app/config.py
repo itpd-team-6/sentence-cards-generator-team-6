@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     analytics_stream: str = "events"
     analytics_user: str = ""
     analytics_password: str = ""
+    # The observability backend (OpenObserve, over OTLP). The signals are pushed only when `observability_enabled` is true.
+    observability_enabled: bool = False
+    observability_url: str = ""
+    observability_org: str = ""
+    observability_user: str = ""
+    observability_password: str = ""
+    # How often the histogram is exported, and how long the log lines wait to be sent in a batch, in seconds.
+    observability_metric_interval_seconds: int = 10
+    observability_log_batch_seconds: int = 1
 
 
 def get_settings() -> Settings:
