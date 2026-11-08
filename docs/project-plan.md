@@ -82,7 +82,7 @@ This goal is provisional until the sprint is planned.
 
 #### REL-06
 
-- **Released:** [v0.3.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.3.0) on YYYY-MM-DD.
+- **Released:** [v0.3.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.3.0) on 2026-11-08.
 - **Checked QRs:**
   - [QR-07](quality-requirements/qr/QR-07.md)
 
