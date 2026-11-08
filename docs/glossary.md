@@ -87,3 +87,35 @@ The number that guards the focus metric against buying it with harm, and that do
 The nested list that shows the focus metric, its counter-metric and the input metrics under it, each linked to its section.
 
 **Defined by:** [the analytics plan](analytics.md#the-metric-tree).
+
+### Event
+
+A named record of a product action with the trigger and fields specified in the analytics events table.
+
+**Defined by:** [the analytics events table](analytics.md#the-events) and [FR-016](functional-requirements/fr/FR-016.md).
+
+### Analytics backend
+
+The role of OpenObserve that stores product events and runs the metric queries used by the analytics dashboards.
+
+**Defined by:** [the analytics pipeline](analytics.md#the-pipeline) and [ADR-007](architecture/adr/ADR-007.md).
+
+## Telemetry Pipelines
+
+### Instrumentation
+
+The backend code that records product events and operating signals and exports them to OpenObserve when their respective pipelines are enabled.
+
+**Defined by:** [FR-016](functional-requirements/fr/FR-016.md) and [FR-017](functional-requirements/fr/FR-017.md).
+
+### Observability backend
+
+The role of OpenObserve that receives structured request logs and request duration histogram metrics for operational monitoring.
+
+**Defined by:** [the observability pipeline](observability.md#the-pipeline) and [ADR-008](architecture/adr/ADR-008.md).
+
+### Dashboard
+
+An OpenObserve view for one environment that displays charts based on the queries in the analytics or observability plan.
+
+**Defined by:** [the analytics dashboard](analytics.md#the-dashboard) and [the observability dashboard](observability.md#the-dashboard).
