@@ -27,7 +27,7 @@ The audio and the daily limits build on this version in the sprints after it.
 - **Advances:** [TOS-04](threshold-of-success.md#tos-04)
 
 A learner chooses which decks of cards to study, in a study queue with a list of decks and two tabs.
-The work on the texts and the interface, then login, then the audio and a mobile interface follow it, in the order the Customer set ([DEC-047](decisions.md#dec-047), the Week 6 meeting).
+The work on the texts and the interface, then login, then the audio and a mobile interface follow it, in the order the Customer set ([DEC-061](decisions.md#dec-061), the Week 6 meeting).
 
 ## Sprints
 
@@ -85,7 +85,7 @@ A learner chooses which decks to study in the study queue, with its list of deck
 
 ### SPRINT-07
 
-A learner keeps their texts and marks more words in them later, and finds studying, adding a text and their cards in a few steps, as the Customer ranked the work on texts and the interface first ([DEC-047](decisions.md#dec-047), the Week 6 meeting).
+A learner keeps their texts and marks more words in them later, and finds studying, adding a text and their cards in a few steps, as the Customer ranked the work on texts and the interface first ([DEC-061](decisions.md#dec-061), the Week 6 meeting).
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-14
@@ -98,7 +98,7 @@ This goal is provisional until the sprint is planned.
 
 ### SPRINT-08
 
-A learner keeps their cards and progress under their own account, on every device, as the Customer ranked login after the work on texts and the interface and before the audio ([DEC-047](decisions.md#dec-047), the Week 6 meeting).
+A learner keeps their cards and progress under their own account, on every device, as the Customer ranked login after the work on texts and the interface and before the audio ([DEC-061](decisions.md#dec-061), the Week 6 meeting).
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-21
