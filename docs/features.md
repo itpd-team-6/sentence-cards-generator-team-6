@@ -56,3 +56,11 @@ The product records four [events](glossary.md#event) about its use, such as a ca
 - **Stories:** [US-13](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/208)
 - **Behavior:** [FR-016](functional-requirements/fr/FR-016.md)
 - **Decisions:** [ADR-007](architecture/adr/ADR-007.md)
+
+## Diagnose a quality problem from the operating signals
+
+Read the [signals](glossary.md#signal) the product emits while it runs as [service level indicators](glossary.md#service-level-indicator), such as how long requests take and how many fail, so the team can find and diagnose a quality problem.
+
+- **Stories:** [US-14](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/213)
+- **Behavior:** [FR-017](functional-requirements/fr/FR-017.md)
+- **Decisions:** [ADR-008](architecture/adr/ADR-008.md)

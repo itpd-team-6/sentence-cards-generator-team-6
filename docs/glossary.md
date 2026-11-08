@@ -119,3 +119,33 @@ The role of OpenObserve that receives structured request logs and request durati
 An OpenObserve view for one environment that displays charts based on the queries in the analytics or observability plan.
 
 **Defined by:** [the analytics dashboard](analytics.md#the-dashboard) and [the observability dashboard](observability.md#the-dashboard).
+
+### Observability
+
+The ability to tell how well the product serves its requests from the [signals](#signal) it emits while it runs, read as [service level indicators](#service-level-indicator).
+
+**Defined by:** [the observability plan](observability.md) and [ADR-008](architecture/adr/ADR-008.md).
+
+### Signal
+
+A piece of data the product emits about its own running, of one of three types, the metric, the log and the trace; the product emits a metric and a log, and no trace.
+
+**Defined by:** [the observability plan](observability.md#the-signals) and [FR-017](functional-requirements/fr/FR-017.md).
+
+### Telemetry
+
+The [signals](#signal) the product sends out of itself to the [observability backend](#observability-backend), over OTLP, when `OBSERVABILITY_ENABLED` is true.
+
+**Defined by:** [the observability plan](observability.md#the-pipeline) and [ADR-008](architecture/adr/ADR-008.md).
+
+### SLI
+
+A short name for a [service level indicator](#service-level-indicator).
+
+**Defined by:** [the observability plan](observability.md#the-slis).
+
+### Service level indicator
+
+A number read from the [signals](#signal) that says how well the product serves a request, such as the request latency of [SLI-01](observability.md#sli-01).
+
+**Defined by:** [the observability plan](observability.md#the-slis) and [QR-07](quality-requirements/qr/QR-07.md).
