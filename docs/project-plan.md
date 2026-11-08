@@ -93,7 +93,6 @@ This goal is provisional until the sprint is planned.
   - [US-15](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/232): keep my texts and pick more words from them later (Must Have, 8 points).
   - [US-17](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234): find studying, adding a text and my cards in a few steps (Must Have, 5 points).
   - [US-18](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/235): edit, regenerate or hide a card inside a study session (Should Have, 5 points).
-  - [US-16](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/233): open a deck and work with its cards (Could Have, 5 points).
 
 #### REL-07
 
