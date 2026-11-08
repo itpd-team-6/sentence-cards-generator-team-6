@@ -82,6 +82,12 @@ This goal is provisional until the sprint is planned.
 
 #### REL-06
 
+- **Released:** [v0.3.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.3.0) on YYYY-MM-DD.
+- **Checked QRs:**
+  - [QR-07](quality-requirements/qr/QR-07.md)
+
+  The [testing plan](#quality-requirement-testing-plan) carries each test's result.
+
 ### SPRINT-07
 
 A person outside the team can install the product, use it from a pasted text to studying the cards, with what happened written down.
