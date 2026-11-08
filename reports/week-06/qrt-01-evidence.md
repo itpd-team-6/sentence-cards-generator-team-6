@@ -29,10 +29,10 @@ It does not measure how fast the product is for real learners.
 
 The chart `Request latency P95 by outcome (SLI-01)` in the dashboard `Observability (staging)`:
 
-![The dashboard Observability (staging) with the chart of the P95 of the request duration by outcome](images/observability-staging-dashboard.png)
+![The dashboard Observability (staging) with the chart of the P95 of the request duration by outcome](images/observability-staging.png)
 
 The same chart in the dashboard `Observability (production)`:
 
-![The dashboard Observability (production) with the chart of the P95 of the request duration by outcome](images/observability-production-dashboard.png)
+![The dashboard Observability (production) with the chart of the P95 of the request duration by outcome](images/observability-production.png)
 
 The script is not run against production, so its chart shows the requests that the production deployment has served since collection was switched on.
