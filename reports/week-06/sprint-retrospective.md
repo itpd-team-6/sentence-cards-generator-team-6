@@ -1,7 +1,7 @@
 # Sprint 06 retrospective
 
 Draft for team review at sprint close.
-Confirm the Sprint 06 root causes and the proposed action assignments before finalizing.
+Confirm Sprint 07 ownership before finalizing.
 
 ## What Went Well
 
@@ -14,21 +14,21 @@ Confirm the Sprint 06 root causes and the proposed action assignments before fin
 
 ## What Did Not
 
-| Problem                                                                                                                                                                                                                                  | Root cause                                                                                                                                                                                                                                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The language-model question revision was unfinished in Week 6, as recorded in the [Sprint Review script](meeting-script.md#agenda), and [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165) is open. | To verify with the team. The script records the deferral and gives no Sprint 06 cause.                                                                                                                                                                         |
-| The due-date and time-zone scenarios were unfinished in Week 6, as recorded in the [Sprint Review script](meeting-script.md#agenda).                                                                                                     | To verify with the team. [Issue #183](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/183) documents the use of the server date, which explains the scheduling problem. The reason the scenarios slipped is still open for verification. |
+| Problem                                                                                                                                                                                                                                                | Root cause                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| The language-model question revision ([issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165)) was deferred to Sprint 07.                                                                                              | Sprint 06 time went to the decks (US-11), libraries (US-12), analytics dashboards, and observability setup. |
+| The due-date and time-zone scenarios ([issue #174](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/174) and [issue #183](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/183)) were deferred to Sprint 07. | Sprint 06 time went to the decks (US-11), libraries (US-12), analytics dashboards, and observability setup. |
 
 ## Actions
 
-The first two owners come from the [Sprint 05 retrospective](../week-05/sprint-retrospective.md#actions) and the [Week 5 action points](../week-05/meeting-report.md#action-points).
-Confirm these assignments for Sprint 07 and confirm the owner, impact and carry flag of each proposed action.
+Natalia suggested taking issue #165 in Sprint 07.
+Ownership of issues #174 and #183 is pending confirmation based on the capacity of `AbdelrahmanAbdel-Aal` and `emapfff`.
 
-| Action                                                                                                                                                                        | Owner         | Impact | Reason                                                                                                                         | Carried |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| Revise the question to the language model, try longer context phrases and the format of the Customer, and run the test table of `FR-009` on the model of the virtual machine. | nataliamotand | High   | The Sprint 05 action is still open in [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165). | Yes     |
-| Prepare scenarios that show the due date for a card marked at the start and end of a day under each time-zone option.                                                         | nataliamotand | Medium | The Week 6 script records the scenarios as unfinished and proposes carrying them to Week 7.                                    | Yes     |
-| At Sprint 07 planning, record what blocked the two deferred actions and confirm who will complete each one.                                                                   | To confirm    | Medium | Recording blockers and owners gives the team a basis for following up on both actions.                                         | No      |
+| Action                                                                                                                                                                        | Owner                    | Impact | Reason                                                                                                                                                                                                                        | Carried |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Revise the question to the language model, try longer context phrases and the format of the Customer, and run the test table of `FR-009` on the model of the virtual machine. | nataliamotand (proposed) | High   | The Sprint 05 action is still open in [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165).                                                                                                | Yes     |
+| Prepare scenarios that show the due date for a card marked at the start and end of a day under each time-zone option.                                                         | To confirm               | Medium | The time-zone work in [issue #174](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/174) and [issue #183](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/183) moved to Sprint 07. | Yes     |
+| Confirm ownership of issues #174 and #183 during Sprint 07 planning based on team capacity.                                                                                   | To confirm               | Medium | The due-date and time-zone work needs confirmed ownership before it can be scheduled.                                                                                                                                         | No      |
 
 ## Carried Actions
 
