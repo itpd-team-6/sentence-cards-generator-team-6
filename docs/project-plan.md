@@ -80,8 +80,15 @@ A learner chooses which decks to study in the study queue, with its list of deck
 - **Due:** 2026-11-08
 - **Sprint Backlog:** [the issues scheduled into SPRINT-06](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/4)
 - **Planned Velocity:** 21
+- **Actual Velocity:** 21; US-11, US-12, US-13 and US-14 are closed with all their acceptance criteria met, and four tasks moved to SPRINT-07: [#165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165), [#172](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/172), [#204](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/204) and [#212](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/212).
 
 #### REL-06
+
+- **Released:** [v0.3.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.3.0) on 2026-11-08.
+- **Checked QRs:**
+  - [QR-07](quality-requirements/qr/QR-07.md)
+
+  The [testing plan](#quality-requirement-testing-plan) carries each test's result.
 
 ### SPRINT-07
 
