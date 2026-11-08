@@ -15,6 +15,8 @@ The product runs as the containers below, and [`ADR-001`](adr/ADR-001.md) decide
 
 ![Container view](container.svg)
 
+The team self-hosts the analytics and observability backends on one instance of OpenObserve, software developed by a third party, and the product works with telemetry collection off.
+
 The dashed arrows between the `frontend` and the language model service are decided by [`ADR-004`](adr/ADR-004.md) and are not built yet; today only the `backend` asks the model.
 
 ### Container Responsibilities
@@ -28,6 +30,7 @@ The dashed arrows between the `frontend` and the language model service are deci
 ## Diagrams And Legends
 
 A solid box is a container, with its name and its technology, and a dashed box is an external system.
+The analytics and observability boxes represent two external roles of OpenObserve, third-party software that the team self-hosts.
 A solid arrow is one exchange, labelled with what crosses it, and it points to the side that receives it.
 A dashed arrow is an exchange that is decided and not built yet.
 The image is [`container.svg`](container.svg), written by hand as SVG, so the file is also its source.
