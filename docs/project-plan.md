@@ -22,7 +22,7 @@ The audio and the daily limits build on this version in the sprints after it.
 
 ### MLS-06
 
-- **Due:** 2026-11-07
+- **Due:** 2026-11-08
 - **Sprints:** [SPRINT-06](#sprint-06)
 - **Advances:** [TOS-04](threshold-of-success.md#tos-04)
 
@@ -76,9 +76,10 @@ A learner studies the words of one text first, deleting a card removes it from t
 ### SPRINT-06
 
 A learner chooses which decks to study in the study queue, with its list of decks and its two tabs.
-This goal is provisional until the sprint is planned.
 
-- **Due:** 2026-11-07
+- **Due:** 2026-11-08
+- **Sprint Backlog:** [the issues scheduled into SPRINT-06](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/4)
+- **Planned Velocity:** 21
 
 #### REL-06
 
