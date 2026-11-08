@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.3.0) - 2026-11-08
+
 ### Added
 
 - Decks ([DEC-020](docs/decisions.md#dec-020), [DEC-047](docs/decisions.md#dec-047)): the learner makes decks with a title and a pair of languages, chooses the decks the cards of a text go in, and studies only the decks ticked on the Study page.
