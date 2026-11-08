@@ -597,3 +597,89 @@ The selection editor keeps the line breaks of the pasted text, and more than one
 - **Source:** [the Customer's chat message after the Week 5 meeting](../reports/week-05/evidence/customer-chat-line-breaks-request.md)
 - **Why:** the Customer wrote "Right now, the preview puts the text on a single line and wraps it. As a result, when I paste a song text which doesn't have any separators between lines, I can't see where one line ends and another one starts." (Customer, chat, 2026-10-31 18:24) and "For me, it'd be more convenient if newlines were preserved." (Customer, chat, 2026-10-31 18:24).
   He also wrote "I think if there are more than one newline between lines, they can be replaced with only one." (Customer, chat, 2026-10-31 18:24).
+
+## DEC-055
+
+The Customer accepted `QR-07`.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** after the team showed the result of `QRT-01` on the observability dashboard and asked whether he accepts the quality requirement, he said "Yeah, I accept this quality requirement." (Customer, [01:20:51]) and "Each request is basically executed under a second, so yeah, this is acceptable." (Customer, [01:20:51]).
+
+## DEC-056
+
+The study page opens on the Study tab, with the study panel above the Reorder panel, and the product remembers the last selection of decks.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** the Customer said "But I think the study panel would be above the reorder panel." (Customer, [00:26:40]), "I suggest that reorder is not collapsed as it is now, and is not collapsible." (Customer, [00:28:24]), "So rather than selecting all or none of the decks by default, we could just store the last selection of the user and use it in subsequent sessions." (Customer, [00:31:23]) and "I think the study tab should be the tab that opens by default." (Customer, [00:32:33]).
+
+## DEC-057
+
+The study session shows no English sentence on the card, has an arrow at the top left to go back, and lets the learner edit, regenerate and hide a card without leaving the session.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** the Customer said "I still think that this text in English is not really necessary, because you have a "show translation" button." (Customer, [00:33:49]), "So yeah, maybe an arrow at the top left corner of the screen can be placed." (Customer, [00:36:24]) and "I would like to edit in place to not get very distracted from the session." (Customer, [00:47:18]).
+  The team added that regenerating and hiding a card belong in the session as well, "I think maybe we should allow the user to have these options: regenerating, maybe hiding so it doesn't show in the next sessions, or editing by hand." (nataliamotand, [00:48:10]).
+
+## DEC-058
+
+The cards get their own "Your cards" tab, and the product keeps the texts the learner added, so that the learner can work with them later and editing a text keeps its cards.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** the Customer said "So maybe we can move "Your cards" to a separate tab, but still keep a box here just for cards generated from this text." (Customer, [00:53:14]) and "We should let users edit the texts and preserve cards generated from texts, but while these texts exist we should store them and let users work on them, use them to create new cards." (Customer, [01:09:09])
+  The team decided that the cards of a deleted text are kept for now.
+
+## DEC-059
+
+The product supports several users, each with their own cards and progress.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** the Customer said "Yeah, I think it should support several users." (Customer, [01:03:55]), and the team answered "But I'll add a user story for that, so we can implement it in the following weeks." (nataliamotand, [01:04:14])
+
+## DEC-060
+
+`US-11` is closed and replaced by more specific stories, and the page of a deck, reached from a card, is not an early priority.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** when the team asked whether `US-11` could be closed as it was, with the other work in new stories, the Customer said "I think it would be better to close this user story and create new ones with more details that you learned." (Customer, [01:15:02])
+  About the page of a deck he said "If not, we can... since you mentioned that there is no functionality for inspecting decks, maybe when you implement it we can let the user go to the deck from a card." (Customer, [01:12:29]) and "so maybe it should not be prioritized to be implemented very early, very soon" (Customer, [01:15:45])
+
+## DEC-061
+
+The next stories follow this order: texts and UI improvements, then authentication, then audio, then the mobile version.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** the Customer said "I think this new work on texts and your improvements will bring the most value." (Customer, [01:25:15]), "So I would prioritize the UI refactoring over audio." (Customer, [01:25:59]), "So maybe let's postpone mobile to after the audio." (Customer, [01:27:04]) and "Then authentication can be done, and then audio and mobile versions." (Customer, [01:27:51])
+  When the team repeated the order, he answered "Yes, that's correct." (Customer, [01:28:48])
+  This order replaces the order of [`DEC-047`](#dec-047).
+
+## DEC-062
+
+The thresholds of success stay as they are for now.
+
+- **Status:** Active
+- **Date:** 2026-11-08
+- **Made by:** Customer
+- **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
+- **Why:** the team showed the thresholds, said it would correct `TOS-01` to "open" ("But here in the table we have that you accept the final product at the end of the semester, and this isn't fulfilled yet, so I'll correct the status to be "open"." (nataliamotand, [01:21:59])) and asked whether the Customer wanted other thresholds, and he said "So I think we can discuss this a bit later." (Customer, [01:23:00])
+  The team proposed no change to the thresholds, so this entry records that the outcome of the proposal is no change.
