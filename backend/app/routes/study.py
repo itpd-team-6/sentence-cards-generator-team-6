@@ -2,7 +2,7 @@
 
 import sqlite3
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ from app.database import (
     reorder_queue,
 )
 from app.routes.cards import DeckRef, get_today
-from app.scheduler import Answer, answer_card, forecast
+from app.scheduler import Answer, answer_card, forecast, stage
 
 router = APIRouter()
 
@@ -44,6 +44,8 @@ class DueCard(StudyCard):
     """A card of the session, with what each of the four answers would do to it."""
 
     forecast: dict[Answer, Forecast]
+    # "new" when the learner never answered the card, "forgotten" when the last answer was "again", "due" otherwise.
+    stage: Literal["new", "forgotten", "due"]
 
 
 class QueueCard(StudyCard):
@@ -84,6 +86,7 @@ def due_cards(
     return [
         DueCard(
             **card,
+            stage=stage(card["answers"], card["interval_days"]),
             forecast={
                 answer: Forecast(interval_days=interval, due_date=due.isoformat())
                 for answer, (interval, due) in forecast(card["interval_days"], today).items()

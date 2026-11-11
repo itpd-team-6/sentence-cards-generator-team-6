@@ -53,6 +53,14 @@ def forecast(interval_days: int, today: date) -> dict[Answer, tuple[int, date]]:
     return {answer: next_review(interval_days, answer, today) for answer in ANSWERS}
 
 
+def stage(answers: int, interval_days: int) -> str:
+    """Where a due card is: "new" (never answered), "forgotten" (answered, and its last answer was "again" or it has no
+    wait) or "due" (answered, with a wait that has passed)."""
+    if answers == 0:
+        return "new"
+    return "forgotten" if interval_days == 0 else "due"
+
+
 def answer_card(
     connection: sqlite3.Connection, card_id: int, answer: Answer, today: date
 ) -> dict | None:
@@ -65,6 +73,7 @@ def answer_card(
         connection,
         card_id,
         interval_days=interval,
+        answers=card["answers"] + 1,
         due_date=due_date.isoformat(),
         due_at=default_due_time(due_date, card_id),
     )

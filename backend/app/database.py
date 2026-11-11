@@ -205,6 +205,16 @@ def add_the_decks(connection: sqlite3.Connection) -> None:
     connection.execute("DROP TABLE card_origin")
 
 
+def add_the_answer_count(connection: sqlite3.Connection) -> None:
+    """Count the answers of each card, so that a card never answered (new) is told from one that was forgotten.
+
+    A card that already waits more than 0 days was answered at least once, so it starts at 1. A card with no wait
+    could be new or forgotten and the database cannot say which, so it starts at 0 and counts as new.
+    """
+    connection.execute("ALTER TABLE cards ADD COLUMN answers INTEGER NOT NULL DEFAULT 0")
+    connection.execute("UPDATE cards SET answers = 1 WHERE interval_days > 0")
+
+
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
@@ -213,6 +223,7 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     add_the_translation_lock,
     add_the_card_phrase,
     add_the_decks,
+    add_the_answer_count,
 ]
 
 # The card fields a caller may change with `update_card`.
@@ -226,6 +237,7 @@ CARD_FIELDS = {
     "due_date",
     "due_at",
     "interval_days",
+    "answers",
 }
 
 
@@ -423,14 +435,29 @@ def list_decks(
     text_language: str | None = None,
     first_language: str | None = None,
 ) -> list[dict]:
-    """The decks, each with its number of cards, newest first. Both languages together keep only that language pair."""
+    """The decks, each with its number of cards and `learned_percent`, newest first.
+
+    `learned_percent` is the share of the deck's visible cards that were answered at least once and are not forgotten.
+    Both languages together keep only that language pair.
+    """
     rows = connection.execute(
-        "SELECT decks.*, (SELECT COUNT(*) FROM card_decks WHERE deck_id = decks.id) AS card_count FROM decks"
+        "SELECT decks.*, (SELECT COUNT(*) FROM card_decks WHERE deck_id = decks.id) AS card_count,"
+        " (SELECT COUNT(*) FROM card_decks JOIN cards ON cards.id = card_decks.card_id"
+        "  WHERE card_decks.deck_id = decks.id AND cards.hidden = 0) AS visible_count,"
+        " (SELECT COUNT(*) FROM card_decks JOIN cards ON cards.id = card_decks.card_id"
+        "  WHERE card_decks.deck_id = decks.id AND cards.hidden = 0"
+        "  AND cards.answers > 0 AND cards.interval_days > 0) AS learned_count FROM decks"
         " WHERE (? IS NULL OR text_language = ?) AND (? IS NULL OR first_language = ?)"
         " ORDER BY id DESC",
         (text_language, text_language, first_language, first_language),
     ).fetchall()
-    return [dict(row) for row in rows]
+    decks = []
+    for row in rows:
+        deck = dict(row)
+        visible, learned = deck.pop("visible_count"), deck.pop("learned_count")
+        deck["learned_percent"] = round(100 * learned / visible) if visible else 0
+        decks.append(deck)
+    return decks
 
 
 def link_to_decks(connection: sqlite3.Connection, card_ids: list[int], deck_ids: list[int]) -> None:

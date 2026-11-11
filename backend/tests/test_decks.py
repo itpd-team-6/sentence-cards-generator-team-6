@@ -71,7 +71,7 @@ INSERT INTO cards VALUES (3, 2, 'cat', 'The cat sleeps.', 'Die Katze schläft.',
 def database_at_version_5() -> sqlite3.Connection:
     connection = connect()
     connection.executescript(VERSION_5_TABLES)
-    connection.execute(f"PRAGMA user_version = {len(MIGRATIONS) - 1}")
+    connection.execute("PRAGMA user_version = 5")
     return connection
 
 
@@ -189,22 +189,22 @@ def test_the_migration_runs_only_once() -> None:
 
 def test_a_migration_that_fails_changes_nothing() -> None:
     connection = database_at_version_5()
-    real = MIGRATIONS[-1]
+    real = MIGRATIONS[5]  # the decks migration
 
     def fails_at_the_end(connection: sqlite3.Connection) -> None:
         real(connection)
         raise RuntimeError("The migration failed.")
 
-    database.MIGRATIONS[-1] = fails_at_the_end
+    database.MIGRATIONS[5] = fails_at_the_end
     try:
         with pytest.raises(RuntimeError):
             init_db(connection)
     finally:
-        database.MIGRATIONS[-1] = real
+        database.MIGRATIONS[5] = real
 
     columns = {row["name"] for row in connection.execute("PRAGMA table_info(cards)")}
     tables = {row["name"] for row in connection.execute("SELECT name FROM sqlite_master")}
-    assert connection.execute("PRAGMA user_version").fetchone()[0] == len(MIGRATIONS) - 1
+    assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
     assert "text_id" in columns
     assert "decks" not in tables
     assert connection.execute("SELECT COUNT(*) FROM cards").fetchone()[0] == 3
@@ -304,6 +304,7 @@ def test_a_deck_is_made_with_a_clean_title_and_starts_empty(client) -> None:
         "text_language": "de",
         "first_language": "en",
         "card_count": 0,
+        "learned_percent": 0,
     }
 
 
@@ -323,6 +324,28 @@ def test_a_title_is_taken_for_the_language_pair_whatever_the_case_of_the_letters
     assert make_deck(client, "  tRAVEL ").status_code == 409
     assert make_deck(client, "Travel", "en", "de").status_code == 201
     assert len(client.get("/api/decks").json()) == 2
+
+
+def test_a_deck_is_learned_by_the_share_of_its_visible_cards_answered_and_not_forgotten() -> None:
+    connection = open_database()
+    text_id = make_german_text(connection, ["Zug", "Haus", "Hund", "Tisch", "Baum"])
+    deck = create_deck(connection, "Mixed", "de", "en")
+    ids = [
+        add_card(connection, text_id, word, f"{word}.", f"{word}.", TODAY, deck_ids=[deck["id"]])
+        for word in ["Zug", "Haus", "Hund", "Tisch", "Baum"]
+    ]
+    assert list_decks(connection)[0]["learned_percent"] == 0
+    # Zug and Haus are answered and waiting, Hund was forgotten, Tisch is new, Baum is hidden.
+    connection.execute(
+        "UPDATE cards SET answers = 2, interval_days = 3 WHERE id IN (?, ?)", ids[:2]
+    )
+    connection.execute("UPDATE cards SET answers = 1, interval_days = 0 WHERE id = ?", (ids[2],))
+    connection.execute(
+        "UPDATE cards SET answers = 1, interval_days = 3, hidden = 1 WHERE id = ?", (ids[4],)
+    )
+
+    assert list_decks(connection)[0]["learned_percent"] == 50
+    assert list_decks(connection)[0]["card_count"] == 5
 
 
 def test_the_decks_are_listed_with_their_cards_and_can_be_kept_to_a_language_pair(client) -> None:
@@ -543,3 +566,14 @@ def test_reorder_in_the_database_uses_the_cards_of_the_given_decks_only() -> Non
     assert list_queue(connection, []) == []
     with pytest.raises(ValueError):
         reorder_queue(connection, [first, 99], [first], 2, TODAY, [deck["id"]])
+
+
+def test_the_answer_count_starts_at_one_for_a_card_that_already_waits() -> None:
+    connection = database_at_version_5()
+    init_db(connection)
+
+    counts = {
+        row["id"]: row["answers"] for row in connection.execute("SELECT id, answers FROM cards")
+    }
+
+    assert counts == {1: 1, 2: 0, 3: 0}
