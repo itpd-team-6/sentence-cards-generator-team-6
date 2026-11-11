@@ -1,7 +1,9 @@
+const learned = (deck) => deck.learned_percent ?? 0;
+
 const LANGUAGE_CODES = { ru: "RU", en: "EN", de: "DE" };
 
-// The first box of the study page: the decks to study from, as chips. The ticked decks are filled in blue, and the
-// button ticks every deck, or unticks them all when every deck is ticked.
+// The decks to study from, as a row of chips inside the Study box. The ticked decks are filled in blue, and the button
+// ticks every deck, or unticks them all when every deck is ticked.
 export default function StudyDecks({ decks, ticked, onChange }) {
   const all =
     decks.length > 0 && decks.every((deck) => ticked.includes(deck.id));
@@ -18,9 +20,9 @@ export default function StudyDecks({ decks, ticked, onChange }) {
   }
 
   return (
-    <section className="panel" aria-label="Decks">
-      <div className="pane-head">
-        <h2>Decks</h2>
+    <div className="study-decks" role="group" aria-label="Decks">
+      <div className="study-decks-head">
+        <h3>Decks</h3>
         {decks.length > 0 && (
           <button
             type="button"
@@ -46,6 +48,14 @@ export default function StudyDecks({ decks, ticked, onChange }) {
               <span className="dchip-dot" aria-hidden="true" />
               <span className="dchip-name">{deck.title}</span>
               <span className="dchip-count">{deck.card_count}</span>
+              <span
+                className="dchip-progress"
+                role="img"
+                aria-label={`${learned(deck)}% learned`}
+                title={`${learned(deck)}% learned`}
+              >
+                <span style={{ width: `${learned(deck)}%` }} />
+              </span>
               {pairs.size > 1 && (
                 <span className="dchip-pair">
                   {LANGUAGE_CODES[deck.text_language]} to{" "}
@@ -56,6 +66,6 @@ export default function StudyDecks({ decks, ticked, onChange }) {
           ))}
         </div>
       )}
-    </section>
+    </div>
   );
 }

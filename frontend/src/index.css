@@ -12,6 +12,7 @@
   --accent-soft: #172f55; /* the marked-word chips */
   --accent-soft-text: #a3c8ff; /* 7.8:1 on the soft blue */
   --focus: #8dbbff; /* 7.9:1 on the surface */
+  --ok: #3fb97c; /* the dot of the API when it answers */
   --error-text: #ff8a9d; /* the tone of a problem message, kept red so that the accent is not read as an error */
   --radius: 12px;
   color-scheme: dark; /* the browser draws scrollbars and form parts in the dark theme too */
@@ -45,7 +46,7 @@ body {
 .app {
   max-width: 56rem;
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 3rem;
+  padding: 1.25rem 1.25rem 3rem;
 }
 
 h1,
@@ -504,17 +505,6 @@ textarea {
   }
 }
 
-.status {
-  margin-top: 1.5rem;
-  font-size: 0.8rem;
-  color: var(--muted);
-  text-align: right;
-}
-
-.status.problem {
-  color: var(--accent-soft-text);
-}
-
 @media (max-width: 34rem) {
   .fields {
     grid-template-columns: 1fr;
@@ -765,26 +755,28 @@ textarea {
   }
 }
 
-/* The two pages of the product. */
+/* The pages of the product. They are links, so the address of each page can be copied and the back button works. They
+   sit in the bar at the top; on a phone the bar is fixed at the bottom of the screen, where the thumb reaches it. */
 .tabs {
   display: flex;
-  gap: 0.4rem;
-  margin: 0 0 1.5rem;
-  padding: 0.3rem;
-  border: 1px solid var(--field-border);
-  border-radius: var(--radius);
-  background: var(--bg);
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
 }
 
 .tab {
-  flex: 1;
-  padding: 0.55rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
   border: 0;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: 8px;
   background: transparent;
   color: var(--muted);
   font: inherit;
   font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -793,14 +785,54 @@ textarea {
 }
 
 .tab[aria-current="page"] {
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.tab:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tab-icon {
+  display: none;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+@media (max-width: 40rem) {
+  .app {
+    padding-bottom: 5.5rem;
+  }
+
+  .tabs {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    gap: 0;
+    padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .tab {
+    flex: 1;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.4rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .tab-icon {
+    display: block;
+  }
 }
 
 /* The study session: one card at a time. */
 .study-card {
+  position: relative;
   margin: 1rem 0;
-  padding: 1.5rem;
+  padding: 2.75rem 1.5rem 1.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
@@ -1081,14 +1113,15 @@ textarea {
   line-height: 1.35;
 }
 
-/* The sentence is one line; the word of the card is marked in soft blue, as on the study page. */
+/* The whole sentence is shown, on as many lines as it needs; the word of the card is marked in soft blue, as on the
+   study page. */
 .queue-sentence {
   display: block;
-  overflow: hidden;
   color: var(--muted);
   font-size: 0.85rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .queue-sentence mark {
@@ -1479,13 +1512,16 @@ textarea {
   flex-wrap: wrap;
   gap: 0.5rem;
   max-height: 7rem;
-  padding-right: 0.25rem;
+  margin: -0.25rem;
+  padding: 0.25rem;
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
 .dchip {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -1527,6 +1563,32 @@ textarea {
   background: var(--accent);
 }
 
+/* How much of the deck is learned: a thin line along the bottom of the chip. */
+.dchip-progress {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0;
+  left: 0.9rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.dchip-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--muted);
+}
+
+.dchip[aria-pressed="true"] .dchip-progress {
+  background: var(--accent);
+}
+
+.dchip[aria-pressed="true"] .dchip-progress span {
+  background: var(--text);
+}
+
 .dchip-name {
   max-width: 11rem;
   overflow: hidden;
@@ -1541,98 +1603,269 @@ textarea {
   font-weight: 500;
 }
 
-/* The second row of boxes: Reorder on the left, which can be folded away, and Study on the right. */
-.study-split {
+/* The Study box: the day in numbers, the button that starts a session, and the decks to study from. */
+.study-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem 1.25rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.study-hero-main {
   display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* The same height whatever is ticked, so the box does not move when a message appears or goes away. */
+.study-summary {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  min-height: 8.5rem;
+}
+
+.study-ring {
+  flex: none;
+  width: 8.5rem;
+  height: 8.5rem;
+  fill: none;
+  stroke-width: 12;
+  transform: rotate(-90deg);
+}
+
+.study-ring-track {
+  stroke: var(--surface-2);
+}
+
+.study-ring text {
+  fill: var(--text);
+  transform: rotate(90deg);
+  transform-origin: 60px 60px;
+  stroke: none;
+}
+
+.study-ring-total {
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.study-ring-caption {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.study-greeting {
+  margin: 0.1rem 0 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* The line is always there, so the box has the same height whatever is ticked. */
+.study-title {
+  min-height: 1.4rem;
+  margin: 0.15rem 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* The three numbers and the button are one row of four, the button wider than a number. */
+.study-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.5fr);
+  gap: 0.6rem;
+}
+
+.study-stats {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.study-stat {
+  padding: 0.55rem 0.9rem 0.6rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.study-stat b {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.study-stat span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.study-stat span::before {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.study-stat.new span::before {
+  background: var(--ok);
+}
+
+.study-stat.forgotten span::before {
+  background: var(--accent-soft-text);
+}
+
+.study-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.study-start svg {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: currentColor;
+}
+
+.study-start small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.study-decks {
+  grid-column: 1 / -1;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* The decks are tiles like the numbers above them. */
+.study-decks .deckbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.6rem;
+  max-height: 9.5rem;
+}
+
+.study-decks .dchip {
+  display: flex;
+  max-width: none;
+  padding: 0.6rem 0.85rem 0.8rem;
+  border-radius: 12px;
+}
+
+.study-decks .dchip-name {
+  flex: 1;
+  max-width: none;
+  text-align: left;
+}
+
+.study-decks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  align-items: stretch;
-  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.study-decks-head h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .reorder-panel {
-  position: relative;
-  flex: 0 0 calc(50% - 0.5rem);
-  min-width: 0;
-  overflow: hidden;
-  padding: 1.25rem;
-  transition: flex-basis 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.study-panel {
-  flex: 1 1 0;
-  align-self: flex-start;
-  min-width: 0;
+  margin-block: 1rem;
   padding: 1.25rem;
 }
 
-.study-split.collapsed .reorder-panel {
-  flex-basis: 3.25rem;
-}
+@media (max-width: 40rem) {
+  .study-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.1rem;
+  }
 
-.reorder-inner {
-  min-width: 18rem;
-  transition: opacity 0.2s ease;
-}
+  /* On a phone the three numbers go under the ring and the greeting, over the whole width. */
+  .study-hero-main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1rem;
+  }
 
-.collapsed .reorder-inner {
-  height: 0;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
+  .study-summary {
+    display: contents;
+  }
 
-.study-split.collapsed .reorder-panel {
-  min-height: 9rem;
-}
+  .study-ring {
+    grid-row: 1 / span 3;
+    width: 5.5rem;
+    height: 5.5rem;
+  }
 
-.collapse-button {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .eyebrow,
+  .study-greeting,
+  .study-title {
+    grid-column: 2;
+  }
 
-.collapse-button:hover {
-  border-color: var(--accent);
-}
+  .eyebrow {
+    align-self: end;
+  }
 
-.collapse-button:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
+  .study-title {
+    align-self: start;
+    margin-bottom: 0;
+  }
 
-.collapsed .collapse-button {
-  right: 0.6rem;
-}
+  .study-greeting {
+    font-size: 1.35rem;
+  }
 
-.rail {
-  position: absolute;
-  top: 4rem;
-  left: 50%;
-  color: var(--muted);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  writing-mode: vertical-rl;
-  transform: translateX(-50%) rotate(180deg);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
+  .study-row {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
 
-.collapsed .rail {
-  opacity: 1;
-  transition-delay: 0.18s;
+  .study-stat {
+    padding: 0.5rem 0.75rem 0.55rem;
+  }
+
+  .study-start {
+    grid-column: 1 / -1;
+    min-height: 3.25rem;
+  }
 }
 
 .reorder-panel .queue-box {
@@ -1641,9 +1874,9 @@ textarea {
   border-top: 0;
 }
 
-/* A fixed height, so the box does not change size when decks are ticked or the cards load. */
+/* As high as the cards, up to about three and a half of them, and then it scrolls: a short list leaves no large empty space. */
 .reorder-panel .queue-scroll {
-  height: 11rem;
+  max-height: min(23rem, 60vh);
   margin-right: -0.5rem;
   padding-right: 0.5rem;
 }
@@ -1661,127 +1894,7 @@ textarea {
   margin-bottom: 0.15rem;
 }
 
-.study-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.study-stat {
-  min-width: 6rem;
-  padding: 0.5rem 0.8rem;
-  border-radius: 10px;
-  background: var(--surface-2);
-}
-
-.study-stat b {
-  display: block;
-  font-size: 1.4rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.study-stat span {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
 /* One row of a fixed height, with or without ticked decks, so ticking a deck never moves the page. */
-.study-by-deck {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.5rem;
-  height: 2.75rem;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.study-by-deck > * {
-  flex: 0 0 auto;
-}
-
-.deck-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  max-width: 100%;
-  font-variant-numeric: tabular-nums;
-}
-
-.deck-count b {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.study-session {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border);
-}
-
-.study-session-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.shuffle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.shuffle input {
-  display: grid;
-  flex: none;
-  place-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0;
-  border: 1.5px solid var(--field-border);
-  border-radius: 6px;
-  background: transparent;
-  appearance: none;
-  cursor: pointer;
-}
-
-.shuffle input:checked {
-  border-color: transparent;
-  background: var(--accent);
-}
-
-.shuffle input:checked::after {
-  content: "\2713";
-  color: var(--accent-text);
-  font-size: 0.8rem;
-  line-height: 1;
-}
-
-.shuffle input:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.order-state {
-  min-width: 5.5rem;
-  padding: 0.05rem 0.6rem;
-  border-radius: 6px;
-  background: var(--accent-soft);
-  color: var(--accent-soft-text);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-align: center;
-}
 
 .empty-box {
   margin: 0;
@@ -1792,45 +1905,90 @@ textarea {
   text-align: center;
 }
 
-@media (max-width: 51rem) {
-  .study-split {
-    flex-direction: column;
-  }
-
-  .study-panel {
-    align-self: stretch;
-  }
-
-  .study-split.collapsed .reorder-panel {
-    min-height: 0;
-  }
-
-  .reorder-panel,
-  .study-split.collapsed .reorder-panel {
-    flex-basis: auto;
-  }
-
-  .study-split.collapsed .reorder-panel {
-    height: 3.6rem;
-  }
-
-  .reorder-inner {
-    min-width: 0;
-  }
-
-  .rail {
-    top: 1.1rem;
-    left: 1rem;
-    writing-mode: horizontal-tb;
-    transform: none;
-  }
+/* The session: only the card, with the arrow back to Study at the top left. */
+.session-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .reorder-panel,
-  .collapse-button {
-    transition: none;
-  }
+.session-bar h2 {
+  margin: 0;
+}
+
+.back-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: none;
+}
+
+.back-button:active {
+  transform: none;
+}
+
+.back-button:hover {
+  border-color: var(--accent);
+}
+
+.back-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The actions of the card in the session: small, quiet icons in the corner of the card, named by their tip. */
+.study-tools {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.15rem;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.icon-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* An element with the hidden attribute stays hidden even when a rule gives it a display. */
+[hidden] {
+  display: none !important;
+}
+
+.app.in-session {
+  padding-bottom: 1.25rem;
 }
 
 /* Two buttons in a row of actions: a small gap between them. */
@@ -1839,17 +1997,86 @@ textarea {
   padding: 0.7rem 1.1rem;
 }
 
-/* The title and the menu of the library. The panel floats over the page, so opening it never moves anything. */
+/* The bar of the product: the name, the pages and the state with the menu of the library. The panel of the library
+   floats over the page, so opening it never moves anything. */
 .app-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .app-header h1 {
   margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .app-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .brand {
+    min-width: 0;
+    font-size: 0.95rem;
+  }
+
+  .brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .logo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+/* The name of the product, small, with its mark at the left. */
+.brand {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+}
+
+.logo {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.app-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* The state of the API as a dot: green when the front end reaches it. The text is for screen readers and the tip. */
+.status-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.status-dot.problem {
+  background: var(--error-text);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .library {
