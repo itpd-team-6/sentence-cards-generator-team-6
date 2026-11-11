@@ -683,3 +683,30 @@ The thresholds of success stay as they are for now.
 - **Source:** [the Week 6 Sprint Review](../reports/week-06/meeting-report.md)
 - **Why:** the team showed the thresholds, said it would correct `TOS-01` to "open" ("But here in the table we have that you accept the final product at the end of the semester, and this isn't fulfilled yet, so I'll correct the status to be "open"." (nataliamotand, [01:21:59])) and asked whether the Customer wanted other thresholds, and he said "So I think we can discuss this a bit later." (Customer, [01:23:00])
   The team proposed no change to the thresholds, so this entry records that the outcome of the proposal is no change.
+
+## DEC-063
+
+The product moves between its pages by an address after the `#`, and the Study page is the page it opens on.
+
+- **Status:** Active
+- **Date:** 2026-11-11
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Customer said "For me the first action in Anki was not to add a text but to study. I think the study tab should be the tab that opens by default." (Customer, [00:32:33]), as recorded in [`DEC-056`](#dec-056), and asked for a way to open a text and a deck from a card: "And this label can be used to go to the text, to the text page, I mean from a card." (Customer, [01:11:13]) and "maybe when you implement it we can let the user go to the deck from a card." (Customer, [01:12:29]).
+  Today the open page is kept only in the state of `frontend/src/App.jsx`, so no address names a page: reloading the page or pressing the back button of the browser returns to the first page, and a text or a deck cannot be linked.
+  The team chose an address after `#` because the browser reads it alone and the server needs no setting for it, and a small router of its own because no library is needed for these pages.
+  The behavior the learner knows stays: the page "Add a text" keeps the typed text and the marked words when the learner goes to another page and comes back, and a study session ends when the learner leaves the Study page.
+
+## DEC-066
+
+The Study box shows an estimate of the time of a session, counting 30 seconds for each card, and the share of each deck that is learned.
+
+- **Status:** Active
+- **Date:** 2026-11-11
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Customer asked for the statistics at the top of the Study page: "the statistics will be at the top of the page, like "due today", "new", "learning"." (Customer, [00:37:35]) and "In Anki there are three numbers: new, learn and due, if you remember." (Customer, [00:38:51]), and nataliamotand said "I will make sure that we try this next week and show you at the next sprint review, so you can see if it meets your expectations." ([00:42:25]).
+  The Customer never mentioned a time estimate or a share learned, so both are the choice of the team, made to give the learner a sense of the session before it starts.
+  The team does not measure how long a card takes, so the estimate is a fixed 30 seconds for each card, rounded up to whole minutes and always written as "about"; the value is one constant in `frontend/src/studyTexts.js` and is easy to change.
+  The share learned of a deck is the cards that are not hidden, were answered at least once and are not forgotten, over the cards that are not hidden; it needs only the answer count of [`DEC-063`](#dec-063) and the interval, so it adds no migration.
+  The Study page shows it as a thin line in each deck, and the Decks page can show the number.

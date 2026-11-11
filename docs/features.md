@@ -23,7 +23,7 @@ Review the sentences and translations on your [cards](glossary.md#card), and mak
 [Review](glossary.md#review) your [cards](glossary.md#card) in the app and keep learning as they come back for practice.
 
 - **Stories:** [US-03](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/29)
-- **Behavior:** [FR-007](functional-requirements/fr/FR-007.md)
+- **Behavior:** [FR-007](functional-requirements/fr/FR-007.md), [FR-018](functional-requirements/fr/FR-018.md)
 
 ## Organize your study queue
 

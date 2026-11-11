@@ -19,3 +19,4 @@
 | [FR-015](fr/FR-015.md) | Keep The Library Of Each Learner Apart, With A Code To Open It Again | `frontend`, `backend`, `database` | Active |
 | [FR-016](fr/FR-016.md) | Record An Event For Each Step Of The Core Task                       | `backend`                         | Active |
 | [FR-017](fr/FR-017.md) | Expose The Quality Signal Of Each Request With Its Environment       | `backend`                         | Active |
+| [FR-018](fr/FR-018.md) | Study In A Session That Shows Only The Card, And Fix The Card There  | `frontend`                        | Active |

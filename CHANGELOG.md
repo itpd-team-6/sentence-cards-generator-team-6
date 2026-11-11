@@ -5,6 +5,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A study card tells new, forgotten and review cards apart, and the Study page counts each kind.
+- The Study box shows a ring with the cards to study, a greeting, and about how many minutes the session takes, counting 30 seconds for each card ([DEC-066](docs/decisions.md#dec-066)).
+- Each deck on the Study page shows how much of it is learned, and the list of decks gives it as `learned_percent`.
+
+### Removed
+
+- The option to shuffle one study session.
+
+### Changed
+
+- The product opens on the Study page, and each page has its own address, so reloading or going back keeps the page.
+- The Study page has one box with the cards to study today split in new, forgotten and review, the button that starts a session beside them, and the decks to tick below, then the Reorder box over the whole width, with the whole sentence of each card.
+- The header is one bar with the name, the pages and the library, and on a phone the pages are in a bar at the bottom of the screen.
+- The cards of the Add a text page are loaded again each time it is shown, so a card hidden in a study session shows as hidden.
+- A study session shows only the card, with an arrow at the top left that goes back to Study, and no text before the translation.
+- In a study session you can edit the card, ask for a new sentence or hide it without leaving the session.
+- The logo and a green dot for the state of the product replace the written state of the API.
+
 ## [0.3.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.3.0) - 2026-11-08
 
 ### Added
