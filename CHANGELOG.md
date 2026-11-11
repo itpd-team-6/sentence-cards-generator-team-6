@@ -18,6 +18,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - The product opens on the Study page, and each page has its own address, so reloading or going back keeps the page.
+- The text, its languages and the marked words of the Add a text page are kept when the page is reloaded, until the tab is closed or another library is opened.
 - The Study page has one box with the cards to study today split in new, forgotten and review, the button that starts a session beside them, and the decks to tick below, then the Reorder box over the whole width, with the whole sentence of each card.
 - The header is one bar with the name, the pages and the library, and on a phone the pages are in a bar at the bottom of the screen.
 - The cards of the Add a text page are loaded again each time it is shown, so a card hidden in a study session shows as hidden.

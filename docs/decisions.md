@@ -695,7 +695,7 @@ The product moves between its pages by an address after the `#`, and the Study p
 - **Why:** the Customer said "For me the first action in Anki was not to add a text but to study. I think the study tab should be the tab that opens by default." (Customer, [00:32:33]), as recorded in [`DEC-056`](#dec-056), and asked for a way to open a text and a deck from a card: "And this label can be used to go to the text, to the text page, I mean from a card." (Customer, [01:11:13]) and "maybe when you implement it we can let the user go to the deck from a card." (Customer, [01:12:29]).
   Today the open page is kept only in the state of `frontend/src/App.jsx`, so no address names a page: reloading the page or pressing the back button of the browser returns to the first page, and a text or a deck cannot be linked.
   The team chose an address after `#` because the browser reads it alone and the server needs no setting for it, and a small router of its own because no library is needed for these pages.
-  The behavior the learner knows stays: the page "Add a text" keeps the typed text and the marked words when the learner goes to another page and comes back, and a study session ends when the learner leaves the Study page.
+  The behavior the learner knows stays: the page "Add a text" keeps the typed text and the marked words when the learner goes to another page and comes back, and it keeps them with the languages when the learner reloads the page, in the storage of the tab until it is closed or another library is opened, and a study session ends when the learner leaves the Study page.
 
 ## DEC-066
 

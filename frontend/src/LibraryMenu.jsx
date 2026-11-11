@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { checkLibrary } from "./api.js";
 import { clearTickedDecks } from "./deckSelection.js";
+import { clearTextDraft } from "./textDraft.js";
 import {
   cleanLibraryCode,
   isLibraryCode,
@@ -74,6 +75,7 @@ export default function LibraryMenu({
 
   function openFound() {
     clearTickedDecks();
+    clearTextDraft();
     setLibraryCode(found.code);
     reload();
   }

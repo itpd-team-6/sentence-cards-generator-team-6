@@ -6,6 +6,7 @@ import DeckPicker from "./DeckPicker.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
 import WordPicker from "./WordPicker.jsx";
 import { splitText, writtenForm } from "./words.js";
+import { readTextDraft, writeTextDraft } from "./textDraft.js";
 
 const LANGUAGES = [
   { code: "ru", name: "Russian" },
@@ -49,17 +50,22 @@ function LanguagePicker({ label, name, value, onChange, taken }) {
 // `active` is true while the page is shown. The page stays in the document when the learner goes to Study, so the cards
 // are loaded again each time it is shown: a card hidden or changed in a study session shows as it is now.
 export default function TextPage({ active = true }) {
-  const [text, setText] = useState("");
-  const [textLanguage, setTextLanguage] = useState("");
-  const [firstLanguage, setFirstLanguage] = useState("");
-  const [marked, setMarked] = useState([]);
-  const [selections, setSelections] = useState([]); // several words chosen as one card, see WordPicker
+  const [draft] = useState(readTextDraft); // what was typed before a reload of this tab
+  const [text, setText] = useState(draft.text);
+  const [textLanguage, setTextLanguage] = useState(draft.textLanguage);
+  const [firstLanguage, setFirstLanguage] = useState(draft.firstLanguage);
+  const [marked, setMarked] = useState(draft.marked);
+  const [selections, setSelections] = useState(draft.selections); // several words chosen as one card, see WordPicker
   const [message, setMessage] = useState(null);
   const [saved, setSaved] = useState(null);
   const [cards, setCards] = useState(null);
   const [asking, setAsking] = useState(false);
   const [deckIds, setDeckIds] = useState([]); // the decks the new cards go in
   const [decksChanged, setDecksChanged] = useState(0);
+
+  useEffect(() => {
+    writeTextDraft({ text, textLanguage, firstLanguage, marked, selections });
+  }, [text, textLanguage, firstLanguage, marked, selections]);
 
   // The decks are for one pair of languages, so the ticks go when the pair changes.
   useEffect(() => setDeckIds([]), [textLanguage, firstLanguage]);
