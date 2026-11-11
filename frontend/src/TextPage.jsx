@@ -46,7 +46,9 @@ function LanguagePicker({ label, name, value, onChange, taken }) {
   );
 }
 
-export default function TextPage() {
+// `active` is true while the page is shown. The page stays in the document when the learner goes to Study, so the cards
+// are loaded again each time it is shown: a card hidden or changed in a study session shows as it is now.
+export default function TextPage({ active = true }) {
   const [text, setText] = useState("");
   const [textLanguage, setTextLanguage] = useState("");
   const [firstLanguage, setFirstLanguage] = useState("");
@@ -64,10 +66,11 @@ export default function TextPage() {
 
   // The cards are in the database, so they are there again after a refresh, whatever text they came from.
   useEffect(() => {
+    if (!active) return;
     loadCards()
       .then((found) => found.length > 0 && setCards(found))
       .catch(() => {}); // Without the product there is nothing to show; the page says so when the learner asks.
-  }, []);
+  }, [active]);
 
   const pieces = useMemo(() => splitText(text), [text]);
 
