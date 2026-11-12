@@ -1,4 +1,4 @@
-// The text being typed on "Add a text", its languages and the words marked in it are kept for this tab, so that they are
+// The text being typed on the Texts page, its languages and the words marked in it are kept for this tab, so that they are
 // there after a reload. A tab keeps them until it is closed or the learner opens another library. Browser storage can be
 // missing or refuse to answer; then nothing is kept.
 const KEY = "sentence-cards.text-draft";

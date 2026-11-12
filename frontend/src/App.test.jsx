@@ -19,15 +19,24 @@ vi.mock("./StudyPage.jsx", () => ({
 }));
 vi.mock("./LibraryMenu.jsx", () => ({ default: () => <p>Library menu</p> }));
 vi.mock("./TextPage.jsx", () => ({
-  default: function TextPage({ active }) {
+  default: function TextPage() {
     useEffect(() => {
       lifecycle.mounted += 1;
       return () => {
         lifecycle.unmounted += 1;
       };
     }, []);
-    return <p>Text page {active ? "shown" : "hidden"}</p>;
+    return <p>Text page</p>;
   },
+}));
+vi.mock("./TextList.jsx", () => ({
+  default: ({ active }) => <p>Text list {active ? "shown" : "hidden"}</p>,
+}));
+vi.mock("./SavedText.jsx", () => ({
+  default: ({ textId }) => <p>Saved text {textId}</p>,
+}));
+vi.mock("./YourCardsPage.jsx", () => ({
+  default: () => <p>Your cards page</p>,
 }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -69,10 +78,14 @@ afterEach(async () => {
   container.remove();
 });
 
-test("the product opens on the Study page, and Add a text is the second tab", async () => {
+test("the product opens on the Study page, and Texts is the second tab and Your cards the third", async () => {
   await show();
 
-  expect(tabs().map((tab) => tab.textContent)).toEqual(["Study", "Add a text"]);
+  expect(tabs().map((tab) => tab.textContent)).toEqual([
+    "Study",
+    "Texts",
+    "Your cards",
+  ]);
   expect(current().textContent).toBe("Study");
   expect(container.textContent).toContain("Study page");
 });
@@ -90,15 +103,16 @@ test("the tabs are links to the address of their page", async () => {
 
   expect(tabs().map((tab) => tab.getAttribute("href"))).toEqual([
     "#/study",
-    "#/add-a-text",
+    "#/texts",
+    "#/your-cards",
   ]);
 });
 
 test("a change of the address opens the page it names, as the back button does", async () => {
   await show();
 
-  await goTo("#/add-a-text");
-  expect(current().textContent).toBe("Add a text");
+  await goTo("#/texts");
+  expect(current().textContent).toBe("Texts");
   expect(container.textContent).not.toContain("Study page");
   expect(textPageBox().hidden).toBe(false);
 
@@ -108,19 +122,19 @@ test("a change of the address opens the page it names, as the back button does",
 });
 
 test("an address that names the text page opens it on load", async () => {
-  window.location.hash = "#/add-a-text";
+  window.location.hash = "#/texts";
   await show();
 
-  expect(current().textContent).toBe("Add a text");
+  expect(current().textContent).toBe("Texts");
   expect(container.textContent).not.toContain("Study page");
 });
 
 test("the text page stays in the document when the learner goes to another page and comes back", async () => {
   await show();
 
-  await goTo("#/add-a-text");
+  await goTo("#/texts");
   await goTo("#/study");
-  await goTo("#/add-a-text");
+  await goTo("#/texts");
 
   expect(lifecycle.mounted).toBe(1);
   expect(lifecycle.unmounted).toBe(0);
@@ -163,13 +177,41 @@ test("the header and the tabs step aside while a study session is open", async (
   expect(container.querySelector("main").className).toContain("in-session");
 });
 
-test("the text page is told when it is shown, so that it can load the cards again", async () => {
+test("the list of texts is told when it is shown, so that it can read the texts again", async () => {
   await show();
-  expect(container.textContent).toContain("Text page hidden");
+  expect(container.textContent).toContain("Text list hidden");
 
-  await goTo("#/add-a-text");
-  expect(container.textContent).toContain("Text page shown");
+  await goTo("#/texts");
+  expect(container.textContent).toContain("Text list shown");
 
   await goTo("#/study");
-  expect(container.textContent).toContain("Text page hidden");
+  expect(container.textContent).toContain("Text list hidden");
+});
+
+test("the Your cards page is made when the learner goes to it", async () => {
+  await show();
+  expect(container.textContent).not.toContain("Your cards page");
+
+  await goTo("#/your-cards");
+  expect(current().textContent).toBe("Your cards");
+  expect(container.textContent).toContain("Your cards page");
+
+  await goTo("#/study");
+  expect(container.textContent).not.toContain("Your cards page");
+});
+
+test("the address of a saved text opens it on the Texts tab and keeps the form in the document", async () => {
+  await show();
+
+  await goTo("#/texts/7");
+  expect(current().textContent).toBe("Texts");
+  expect(container.textContent).toContain("Saved text 7");
+  expect(container.textContent).toContain("Text list hidden");
+  expect(lifecycle.mounted).toBe(1);
+  expect(lifecycle.unmounted).toBe(0);
+
+  await goTo("#/texts");
+  expect(container.textContent).not.toContain("Saved text");
+  expect(container.textContent).toContain("Text list shown");
+  expect(lifecycle.mounted).toBe(1);
 });
