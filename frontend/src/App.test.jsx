@@ -18,6 +18,9 @@ vi.mock("./StudyPage.jsx", () => ({
   ),
 }));
 vi.mock("./LibraryMenu.jsx", () => ({ default: () => <p>Library menu</p> }));
+vi.mock("./TodaySummary.jsx", () => ({
+  default: ({ page }) => (page === "study" ? null : <p>Today summary</p>),
+}));
 vi.mock("./TextPage.jsx", () => ({
   default: function TextPage() {
     useEffect(() => {
@@ -175,6 +178,24 @@ test("the header and the tabs step aside while a study session is open", async (
 
   expect(header.hidden).toBe(true);
   expect(container.querySelector("main").className).toContain("in-session");
+});
+
+test("the summary of today is in the header on every page but Study", async () => {
+  await show();
+  expect(container.textContent).not.toContain("Today summary");
+
+  await goTo("#/texts");
+  expect(container.querySelector("header").textContent).toContain(
+    "Today summary",
+  );
+
+  await goTo("#/your-cards");
+  expect(container.querySelector("header").textContent).toContain(
+    "Today summary",
+  );
+
+  await goTo("#/study");
+  expect(container.textContent).not.toContain("Today summary");
 });
 
 test("the list of texts is told when it is shown, so that it can read the texts again", async () => {
