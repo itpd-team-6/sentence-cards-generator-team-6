@@ -72,3 +72,10 @@ Read the [signals](glossary.md#signal) the product emits while it runs as [servi
 - **Stories:** [US-14](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/213)
 - **Behavior:** [FR-017](functional-requirements/fr/FR-017.md)
 - **Decisions:** [ADR-008](architecture/adr/ADR-008.md)
+
+## Find, search and organize my cards
+
+Filter all your cards by deck, text and status, search cards, texts and decks from one box, group and sort the list, and put cards in decks or take them out.
+
+- **Stories:** [US-17](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234)
+- **Behavior:** [FR-020](functional-requirements/fr/FR-020.md)
