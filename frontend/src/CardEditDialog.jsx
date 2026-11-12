@@ -132,6 +132,16 @@ export default function CardEditDialog({
             </ul>
           </div>
         )}
+        {showPhrase && card.decks?.length > 0 && (
+          <div className="from-texts">
+            <span className="field-label">In decks</span>
+            <ul>
+              {card.decks.map((deck) => (
+                <li key={deck.id}>{deck.title}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {shown && (
           <p className="form-error" role="alert">
             {shown}
