@@ -60,16 +60,31 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
 
     assert get_text(reopened, text_id) == {
         "id": text_id,
+        "title": "Das Haus ist groß.",
         "text": "Das Haus ist groß.",
         "text_language": "de",
         "first_language": "en",
         "words": ["Haus", "groß"],
+        "words_with_cards": ["Haus"],
+        "marks": [
+            {
+                "word": "Haus",
+                "card": {
+                    "id": card_id,
+                    "sentence": "Das Haus ist alt.",
+                    "translation": "The house is old.",
+                },
+            },
+            {"word": "groß", "card": None},
+        ],
+        "cards": 1,
     }
     assert get_card(reopened, card_id) == {
         "id": card_id,
         "text_language": "de",
         "first_language": "en",
         "decks": [],
+        "texts": [{"id": text_id, "title": "Das Haus ist groß."}],
         "word": "Haus",
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
@@ -210,6 +225,7 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
         "text_language": "de",
         "first_language": "en",
         "decks": [{"id": 1, "title": "Earlier cards"}],
+        "texts": [{"id": 1, "title": "Das Haus ist alt."}],
         "word": "Haus",
         "sentence": "Das Haus ist alt.",
         "translation": "The house is old.",
@@ -339,7 +355,10 @@ def test_a_database_made_before_phrases_keeps_its_cards_and_they_have_no_phrase(
     )  # up to the phrases, before the decks
     connection = connect()
     init_db(connection)
-    text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"])
+    text_id = connection.execute(
+        "INSERT INTO texts (text, text_language, first_language) VALUES ('Das Haus ist alt.', 'de', 'en')"
+    ).lastrowid
+    connection.execute("INSERT INTO marked_words (text_id, word) VALUES (?, 'Haus')", (text_id,))
     card_id = connection.execute(
         "INSERT INTO cards (text_id, word, sentence, translation, due_date) VALUES (?, 'Haus', 'Das Haus ist alt.', "
         "'The house is old.', ?)",

@@ -17,6 +17,11 @@ from fastapi import HTTPException, Request
 from app.config import REPOSITORY_ROOT, get_settings
 from app.phrases import same_phrase
 
+# The longest title of a text, and the longest text. The limit of the text is in FR-019.
+TEXT_TITLE_LENGTH = 60
+TEXT_LENGTH = 10_000
+TITLE_WORDS = 6
+
 
 def create_the_first_tables(connection: sqlite3.Connection) -> None:
     """The tables of release `v0.1.0`. A database made by that release already has them, and keeps its rows."""
@@ -216,6 +221,24 @@ def add_the_answer_count(connection: sqlite3.Connection) -> None:
 
 
 # The migrations, in order. The number of a migration is its place in the list, starting at 1.
+def title_from_text(text: str) -> str:
+    """The title a text gets when the learner gives none: its first words, cut to `TEXT_TITLE_LENGTH` characters."""
+    title = " ".join(text.split()[:TITLE_WORDS])
+    return title[:TEXT_TITLE_LENGTH].rstrip()
+
+
+def add_the_text_titles(connection: sqlite3.Connection) -> None:
+    """Give every text a title (DEC-064), so the list of texts and the labels of the cards have a name to show.
+
+    A text saved before this release gets the title the product would have made for it: its first words.
+    """
+    connection.execute("ALTER TABLE texts ADD COLUMN title TEXT NOT NULL DEFAULT ''")
+    for row in connection.execute("SELECT id, text FROM texts").fetchall():
+        connection.execute(
+            "UPDATE texts SET title = ? WHERE id = ?", (title_from_text(row["text"]), row["id"])
+        )
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
     add_the_due_time,
@@ -224,6 +247,7 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     add_the_card_phrase,
     add_the_decks,
     add_the_answer_count,
+    add_the_text_titles,
 ]
 
 # The card fields a caller may change with `update_card`.
@@ -339,11 +363,12 @@ def save_text(
     text_language: str,
     first_language: str,
     words: list[str],
+    title: str | None = None,
 ) -> int:
-    """Save a text with its marked words, and return the text's id."""
+    """Save a text with its marked words, and return the text's id. Without a title, the text gets its first words."""
     cursor = connection.execute(
-        "INSERT INTO texts (text, text_language, first_language) VALUES (?, ?, ?)",
-        (text, text_language, first_language),
+        "INSERT INTO texts (title, text, text_language, first_language) VALUES (?, ?, ?, ?)",
+        (title or title_from_text(text), text, text_language, first_language),
     )
     text_id = cursor.lastrowid
     connection.executemany(
@@ -354,14 +379,155 @@ def save_text(
     return text_id
 
 
+def marked_words_of(connection: sqlite3.Connection, text_id: int) -> list[dict]:
+    """The marked words of a text, in the order they were marked, each with the id of its card or None."""
+    rows = connection.execute(
+        "SELECT m.word, m.card_id, c.sentence, c.translation FROM marked_words m"
+        " LEFT JOIN cards c ON c.id = m.card_id WHERE m.text_id = ? ORDER BY m.id",
+        (text_id,),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def text_summary(row: sqlite3.Row, marks: list[dict]) -> dict:
+    return {
+        **dict(row),
+        "words": [mark["word"] for mark in marks],
+        "words_with_cards": [mark["word"] for mark in marks if mark["card_id"] is not None],
+        # Each marked word with its card, or with no card (issue #204).
+        "marks": [
+            {
+                "word": mark["word"],
+                "card": None
+                if mark["card_id"] is None
+                else {
+                    "id": mark["card_id"],
+                    "sentence": mark["sentence"],
+                    "translation": mark["translation"],
+                },
+            }
+            for mark in marks
+        ],
+        "cards": len({mark["card_id"] for mark in marks if mark["card_id"] is not None}),
+    }
+
+
 def get_text(connection: sqlite3.Connection, text_id: int) -> dict | None:
     row = connection.execute("SELECT * FROM texts WHERE id = ?", (text_id,)).fetchone()
     if row is None:
         return None
-    words = connection.execute(
-        "SELECT word FROM marked_words WHERE text_id = ? ORDER BY id", (text_id,)
-    ).fetchall()
-    return {**dict(row), "words": [word["word"] for word in words]}
+    return text_summary(row, marked_words_of(connection, text_id))
+
+
+def list_texts(connection: sqlite3.Connection) -> list[dict]:
+    """Every text, the newest first, each with its marked words and the number of its cards."""
+    rows = connection.execute("SELECT * FROM texts ORDER BY id DESC").fetchall()
+    return [text_summary(row, marked_words_of(connection, row["id"])) for row in rows]
+
+
+class UnknownText(ValueError):
+    """A text id that does not exist."""
+
+
+class InvalidTextTitle(ValueError):
+    """The title of a text is empty or longer than `TEXT_TITLE_LENGTH` characters."""
+
+
+class InvalidText(ValueError):
+    """The text is empty or longer than `TEXT_LENGTH` characters."""
+
+
+class MarkNotInText(ValueError):
+    """A word the learner marked is not in the text."""
+
+
+_LETTER = r"(?:[^\W\d_]|[\u0300-\u036f])"
+_WORD = re.compile(rf"{_LETTER}+(?:['’-]{_LETTER}+)*")
+
+
+def words_of(text: str) -> list[str]:
+    """The words of a text, in lower case and in order: letters of any alphabet, with the marks and the apostrophes or
+    hyphens inside a word. It reads the text as the text page does."""
+    return [match.group(0).casefold() for match in _WORD.finditer(text)]
+
+
+def mark_is_in(word: str, words: list[str]) -> bool:
+    """Is a marked item in the words of a text? An item of several words ("stimmt zu") is in the text when its words
+    are, whatever the case of the letters, in this order and with other words allowed between them."""
+    position = 0
+    for part in word.split():
+        try:
+            position = words.index(part.casefold(), position) + 1
+        except ValueError:
+            return False
+    return True
+
+
+def update_text(
+    connection: sqlite3.Connection,
+    text_id: int,
+    title: str | None = None,
+    text: str | None = None,
+    words: list[str] | None = None,
+) -> list[str]:
+    """Change the title, the text or the marked words of a text, and return the marks the new text took away.
+
+    Only what is given changes. A mark whose word is no longer in the text is removed: the learner's edit took the word
+    out. Cards are never touched: a card keeps its sentence, translation and study data (DEC-064). When `words` is
+    given it is the whole list of marks the text keeps, so a word left out loses its mark too. A mark that stays keeps
+    its card.
+    """
+    row = connection.execute("SELECT * FROM texts WHERE id = ?", (text_id,)).fetchone()
+    if row is None:
+        raise UnknownText(text_id)
+    if title is not None:
+        title = " ".join(title.split())
+        if not title or len(title) > TEXT_TITLE_LENGTH:
+            raise InvalidTextTitle(title)
+    if text is not None and (not text.strip() or len(text) > TEXT_LENGTH):
+        raise InvalidText(text)
+    new_text = row["text"] if text is None else text
+    in_text = words_of(new_text)
+    marks = marked_words_of(connection, text_id)
+    target = [mark["word"] for mark in marks if mark_is_in(mark["word"], in_text)]
+    lost = [mark["word"] for mark in marks if mark["word"] not in target]
+    if words is not None:
+        for word in words:
+            if not mark_is_in(word, in_text):
+                raise MarkNotInText(word)
+        target = list(words)
+    keep = {word.casefold() for word in target}
+    try:
+        for mark in marks:
+            if mark["word"].casefold() not in keep:
+                connection.execute(
+                    "DELETE FROM marked_words WHERE text_id = ? AND word = ?",
+                    (text_id, mark["word"]),
+                )
+        have = {mark["word"].casefold() for mark in marks}
+        for word in target:
+            if word.casefold() not in have:
+                connection.execute(
+                    "INSERT OR IGNORE INTO marked_words (text_id, word) VALUES (?, ?)",
+                    (text_id, word),
+                )
+        connection.execute(
+            "UPDATE texts SET title = ?, text = ? WHERE id = ?",
+            (row["title"] if title is None else title, new_text, text_id),
+        )
+    except BaseException:
+        connection.rollback()
+        raise
+    connection.commit()
+    return lost if text is not None else []
+
+
+def delete_text(connection: sqlite3.Connection, text_id: int) -> bool:
+    """Delete a text and its marks. The cards stay, with their decks and study data (DEC-064): a card does not belong
+    to a text. Returns False when the text does not exist."""
+    cursor = connection.execute("DELETE FROM texts WHERE id = ?", (text_id,))
+    connection.commit()
+    return cursor.rowcount == 1
 
 
 class InvalidDeckTitle(ValueError):
@@ -497,7 +663,8 @@ def add_cards_to_decks(
 
 
 def attach_decks(connection: sqlite3.Connection, cards: list[dict]) -> list[dict]:
-    """Add `decks` (id and title, newest deck first) to each card."""
+    """Add `decks` (id and title, newest deck first) and `texts` (the texts that still have its word, newest first) to
+    each card."""
     if not cards:
         return cards
     marks = ", ".join("?" for _ in cards)
@@ -509,7 +676,18 @@ def attach_decks(connection: sqlite3.Connection, cards: list[dict]) -> list[dict
     by_card: dict[int, list[dict]] = {card["id"]: [] for card in cards}
     for row in rows:
         by_card[row["card_id"]].append({"id": row["id"], "title": row["title"]})
-    return [{**card, "decks": by_card[card["id"]]} for card in cards]
+    origins = connection.execute(
+        "SELECT marked_words.card_id, texts.id, texts.title FROM marked_words"
+        " JOIN texts ON texts.id = marked_words.text_id"
+        f" WHERE marked_words.card_id IN ({marks}) ORDER BY texts.id DESC",
+        [card["id"] for card in cards],
+    )
+    texts_of: dict[int, list[dict]] = {card["id"]: [] for card in cards}
+    for row in origins:
+        item = {"id": row["id"], "title": row["title"]}
+        if item not in texts_of[row["card_id"]]:
+            texts_of[row["card_id"]].append(item)
+    return [{**card, "decks": by_card[card["id"]], "texts": texts_of[card["id"]]} for card in cards]
 
 
 def deck_filter(deck_ids: list[int] | None) -> tuple[str, list[int]]:

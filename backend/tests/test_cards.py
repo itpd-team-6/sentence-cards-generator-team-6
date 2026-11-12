@@ -846,6 +846,20 @@ def test_the_other_words_of_the_text_still_get_their_cards_when_one_word_exists(
 
         assert [card["word"] for card in response["cards"]] == ["Zug", "Hund"]
         assert [item["word"] for item in response["existing"]] == ["Zug"]
+        # The answer lists every card of the text, but counts only the card this call made.
+        assert response["made"] == 1
+
+
+def test_the_answer_counts_no_card_when_every_word_already_has_one(model) -> None:
+    model.phrases = {"Zug": "den Zug nehmen"}
+    with TestClient(app) as client:
+        text_id = client.post("/api/texts", json=TEXT).json()["id"]
+        first = ask_for_cards(client, text_id).json()
+        response = ask_for_cards(client, text_id).json()
+
+        assert first["made"] == len(first["cards"])
+        assert response["made"] == 0
+        assert len(response["cards"]) == len(first["cards"])
 
 
 def test_a_card_the_model_gave_no_sentence_for_has_no_phrase(model) -> None:
