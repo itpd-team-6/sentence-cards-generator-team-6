@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A text has a title, made from its first words if you give none, and at most 10,000 characters, with a count next to the text.
 - The box that edits a card lists the texts it comes from, each with a link to the text.
 - Your cards has a list of filters by deck, text and status, with the number of cards of each, a search box for cards, texts and decks, and chips that show what is filtered; the learner can group the cards by deck or by text, sort them, and put the selected cards in decks or take them out ([DEC-067](docs/decisions.md#dec-067)).
+- The header shows, on every page but Study, how many cards are to study today and about how long they take, and a panel gives the cards of each kind and of each deck; a click opens the Study page ([DEC-068](docs/decisions.md#dec-068)).
 
 ### Removed
 
@@ -22,6 +23,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - The product opens on the Study page, and each page has its own address, so reloading or going back keeps the page.
+- The header is a bar as wide as the window, with the name of the product in smaller type.
 - The page that adds a text is now the Texts tab, "Add cards from a text", and the table of all the cards is on its own tab, "Your cards"; the page of a text shows only the cards of that text.
 - The message after asking for the cards counts only the cards made by that request, not the cards the text already had.
 - The text, its languages and the marked words of the form that adds cards from a text are kept when the page is reloaded, until the tab is closed or another library is opened.

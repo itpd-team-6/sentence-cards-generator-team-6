@@ -6,6 +6,7 @@ import StudyPage from "./StudyPage.jsx";
 import SavedText from "./SavedText.jsx";
 import TextList from "./TextList.jsx";
 import TextPage from "./TextPage.jsx";
+import TodaySummary from "./TodaySummary.jsx";
 import YourCardsPage from "./YourCardsPage.jsx";
 
 // The icon of each page, for the bar at the bottom of a phone. They are drawn on a 24 by 24 grid.
@@ -48,54 +49,62 @@ export default function App() {
   }, []);
 
   return (
-    <main className={inSession ? "app in-session" : "app"}>
-      {/* One bar for the whole product: the name at the left, the pages in the middle and the state and the library at
-          the right. On a phone the pages move to a bar at the bottom of the screen. */}
+    <>
+      {/* One bar for the whole product, as wide as the window: the name at the left, the pages in the middle, and at the
+          right what there is to study today, the state and the library. Its content lines up with the page. On a phone
+          the pages move to a bar at the bottom of the screen. */}
       <header className="app-header" hidden={inSession}>
-        <h1 className="brand">
-          <Logo />
-          <span>Sentence cards generator</span>
-        </h1>
-        <nav className="tabs" aria-label="Pages">
-          {PAGES.map((item) => (
-            <a
-              key={item.id}
-              className="tab"
-              href={hrefOf(item.id)}
-              aria-current={page === item.id ? "page" : undefined}
+        <div className="app-header-inner">
+          <h1 className="brand">
+            <Logo />
+            <span>Sentence cards generator</span>
+          </h1>
+          <nav className="tabs" aria-label="Pages">
+            {PAGES.map((item) => (
+              <a
+                key={item.id}
+                className="tab"
+                href={hrefOf(item.id)}
+                aria-current={page === item.id ? "page" : undefined}
+              >
+                <PageIcon id={item.id} />
+                <span>{item.name}</span>
+              </a>
+            ))}
+          </nav>
+          <div className="app-header-tools">
+            <TodaySummary page={page} />
+            <span
+              className={status === "ok" ? "status-dot" : "status-dot problem"}
+              role="status"
+              title={`API status: ${status}`}
             >
-              <PageIcon id={item.id} />
-              <span>{item.name}</span>
-            </a>
-          ))}
-        </nav>
-        <div className="app-header-tools">
-          <span
-            className={status === "ok" ? "status-dot" : "status-dot problem"}
-            role="status"
-            title={`API status: ${status}`}
-          >
-            <span className="visually-hidden">API status: {status}</span>
-          </span>
-          <LibraryMenu />
+              <span className="visually-hidden">API status: {status}</span>
+            </span>
+            <LibraryMenu />
+          </div>
         </div>
       </header>
-      {/* The form that adds a text stays in the document, so what the learner typed is still there when they come back.
+      <main className={inSession ? "app in-session" : "app"}>
+        {/* The form that adds a text stays in the document, so what the learner typed is still there when they come back.
           The list of texts is under it; a saved text opens in place of both. */}
-      <div hidden={page !== "texts"}>
-        <div hidden={textId !== null}>
-          <TextPage onTextSaved={() => setTextsChanged((count) => count + 1)} />
-          <TextList
-            active={page === "texts" && textId === null}
-            reload={textsChanged}
-          />
+        <div hidden={page !== "texts"}>
+          <div hidden={textId !== null}>
+            <TextPage
+              onTextSaved={() => setTextsChanged((count) => count + 1)}
+            />
+            <TextList
+              active={page === "texts" && textId === null}
+              reload={textsChanged}
+            />
+          </div>
+          {page === "texts" && textId !== null && (
+            <SavedText key={textId} textId={textId} />
+          )}
         </div>
-        {page === "texts" && textId !== null && (
-          <SavedText key={textId} textId={textId} />
-        )}
-      </div>
-      {page === "cards" && <YourCardsPage />}
-      {page === "study" && <StudyPage onSessionChange={setInSession} />}
-    </main>
+        {page === "cards" && <YourCardsPage />}
+        {page === "study" && <StudyPage onSessionChange={setInSession} />}
+      </main>
+    </>
   );
 }

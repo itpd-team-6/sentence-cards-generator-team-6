@@ -765,7 +765,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0.5rem 0.75rem;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -1994,42 +1994,49 @@ textarea {
   padding: 0.7rem 1.1rem;
 }
 
-/* The bar of the product: the name, the pages and the state with the menu of the library. The panel of the library
-   floats over the page, so opening it never moves anything. */
+/* The bar of the product, as wide as the window: the name, the pages, what there is to study today, the state and the
+   menu of the library. Its content lines up with the column of the page. The panels float over the page, so opening
+   one never moves anything. The bar is not fixed: it scrolls away with the page. */
 .app-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.app-header-inner {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 0.5rem 1.5rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--border);
+  gap: 0.5rem 1rem;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0.7rem 1.25rem;
 }
 
 .app-header h1 {
   margin: 0;
 }
 
-@media (max-width: 40rem) {
-  .app-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
+/* Where the bar has no room for everything, the time and then the name go first. */
+@media (max-width: 60rem) {
+  .today-time {
+    display: none;
   }
+}
 
-  .brand {
-    min-width: 0;
-    font-size: 0.95rem;
+@media (max-width: 48rem) {
+  .brand span {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .app-header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0.6rem 1rem;
   }
 
   .brand span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .logo {
-    width: 1.5rem;
-    height: 1.5rem;
+    display: none;
   }
 }
 
@@ -2039,7 +2046,7 @@ textarea {
   white-space: nowrap;
   align-items: center;
   gap: 0.6rem;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   letter-spacing: 0.01em;
 }
 
@@ -3413,4 +3420,189 @@ a.secondary {
 
 .search-section > .search-row {
   width: 100%;
+}
+
+/* What there is to study today, in the bar of every page but Study (DEC-068). */
+.today {
+  position: relative;
+}
+
+.today-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.25rem 0.85rem 0.25rem 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.today-pill:hover {
+  border-color: var(--accent);
+}
+
+.today-pill:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.today-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.today-play svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.today-pill.done .today-play {
+  background: var(--ok);
+  color: var(--bg);
+}
+
+.today-pill.done:not(:has(.today-play)) {
+  padding-left: 0.85rem;
+}
+
+.today-time {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.today-panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 40;
+  width: 19rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* A strip over the gap between the pill and the panel, so the pointer can go from one to the other. */
+.today-panel::before {
+  content: "";
+  position: absolute;
+  inset: -0.7rem 0 auto 0;
+  height: 0.7rem;
+}
+
+.today:hover .today-panel,
+.today:focus-within .today-panel {
+  visibility: visible;
+  opacity: 1;
+}
+
+.today-panel h2 {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+.today-kinds,
+.today-decks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.today-kinds {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.today-kind {
+  padding: 0.45rem 0.6rem 0.5rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.today-kind b {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-kind span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.today-kind span::before {
+  content: "";
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.today-kind.new span::before {
+  background: var(--ok);
+}
+
+.today-kind.forgotten span::before {
+  background: var(--accent-soft-text);
+}
+
+.today-decks {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.today-decks li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.today-decks span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-decks b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A phone has no pointer to rest on the pill, so it only gives the pill, and a tap opens the Study page. */
+@media (hover: none) {
+  .today-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .today-time {
+    display: none;
+  }
 }
