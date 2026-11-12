@@ -731,3 +731,24 @@ The Study box shows an estimate of the time of a session, counting 30 seconds fo
   The team does not measure how long a card takes, so the estimate is a fixed 30 seconds for each card, rounded up to whole minutes and always written as "about"; the value is one constant in `frontend/src/studyTexts.js` and is easy to change.
   The share learned of a deck is the cards that are not hidden, were answered at least once and are not forgotten, over the cards that are not hidden; it needs only the answer count of [`DEC-063`](#dec-063) and the interval, so it adds no migration.
   The Study page shows it as a thin line in each deck, and the Decks page can show the number.
+
+## DEC-067
+
+The page "Your cards" is where the learner finds, searches, groups and organizes all their cards, with a list of filters at the side, one search box with a panel of results, a choice of grouping and order, and a box that changes the decks of the selected cards.
+
+- **Status:** Active
+- **Date:** 2026-11-12
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** [`DEC-064`](#dec-064) moved all the cards to a page of their own, but the page was one table with no way to narrow it, and the story [`US-17`](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234) asks for the learner to find their cards in a few steps.
+  The team chose a list of filters at the side with a box for each deck, text and status, and a search box, over a menu or a page for each filter, because the learner sees every choice and how many cards each one gives without opening anything.
+  The team made these choices, which the Customer did not state:
+  - Inside one part, the product lists the cards that are in at least one ticked item, because the learner who ticks two decks usually wants the cards of both, and offers "All" for the cards that are in every one of them. Between parts the choices are joined with "and", so ticking a deck and a text narrows the list.
+  - The number of an item counts the cards the learner would get by ticking it, with the other choices applied, and an item with no card is dimmed but a ticked item stays, so no choice leads to a list that cannot be undone.
+  - A card in no deck and a card whose text was deleted are items like the others, "Uncategorized" and "No text", so that taking a card out of all its decks does not hide it.
+  - The search is one box for the cards, the texts and the decks. The list narrows as the learner types, and a panel under the box says what was found in each kind; a text or a deck of the panel is ticked in the list of filters, because the filters are how the learner chooses a text or a deck.
+  - A row shows the text the card came from, only the decks the learner ticked, and how many decks the card is in, not the names of all its decks, so that a row stays light; the names show when the pointer rests on the number, and the box that edits the card lists all its decks.
+  - The learner can group the cards by deck or by text. A card that is in two decks shows in both groups and the total counts it once.
+  - The decks of the selected cards change in one step through the bar of the selected cards, and only the link between a card and its decks changes, so the card keeps its sentence and its study data. The box shows only the decks of the language pair of the cards, as [`DEC-020`](#dec-020) says a deck takes only cards of its pair.
+  - The search, the ticked items, the grouping and the order stay in the browser while the tab is open, so that the learner who opens a text from a card finds the list as it was.
+  - On a narrow screen the list of filters is a sheet from the bottom, opened by a button that shows the number of ticked items.

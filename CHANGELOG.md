@@ -13,6 +13,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The product keeps the texts you save: the Texts page lists them with their title, languages, marked words and cards, and each one opens on its own page where you can change the title, the text and the marked words, ask for the cards of new words, or delete the text, and its cards stay ([DEC-064](docs/decisions.md#dec-064)).
 - A text has a title, made from its first words if you give none, and at most 10,000 characters, with a count next to the text.
 - The box that edits a card lists the texts it comes from, each with a link to the text.
+- Your cards has a list of filters by deck, text and status, with the number of cards of each, a search box for cards, texts and decks, and chips that show what is filtered; the learner can group the cards by deck or by text, sort them, and put the selected cards in decks or take them out ([DEC-067](docs/decisions.md#dec-067)).
 
 ### Removed
 
@@ -26,6 +27,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The text, its languages and the marked words of the form that adds cards from a text are kept when the page is reloaded, until the tab is closed or another library is opened.
 - The Study page has one box with the cards to study today split in new, forgotten and review, the button that starts a session beside them, and the decks to tick below, then the Reorder box over the whole width, with the whole sentence of each card.
 - The header is one bar with the name, the pages and the library, and on a phone the pages are in a bar at the bottom of the screen.
+- A card in Your cards shows the text it came from, the decks you ticked and how many decks it is in, not the names of all its decks, and the bar of the selected cards says how many are selected of the cards shown.
 - The cards of the Your cards page are loaded again each time it is shown, so a card hidden in a study session shows as hidden.
 - A study session shows only the card, with an arrow at the top left that goes back to Study, and no text before the translation.
 - In a study session you can edit the card, ask for a new sentence or hide it without leaving the session.
