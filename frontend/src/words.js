@@ -86,3 +86,62 @@ export function splitAtWords(sentence, word) {
     segments.push({ text: sentence.slice(position), marked: false });
   return segments;
 }
+
+/** The words of a text that are marked, as the cards name them: single words, then the groups of several words. */
+export function markedItems(pieces, marked, selections) {
+  return [
+    ...marked.map((key) => writtenForm(pieces, key)),
+    ...selections
+      .filter((selection) => selection.words.length > 1)
+      .map((selection) => selection.words.map((i) => pieces[i].text).join(" ")),
+  ];
+}
+
+let reopened = 0;
+
+/**
+ * The marks of a saved text as the picker needs them. `items` are the marked words as they are saved ("Zug",
+ * "stimmt zu"). A single word is marked wherever it appears. A group of several words is found at the first place where
+ * its words appear in this order, which is the rule the product uses to match them, so a group that the text writes
+ * more than once is shown at its first place. An item that the text does not have is returned in `lost`.
+ */
+export function marksFromItems(pieces, items) {
+  const marked = [];
+  const selections = [];
+  const lost = [];
+  const words = pieces
+    .map((piece, index) => ({
+      key: markKey(piece.text),
+      index,
+      ok: piece.isWord,
+    }))
+    .filter((piece) => piece.ok);
+  for (const item of items) {
+    const parts = item.split(/\s+/).filter(Boolean).map(markKey);
+    if (parts.length === 1) {
+      if (words.some((word) => word.key === parts[0])) {
+        if (!marked.includes(parts[0])) marked.push(parts[0]);
+      } else lost.push(item);
+      continue;
+    }
+    const found = [];
+    let from = 0;
+    for (const part of parts) {
+      const at = words.findIndex((word, n) => n >= from && word.key === part);
+      if (at === -1) break;
+      found.push(words[at].index);
+      from = at + 1;
+    }
+    if (found.length === parts.length) {
+      reopened -= 1; // negative ids never meet the ids of the selections the learner makes
+      selections.push({ id: reopened, words: found });
+    } else lost.push(item);
+  }
+  return { marked, selections, lost };
+}
+
+/** The longest text a learner can save, in characters (FR-001). */
+export const TEXT_LENGTH = 10000;
+
+/** How many characters a text has. An emoji or a letter with its own mark counts as one, as the product counts. */
+export const textLength = (text) => [...text].length;

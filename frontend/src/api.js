@@ -63,6 +63,22 @@ export const createDeck = (title, textLanguage, firstLanguage) =>
 export const createCards = (textId, deckIds) =>
   call(`/api/texts/${textId}/cards`, json("POST", { deck_ids: deckIds }));
 
+// The saved texts, the newest first, each with its marked words and how many cards it has.
+export const loadTexts = () => call("/api/texts");
+
+// One saved text with its marked words, and the cards of one text.
+export const loadText = (textId) => call(`/api/texts/${textId}`);
+export const loadTextCards = (textId) => call(`/api/texts/${textId}/cards`);
+
+// `fields` has any of: title, text, words (the whole list of marked words the text keeps). The answer is the text as it
+// is now, with `lost_marks`: the marks the new text took away.
+export const changeText = (textId, fields) =>
+  call(`/api/texts/${textId}`, json("PATCH", fields));
+
+// Deletes a text and its marks. Its cards, their decks and their study data stay.
+export const deleteText = (textId) =>
+  call(`/api/texts/${textId}`, { method: "DELETE" });
+
 // Every card, the ones of the newest text first.
 export const loadCards = () => call("/api/cards");
 
