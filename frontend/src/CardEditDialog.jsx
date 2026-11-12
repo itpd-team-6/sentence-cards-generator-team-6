@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { hrefOfText } from "./router.js";
 
 // The box where the learner changes a card: its sentence and translation, and its context phrase when `showPhrase` is
 // true. It is shared by the list of cards and by the study session, so a card is edited the same way in both places.
@@ -117,6 +118,20 @@ export default function CardEditDialog({
             ? "The translation is locked, so it stays when the sentence changes."
             : "Change only the sentence and the translation is made again when you save."}
         </p>
+        {showPhrase && card.texts?.length > 0 && (
+          <div className="from-texts">
+            <span className="field-label">From texts</span>
+            <ul>
+              {card.texts.map((text) => (
+                <li key={text.id}>
+                  <a href={hrefOfText(text.id)} onClick={onCancel}>
+                    {text.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {shown && (
           <p className="form-error" role="alert">
             {shown}

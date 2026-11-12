@@ -15,7 +15,14 @@ def test_a_text_is_saved_with_its_marked_words() -> None:
         response = client.post("/api/texts", json=TEXT)
 
         assert response.status_code == 201
-        assert response.json() == {"id": 1, **TEXT}
+        assert response.json() == {
+            "id": 1,
+            "title": "Ich warte am Bahnhof auf den",
+            **TEXT,
+            "words_with_cards": [],
+            "marks": [{"word": word, "card": None} for word in TEXT["words"]],
+            "cards": 0,
+        }
 
 
 def test_a_saved_text_is_still_there_after_a_restart() -> None:

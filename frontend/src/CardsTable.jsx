@@ -59,7 +59,11 @@ function Working({ count }) {
 // box in its header selects all the cards or none. While cards are selected, a bar under the table, in view at the bottom
 // of the window, acts on them: a new sentence for each, hide them from study or show them again, or delete them after
 // the learner confirms. Without a selection the bar is not there, and the table does not move when it appears.
-export default function CardsTable({ cards, onCardsChange }) {
+export default function CardsTable({
+  cards,
+  onCardsChange,
+  title = "Your cards",
+}) {
   const [editingId, setEditingId] = useState(null); // the id of the card being edited
   const [editError, setEditError] = useState(""); // the problem with what the learner wrote in the editor
   const [busy, setBusy] = useState(null); // { id, what } while the product answers; every button waits
@@ -234,7 +238,7 @@ export default function CardsTable({ cards, onCardsChange }) {
     return (
       <>
         <div className="cards-header">
-          <h2>Your cards</h2>
+          <h2>{title}</h2>
         </div>
         <p className="hint">No cards left.</p>
       </>
@@ -244,7 +248,7 @@ export default function CardsTable({ cards, onCardsChange }) {
   return (
     <>
       <div className="cards-header">
-        <h2>Your cards</h2>
+        <h2>{title}</h2>
         <ul className="legend" aria-label="What the icons do">
           {ACTIONS.map((action) => (
             <li key={action.id}>
@@ -318,7 +322,7 @@ export default function CardsTable({ cards, onCardsChange }) {
         className="cards-scroll"
         tabIndex={0}
         role="region"
-        aria-label="Your cards"
+        aria-label={title}
       >
         <table className="cards">
           <colgroup>

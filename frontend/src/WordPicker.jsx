@@ -21,6 +21,7 @@ export default function WordPicker({
   selections,
   setSelections,
   onEdit,
+  carded = null,
 }) {
   const [building, setBuilding] = useState(null); // id of the selection that Shift is adding to
   const [lastAdded, setLastAdded] = useState(null); // the word the learner added last
@@ -184,6 +185,21 @@ export default function WordPicker({
       setBubble(next);
   });
 
+  // With `carded` (the marked words that have a card), a mark that has no card yet is drawn with a dashed ring.
+  function pending(index) {
+    if (!carded) return false;
+    const selection = selectionOf(index);
+    if (selection) {
+      const item = selection.words
+        .map((word) => pieces[word].text)
+        .join(" ")
+        .toLocaleLowerCase();
+      return !carded.includes(item);
+    }
+    const key = keyOf(index);
+    return marked.includes(key) && !carded.includes(key);
+  }
+
   function render(piece, index) {
     if (!piece.isWord) {
       const before = selectionOf(index - 1);
@@ -213,6 +229,7 @@ export default function WordPicker({
       joinedWith(-1) && "join-l",
       joinedWith(1) && "join-r",
       linked && selection === hovered && index !== hover && "linked",
+      pending(index) && "pending",
     ]
       .filter(Boolean)
       .join(" ");
@@ -235,18 +252,20 @@ export default function WordPicker({
   }
 
   return (
-    <p className="reading words" aria-label="Text to mark" ref={boxRef}>
-      {pieces.map(render)}
-      {bubble && (
-        <span
-          className="bubble"
-          style={{ left: bubble.left, top: bubble.top }}
-          aria-hidden="true"
-        >
-          <small>Card word</small>
-          <b>{bubble.text}</b>
-        </span>
-      )}
-    </p>
+    <div className="words-scroll">
+      <p className="reading words" aria-label="Text to mark" ref={boxRef}>
+        {pieces.map(render)}
+        {bubble && (
+          <span
+            className="bubble"
+            style={{ left: bubble.left, top: bubble.top }}
+            aria-hidden="true"
+          >
+            <small>Card word</small>
+            <b>{bubble.text}</b>
+          </span>
+        )}
+      </p>
+    </div>
   );
 }

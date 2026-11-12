@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { createCards, loadCards } from "./api.js";
+import { createCards, loadTextCards } from "./api.js";
 import { libraryHeaders } from "./library.js";
 import CardsTable from "./CardsTable.jsx";
 import DeckPicker from "./DeckPicker.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
+import TextCounter, { tooLong } from "./TextCounter.jsx";
 import WordPicker from "./WordPicker.jsx";
-import { splitText, writtenForm } from "./words.js";
+import { markedItems, splitText } from "./words.js";
 import { readTextDraft, writeTextDraft } from "./textDraft.js";
 
 const LANGUAGES = [
@@ -47,9 +48,10 @@ function LanguagePicker({ label, name, value, onChange, taken }) {
   );
 }
 
-// `active` is true while the page is shown. The page stays in the document when the learner goes to Study, so the cards
-// are loaded again each time it is shown: a card hidden or changed in a study session shows as it is now.
-export default function TextPage({ active = true }) {
+// The form that adds a text. The page stays in the document when the learner goes to another page, so what was typed
+// is still there when they come back. `onTextSaved` is called when a text is saved, so the list of texts under the form
+// shows it. The box under the form has only the cards of the text just made; all the cards are on their own page.
+export default function TextPage({ onTextSaved = () => {} }) {
   const [draft] = useState(readTextDraft); // what was typed before a reload of this tab
   const [text, setText] = useState(draft.text);
   const [textLanguage, setTextLanguage] = useState(draft.textLanguage);
@@ -58,7 +60,7 @@ export default function TextPage({ active = true }) {
   const [selections, setSelections] = useState(draft.selections); // several words chosen as one card, see WordPicker
   const [message, setMessage] = useState(null);
   const [saved, setSaved] = useState(null);
-  const [cards, setCards] = useState(null);
+  const [cards, setCards] = useState(null); // the cards of the text just made
   const [asking, setAsking] = useState(false);
   const [deckIds, setDeckIds] = useState([]); // the decks the new cards go in
   const [decksChanged, setDecksChanged] = useState(0);
@@ -70,23 +72,10 @@ export default function TextPage({ active = true }) {
   // The decks are for one pair of languages, so the ticks go when the pair changes.
   useEffect(() => setDeckIds([]), [textLanguage, firstLanguage]);
 
-  // The cards are in the database, so they are there again after a refresh, whatever text they came from.
-  useEffect(() => {
-    if (!active) return;
-    loadCards()
-      .then((found) => found.length > 0 && setCards(found))
-      .catch(() => {}); // Without the product there is nothing to show; the page says so when the learner asks.
-  }, [active]);
-
   const pieces = useMemo(() => splitText(text), [text]);
 
   // What is marked: single words, then the selections of several words, each as its words with a space between.
-  const cardWords = [
-    ...marked.map((key) => writtenForm(pieces, key)),
-    ...selections
-      .filter((selection) => selection.words.length > 1)
-      .map((selection) => selection.words.map((i) => pieces[i].text).join(" ")),
-  ];
+  const cardWords = markedItems(pieces, marked, selections);
 
   function edited() {
     setMessage(null);
@@ -98,6 +87,10 @@ export default function TextPage({ active = true }) {
       setMessage(
         newNotice("No word is marked. Click the words you do not know."),
       );
+      return;
+    }
+    if (tooLong(text)) {
+      setMessage(newNotice(tooLong(text)));
       return;
     }
     if (!textLanguage || !firstLanguage) {
@@ -131,10 +124,12 @@ export default function TextPage({ active = true }) {
       }
       const savedText = await response.json();
       const created = await createCards(savedText.id, deckIds);
-      setCards(await loadCards());
+      setCards(await loadTextCards(savedText.id));
       setDecksChanged((count) => count + 1);
+      onTextSaved();
       // When the model has answered, tell how many cards got a sentence, so the learner sees that the work is done.
-      const made = created.cards.filter((card) => card.sentence).length;
+      // `created.cards` has every card of the text; `made` is how many this call made (issue #212).
+      const made = created.made;
       if (made > 0) {
         setSaved(
           newNotice(
@@ -179,7 +174,7 @@ export default function TextPage({ active = true }) {
   return (
     <>
       <section className="panel">
-        <h2>Your text</h2>
+        <h2>Add cards from a text</h2>
         <div className="fields">
           <LanguagePicker
             label="Text language"
@@ -207,8 +202,10 @@ export default function TextPage({ active = true }) {
               setSelections([]);
               setSaved(null);
               setMessage(null);
+              setCards(null);
             }}
           />
+          <TextCounter text={text} />
         </label>
 
         {text.trim() && (
@@ -277,7 +274,11 @@ export default function TextPage({ active = true }) {
 
       {cards && (
         <section className="panel cards-panel">
-          <CardsTable cards={cards} onCardsChange={setCards} />
+          <CardsTable
+            title="Cards of this text"
+            cards={cards}
+            onCardsChange={setCards}
+          />
         </section>
       )}
     </>

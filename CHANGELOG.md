@@ -10,6 +10,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A study card tells new, forgotten and review cards apart, and the Study page counts each kind.
 - The Study box shows a ring with the cards to study, a greeting, and about how many minutes the session takes, counting 30 seconds for each card ([DEC-066](docs/decisions.md#dec-066)).
 - Each deck on the Study page shows how much of it is learned, and the list of decks gives it as `learned_percent`.
+- The product keeps the texts you save: the Texts page lists them with their title, languages, marked words and cards, and each one opens on its own page where you can change the title, the text and the marked words, ask for the cards of new words, or delete the text, and its cards stay ([DEC-064](docs/decisions.md#dec-064)).
+- A text has a title, made from its first words if you give none, and at most 10,000 characters, with a count next to the text.
+- The box that edits a card lists the texts it comes from, each with a link to the text.
 
 ### Removed
 
@@ -18,10 +21,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - The product opens on the Study page, and each page has its own address, so reloading or going back keeps the page.
-- The text, its languages and the marked words of the Add a text page are kept when the page is reloaded, until the tab is closed or another library is opened.
+- The page that adds a text is now the Texts tab, "Add cards from a text", and the table of all the cards is on its own tab, "Your cards"; the page of a text shows only the cards of that text.
+- The message after asking for the cards counts only the cards made by that request, not the cards the text already had.
+- The text, its languages and the marked words of the form that adds cards from a text are kept when the page is reloaded, until the tab is closed or another library is opened.
 - The Study page has one box with the cards to study today split in new, forgotten and review, the button that starts a session beside them, and the decks to tick below, then the Reorder box over the whole width, with the whole sentence of each card.
 - The header is one bar with the name, the pages and the library, and on a phone the pages are in a bar at the bottom of the screen.
-- The cards of the Add a text page are loaded again each time it is shown, so a card hidden in a study session shows as hidden.
+- The cards of the Your cards page are loaded again each time it is shown, so a card hidden in a study session shows as hidden.
 - A study session shows only the card, with an arrow at the top left that goes back to Study, and no text before the translation.
 - In a study session you can edit the card, ask for a new sentence or hide it without leaving the session.
 - The logo and a green dot for the state of the product replace the written state of the API.

@@ -32,6 +32,14 @@ Use the [study queue](glossary.md#study-queue) to focus on the cards you want to
 - **Stories:** [US-04](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/30)
 - **Behavior:** [FR-008](functional-requirements/fr/FR-008.md)
 
+## Keep my texts and edit them with their cards
+
+Open the texts you saved, change their title, their words and the marked words, and make cards for new words, while the cards you already have stay.
+
+- **Stories:** [US-20](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/253)
+- **Behavior:** [FR-019](functional-requirements/fr/FR-019.md)
+- **Decisions:** [DEC-058](decisions.md#dec-058), [DEC-064](decisions.md#dec-064)
+
 ## Keep cards in decks
 
 Group your [cards](glossary.md#card) in [decks](glossary.md#deck) that you name, choose the decks when you ask for the cards of a text, and study only the decks you tick.

@@ -512,10 +512,6 @@ textarea {
 }
 
 /* The cards of a text, in a table the learner reviews. */
-.cards-panel {
-  margin-top: 1.5rem;
-}
-
 .cards {
   width: 100%;
   margin-top: 1rem;
@@ -525,7 +521,8 @@ textarea {
 }
 
 .col-word {
-  width: 6.5rem;
+  /* Wide enough for a word of ten or twelve letters to stay on one line, as "Verspätung" does. */
+  width: 9.5rem;
 }
 
 /* Wide enough for the five icons of a card to stay on one line. */
@@ -2127,4 +2124,231 @@ textarea {
   min-height: 1.5rem;
   margin: 0;
   font-size: 0.875rem;
+}
+
+/* A word marked in a saved text that has no card yet: a ring of dashes and no fill, so it differs from the words that
+   have a card. The ring is an outline, so the word keeps its size when the mark changes. */
+.word.pending[aria-pressed="true"] {
+  background: transparent;
+  color: var(--accent-soft-text);
+  outline: 2px dashed var(--accent-soft-text);
+  outline-offset: -2px;
+}
+
+.word.pending[aria-pressed="true"]:focus-visible {
+  outline-style: solid;
+  outline-offset: 2px;
+}
+
+/* The panels of a page are apart from each other. */
+.panel + .panel {
+  margin-top: 1.5rem;
+}
+
+/* A text field of one line, like the box of the text. */
+.wide-field {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+/* A link that looks like the buttons of the page. */
+a.secondary {
+  display: inline-block;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+/* The chips of a mark that has no card yet: a ring of dashes and no fill. */
+.chips li.pending {
+  border-style: dashed;
+  background: transparent;
+  color: var(--accent-soft-text);
+}
+
+.chips li.more {
+  padding-inline: 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* The texts the card comes from, in the box that edits it. */
+.from-texts {
+  margin-top: 1rem;
+}
+
+.from-texts ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.2rem;
+}
+
+/* The list of saved texts under the form. */
+.text-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.text-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.text-main {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.text-title {
+  display: block;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.text-row .meta {
+  margin: 0.15rem 0 0.6rem;
+  color: var(--muted);
+}
+
+.text-row .chips {
+  min-height: 0;
+}
+
+/* The page of one saved text. */
+.saved-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.back-link {
+  color: var(--accent-soft-text);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.pair {
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: help;
+}
+
+.counter {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.counter.full {
+  color: var(--error-text);
+}
+
+/* The marked words are apart from the box of the decks that comes after them, on both pages. */
+.marking {
+  margin-bottom: 1.5rem;
+}
+
+.saved-text .deck-picker {
+  margin-bottom: 0;
+}
+
+.status-line {
+  margin: 1.25rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.status-line.unsaved {
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.button-row .secondary {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+}
+
+.button-row .push {
+  margin-left: auto;
+}
+
+/* The buttons that delete. */
+.secondary.danger {
+  border-color: var(--error-text);
+  color: var(--error-text);
+}
+
+.secondary.danger:hover:not(:disabled) {
+  background: rgb(255 138 157 / 0.12);
+}
+
+.primary.danger {
+  background: var(--error-text);
+  color: #1a0f12;
+}
+
+.delete-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--error-text);
+  border-radius: var(--radius);
+}
+
+.delete-box h3 {
+  margin: 0;
+  color: var(--error-text);
+}
+
+.delete-box p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+/* A very long text scrolls inside its own box, so the page does not grow with it. The border is on the box that scrolls,
+   and the bubble over a selection is inside the text, so it moves with the words. */
+.words-scroll {
+  max-height: 22rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.words-scroll .reading {
+  border: 0;
+  border-radius: 0;
 }

@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import LibraryMenu from "./LibraryMenu.jsx";
 import Logo from "./Logo.jsx";
-import { PAGES, hrefOf, usePage } from "./router.js";
+import { PAGES, hrefOf, usePage, useTextId } from "./router.js";
 import StudyPage from "./StudyPage.jsx";
+import SavedText from "./SavedText.jsx";
+import TextList from "./TextList.jsx";
 import TextPage from "./TextPage.jsx";
+import YourCardsPage from "./YourCardsPage.jsx";
 
 // The icon of each page, for the bar at the bottom of a phone. They are drawn on a 24 by 24 grid.
 const ICONS = {
   study: "M8 5.5v13l11-6.5z",
-  text: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9 14h6",
+  texts:
+    "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9 14h6",
+  cards: "M4 7h16v12H4zM7 4h10M8 11h8M8 15h5",
 };
 
 function PageIcon({ id }) {
@@ -31,6 +36,8 @@ function PageIcon({ id }) {
 export default function App() {
   const [status, setStatus] = useState("checking");
   const page = usePage();
+  const textId = useTextId(); // the saved text the address opens, if any
+  const [textsChanged, setTextsChanged] = useState(0); // counts the texts saved on the form, so the list is read again
   const [inSession, setInSession] = useState(false); // a study session is open: the learner only sees the cards
 
   useEffect(() => {
@@ -73,10 +80,21 @@ export default function App() {
           <LibraryMenu />
         </div>
       </header>
-      {/* The text page stays in the document, so what the learner typed is still there when they come back. */}
-      <div hidden={page !== "text"}>
-        <TextPage active={page === "text"} />
+      {/* The form that adds a text stays in the document, so what the learner typed is still there when they come back.
+          The list of texts is under it; a saved text opens in place of both. */}
+      <div hidden={page !== "texts"}>
+        <div hidden={textId !== null}>
+          <TextPage onTextSaved={() => setTextsChanged((count) => count + 1)} />
+          <TextList
+            active={page === "texts" && textId === null}
+            reload={textsChanged}
+          />
+        </div>
+        {page === "texts" && textId !== null && (
+          <SavedText key={textId} textId={textId} />
+        )}
       </div>
+      {page === "cards" && <YourCardsPage />}
       {page === "study" && <StudyPage onSessionChange={setInSession} />}
     </main>
   );

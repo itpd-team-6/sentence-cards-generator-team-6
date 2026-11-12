@@ -697,6 +697,27 @@ The product moves between its pages by an address after the `#`, and the Study p
   The team chose an address after `#` because the browser reads it alone and the server needs no setting for it, and a small router of its own because no library is needed for these pages.
   The behavior the learner knows stays: the page "Add a text" keeps the typed text and the marked words when the learner goes to another page and comes back, and it keeps them with the languages when the learner reloads the page, in the storage of the tab until it is closed or another library is opened, and a study session ends when the learner leaves the Study page.
 
+## DEC-064
+
+The product keeps the texts the learner saves, as a library of texts that the learner opens, edits and deletes, and a text keeps its cards when it changes.
+
+- **Status:** Active
+- **Date:** 2026-11-12
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Customer said "We should let users edit the texts and preserve cards generated from texts, but while these texts exist we should store them and let users work on them, use them to create new cards." (Customer, [01:09:09]), as recorded in [`DEC-058`](#dec-058), and "we can introduce a label for a card: the text it comes from." (Customer, [01:10:07]) and "And this label can be used to go to the text, to the text page, I mean from a card." (Customer, [01:11:13]).
+  The product already saved each text with its marked words, but the learner had no way to see the saved texts again.
+  The team made these choices, which the Customer did not state:
+  - The Texts page has the form that adds cards from a text and, under it, the list of saved texts, and a saved text opens on its own page at `#/texts/` and its number. The page "Your cards" is a tab of its own at `#/your-cards`, as [`DEC-058`](#dec-058) says, and a page of a text shows only the cards of that text. The pages and their addresses of [`DEC-063`](#dec-063) are now Study, Texts and Your cards.
+  - A text has a title that is made from its first six words, 60 characters at most, when the learner gives none, and the learner can change it. The title is the name of the text in the list and in the label of a card.
+  - A text has at most 10,000 characters, and the page shows the count next to the text and turns it red at the maximum. The limit is the one that issue [#256](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/256) names.
+  - The pair of languages of a saved text cannot change, because its cards have their own pair of languages and would no longer fit the text.
+  - Changes to a saved text are kept only when the learner chooses "Save changes", and "Make cards" saves them first, so that the cards are made for the text the learner sees.
+  - Taking a mark away removes only the mark. The card stays in "Your cards" and in its decks, with its study data, in line with the card that is kept when its text is deleted ([`DEC-058`](#dec-058)). A mark whose word the new text no longer has is removed in the same way, and the page says so.
+  - A mark of several words is kept while the new text has its words in this order, and it is shown at the first place where they are found in this order. When the same words are in the text in two places, the page may show a different place than the one the learner chose; the card is the same.
+  - The box that edits a card lists the texts it comes from, each with a link to its page. The label of each card in the table "Your cards" that [`DEC-058`](#dec-058) asks for is not part of this decision: it is made with the search and the filters of "Your cards", together with the decks.
+    The answer that makes the cards now says how many cards the request made, so that the page does not count the cards the text already had.
+
 ## DEC-066
 
 The Study box shows an estimate of the time of a session, counting 30 seconds for each card, and the share of each deck that is learned.

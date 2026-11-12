@@ -64,12 +64,21 @@ class DeckRef(BaseModel):
     title: str
 
 
+class TextRef(BaseModel):
+    """A text that still has the word of a card (DEC-064)."""
+
+    id: int
+    title: str
+
+
 class CardResponse(BaseModel):
     id: int
     # A card has its own language pair and no text (DEC-020); the decks it is in say where it belongs.
     text_language: str
     first_language: str
     decks: list[DeckRef]
+    # The texts that still have the word marked; empty for a card whose texts are gone.
+    texts: list[TextRef] = []
     word: str
     # The context phrase that, with the word, identifies the card (DEC-013); None for a card made before phrases existed.
     phrase: str | None
@@ -91,8 +100,12 @@ class ExistingCard(BaseModel):
 
 
 class CreatedCards(BaseModel):
+    # Every card of the text, not only the new ones.
     cards: list[CardResponse]
     existing: list[ExistingCard]
+    # How many cards this call made. A word that already had a card, or that took the card the learner has with the same
+    # meaning, is not counted.
+    made: int = 0
 
 
 class CardsRequest(BaseModel):
@@ -320,7 +333,7 @@ def create_cards(
         cards_made=made,
         words_failed=len(errors),
     )
-    return CreatedCards(cards=cards, existing=existing)
+    return CreatedCards(cards=cards, existing=existing, made=made)
 
 
 @router.get("/api/texts/{text_id}/cards")
