@@ -752,3 +752,20 @@ The page "Your cards" is where the learner finds, searches, groups and organizes
   - The decks of the selected cards change in one step through the bar of the selected cards, and only the link between a card and its decks changes, so the card keeps its sentence and its study data. The box shows only the decks of the language pair of the cards, as [`DEC-020`](#dec-020) says a deck takes only cards of its pair.
   - The search, the ticked items, the grouping and the order stay in the browser while the tab is open, so that the learner who opens a text from a card finds the list as it was.
   - On a narrow screen the list of filters is a sheet from the bottom, opened by a button that shows the number of ticked items.
+
+## DEC-068
+
+The header is a bar as wide as the window with a pill that says how many cards the learner has to study today, on every page except Study, and a panel under it with the cards of each kind and of each deck.
+
+- **Status:** Active
+- **Date:** 2026-11-12
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Customer asked for the statistics at the top of the Study page ([`DEC-066`](#dec-066)), and the Study box already gives them there. The learner who is on another page cannot see them, so the team tries the same numbers in the header and will show it at the next sprint review, as nataliamotand told the Customer ([00:42:25]).
+  The team made these choices, which the Customer did not state:
+  - The pill counts the cards of all the decks, not the decks ticked on the Study page, because on another page the learner cannot see which decks are ticked, and a number that depends on it would be hard to read. The panel says "All decks" for that reason.
+  - The pill opens the Study page, and the panel opens only while the pointer rests on the pill or it has the focus, so that the number is always in view and the detail does not take room.
+  - The pill is not shown on the Study page, where the Study box already says the same, nor in a session, where the header is hidden.
+  - The header is not fixed, so that it takes no room from the page when the learner scrolls.
+  - The pill reads the cards with the calls of the Study page and adds no endpoint and no migration, and it reads them again when the learner changes page or something of the learner's data changes.
+  - On a narrow bar the time goes first and then the name of the product.
