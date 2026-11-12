@@ -78,3 +78,27 @@ test("a card that comes from no text, or the study session, shows no list", asyn
   await show({ showPhrase: false });
   expect(container.querySelector(".from-texts")).toBeNull();
 });
+
+test("the box shows the decks the card is in", async () => {
+  await show({
+    card: {
+      ...card,
+      decks: [
+        { id: 1, title: "Trains" },
+        { id: 2, title: "Travel" },
+      ],
+    },
+  });
+
+  const lists = [...container.querySelectorAll(".from-texts")].map(
+    (item) => item.textContent,
+  );
+  expect(
+    lists.some(
+      (text) =>
+        text.startsWith("In decks") &&
+        text.includes("Trains") &&
+        text.includes("Travel"),
+    ),
+  ).toBe(true);
+});

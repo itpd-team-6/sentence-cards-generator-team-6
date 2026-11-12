@@ -16,9 +16,12 @@ from pydantic import (
 
 from app.analytics import Tracker, get_tracker
 from app.database import (
+    DeckPairMismatch,
+    UnknownDeck,
     add_card,
     add_cards_to_decks,
     card_of_marked_word,
+    change_card_decks,
     delete_card,
     delete_cards,
     find_card_by_phrase,
@@ -153,6 +156,22 @@ class HiddenCards(CardIds):
     """The cards to hide from study, or to show again."""
 
     hidden: bool
+
+
+class CardDecks(CardIds):
+    """The decks to put the cards in and the decks to take them out of. At least one deck is needed, and a deck cannot be
+    both."""
+
+    add_deck_ids: list[int] = []
+    remove_deck_ids: list[int] = []
+
+    @model_validator(mode="after")
+    def at_least_one_change(self) -> "CardDecks":
+        if not self.add_deck_ids and not self.remove_deck_ids:
+            raise ValueError("Send at least one deck to add or to remove.")
+        if set(self.add_deck_ids) & set(self.remove_deck_ids):
+            raise ValueError("A deck cannot be added and removed in the same step.")
+        return self
 
 
 def card_response(card: dict, error: str | None = None) -> CardResponse:
@@ -396,6 +415,27 @@ def hide_cards(
 ) -> list[CardResponse]:
     """Hide the chosen cards from study, or show them again, in one step. When a card does not exist, none changes."""
     if not set_hidden(connection, chosen.card_ids, chosen.hidden):
+        raise HTTPException(status_code=404, detail="There is no card with one of these ids.")
+    ids = list(dict.fromkeys(chosen.card_ids))
+    return [card_response(get_card(connection, card_id)) for card_id in ids]
+
+
+@router.post("/api/cards/decks")
+def change_decks_of_cards(
+    chosen: CardDecks, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> list[CardResponse]:
+    """Put the chosen cards in decks and take them out of others, in one step (FR-020). A card keeps its sentence and its
+    study data. When a card or a deck does not exist (404), or a deck to add is for another language pair (422), nothing
+    changes."""
+    try:
+        done = change_card_decks(
+            connection, chosen.card_ids, chosen.add_deck_ids, chosen.remove_deck_ids
+        )
+    except UnknownDeck as error:
+        raise HTTPException(status_code=404, detail=str(error)) from None
+    except DeckPairMismatch as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+    if not done:
         raise HTTPException(status_code=404, detail="There is no card with one of these ids.")
     ids = list(dict.fromkeys(chosen.card_ids))
     return [card_response(get_card(connection, card_id)) for card_id in ids]

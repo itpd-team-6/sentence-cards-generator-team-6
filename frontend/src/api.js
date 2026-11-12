@@ -101,6 +101,18 @@ export const deleteCards = (cardIds) =>
 export const hideCards = (cardIds, hidden) =>
   call("/api/cards/hidden", json("POST", { card_ids: cardIds, hidden }));
 
+// Puts cards in the decks `addDeckIds` and takes them out of the decks `removeDeckIds`, in one step. Only the link to the
+// decks changes: a card keeps its sentence and its study data. The answer has the cards as they are now.
+export const changeCardDecks = (cardIds, addDeckIds, removeDeckIds) =>
+  call(
+    "/api/cards/decks",
+    json("POST", {
+      card_ids: cardIds,
+      add_deck_ids: addDeckIds,
+      remove_deck_ids: removeDeckIds,
+    }),
+  );
+
 export const newSentences = (cardIds) =>
   call("/api/cards/new-sentences", json("POST", { card_ids: cardIds }));
 

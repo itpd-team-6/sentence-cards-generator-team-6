@@ -662,6 +662,44 @@ def add_cards_to_decks(
     connection.commit()
 
 
+def change_card_decks(
+    connection: sqlite3.Connection,
+    card_ids: list[int],
+    add_deck_ids: list[int],
+    remove_deck_ids: list[int],
+) -> bool:
+    """Put cards in some decks and take them out of others, in one step. Only the link between a card and a deck changes:
+    the card keeps its sentence, its translation and its study data.
+
+    Returns False, and changes nothing, when a card does not exist. Raises `UnknownDeck`, or `DeckPairMismatch` when a deck
+    to add is for another language pair than a card, and then nothing is saved either.
+    """
+    ids = list(dict.fromkeys(card_ids))
+    marks = ", ".join("?" for _ in ids)
+    found = connection.execute(f"SELECT COUNT(*) FROM cards WHERE id IN ({marks})", ids).fetchone()[
+        0
+    ]
+    if found != len(ids):
+        return False
+    try:
+        link_to_decks(connection, ids, add_deck_ids)
+        for deck_id in dict.fromkeys(remove_deck_ids):
+            if (
+                connection.execute("SELECT 1 FROM decks WHERE id = ?", (deck_id,)).fetchone()
+                is None
+            ):
+                raise UnknownDeck(f"There is no deck with id {deck_id}.")
+            connection.execute(
+                f"DELETE FROM card_decks WHERE deck_id = ? AND card_id IN ({marks})",
+                [deck_id, *ids],
+            )
+    except BaseException:
+        connection.rollback()
+        raise
+    connection.commit()
+    return True
+
+
 def attach_decks(connection: sqlite3.Connection, cards: list[dict]) -> list[dict]:
     """Add `decks` (id and title, newest deck first) and `texts` (the texts that still have its word, newest first) to
     each card."""

@@ -7,6 +7,8 @@ export const ICON_PATHS = {
   lock: "M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2",
   openLock: "M7 11V8a5 5 0 0 1 9.6-2M5 11h14v10H5zM12 15v2",
   new: "M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5",
+  chevron: "M6 9l6 6 6-6",
+  stack: "M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4",
   delete: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v5M14 11v5",
 };
 

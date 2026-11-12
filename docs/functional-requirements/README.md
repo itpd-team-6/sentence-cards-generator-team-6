@@ -21,3 +21,4 @@
 | [FR-017](fr/FR-017.md) | Expose The Quality Signal Of Each Request With Its Environment       | `backend`                         | Active |
 | [FR-018](fr/FR-018.md) | Study In A Session That Shows Only The Card, And Fix The Card There  | `frontend`                        | Active |
 | [FR-019](fr/FR-019.md) | Keep The Texts Of The Learner And Edit Them With Their Cards         | `frontend`, `backend`, `database` | Active |
+| [FR-020](fr/FR-020.md) | Find, Search And Organize The Cards In Your Cards                    | `frontend`, `backend`             | Active |

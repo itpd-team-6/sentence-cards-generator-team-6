@@ -2352,3 +2352,1065 @@ a.secondary {
   border: 0;
   border-radius: 0;
 }
+
+/* "Your cards": the side list of filters at the left and the table at the right (FR-020). On a phone the side list is a
+   sheet that opens from the bottom, and the search and the button that opens it are one under the other. */
+.cards-layout {
+  display: grid;
+  min-height: 70vh;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.cards-main {
+  min-width: 0;
+}
+
+.cards-filters {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: calc(100vh - 2rem);
+  padding: 0.9rem 0.75rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.cards-filters h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.filters-head .grab,
+.cards-filters .filters-close,
+.filters-show,
+.filters-toggle,
+.filters-backdrop {
+  display: none;
+}
+
+.filter-part {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filter-part legend {
+  padding: 0;
+  margin-bottom: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filter-item:hover {
+  background: var(--accent-soft);
+}
+
+/* "All cards" at the top of the side list: chosen while no filter is ticked, and a click clears the filters. */
+.filter-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-all:hover {
+  background: var(--accent-soft);
+}
+
+.filter-all[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 700;
+}
+
+.filter-item.dim {
+  color: var(--muted);
+}
+
+.filter-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-count {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Any" and "All": one control with two parts, the chosen one filled. */
+.filter-mode {
+  display: flex;
+  gap: 2px;
+  margin-top: 0.5rem;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.filter-mode button {
+  flex: 1;
+  padding: 0.3rem 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.filter-mode button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 700;
+}
+
+.cards-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.cards-search-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cards-search {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  padding: 0.1rem 0.25rem 0.1rem 0.7rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.filter-chip button {
+  display: grid;
+  place-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.filter-chip button:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.filter-clear {
+  padding: 0.2rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.filter-clear:hover {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.filter-sentence {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.filter-open {
+  margin-left: 0.5rem;
+  color: var(--accent-soft-text);
+  font-weight: 700;
+}
+
+/* Under the word of a card: the text it came from, and the decks the learner ticked. */
+.origins {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.text-label {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--accent-soft-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more-texts {
+  color: var(--muted);
+}
+
+@media (max-width: 40rem) {
+  .cards-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filters-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+  }
+
+  .filters-badge {
+    min-width: 1.3rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .filters-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: block;
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  .cards-filters {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 41;
+    max-height: 80vh;
+    padding: 0.6rem 1.1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    border: 1px solid var(--border);
+    border-radius: 18px 18px 0 0;
+    background: var(--surface);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition:
+      transform 0.2s ease,
+      visibility 0.2s;
+  }
+
+  .cards-filters.open {
+    transform: none;
+    visibility: visible;
+  }
+
+  .filters-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.6rem;
+  }
+
+  .filters-head .grab {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    display: block;
+    width: 2rem;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--field-border);
+    transform: translateX(-50%);
+  }
+
+  .cards-filters .filters-close {
+    display: inline-flex;
+  }
+
+  .filters-show {
+    display: block;
+    width: 100%;
+  }
+}
+
+@media (max-width: 40rem) and (prefers-reduced-motion: reduce) {
+  .cards-filters {
+    transition: none;
+  }
+}
+
+/* The search box and the panel of results under it: a section for the cards, the texts and the decks that were found. */
+.cards-search-box {
+  position: relative;
+}
+
+.search-panel {
+  position: absolute;
+  inset: calc(100% + 0.4rem) 0 auto 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 24rem;
+  padding: 0.75rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.45);
+}
+
+/* The count of results at the left and, at the right, where to look as plain words: the chosen one has an underline. */
+.search-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0 0.25rem;
+}
+
+.search-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.search-scope {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.search-scope button {
+  padding: 0.15rem 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.search-scope button:hover {
+  color: var(--text);
+}
+
+.search-scope button[aria-pressed="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent-soft-text);
+  font-weight: 700;
+}
+
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  display: grid;
+  place-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.search-clear:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.cards-search-box .cards-search {
+  padding-right: 2.6rem;
+}
+
+.hit {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: rgb(255 214 102 / 0.28);
+  color: inherit;
+}
+
+.search-section h4 {
+  margin: 0.4rem 0 0.2rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.search-row-line {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.search-row {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-row:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.search-section .search-row,
+.search-section .search-row-line {
+  margin-bottom: 0.3rem;
+}
+
+.search-main {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-sub {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-open {
+  display: grid;
+  place-content: center;
+  width: 2.25rem;
+  border-radius: 8px;
+  color: var(--accent-soft-text);
+  text-decoration: none;
+}
+
+.search-open:hover {
+  background: var(--accent-soft);
+}
+
+.search-more {
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent-soft-text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* The box for the decks of the selected cards. */
+.deck-choices {
+  max-height: 16rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+/* Group by and sort, under the sentence of the list. */
+.cards-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.cards-view .filter-mode {
+  align-items: center;
+  margin-top: 0;
+}
+
+.cards-view .filter-mode button {
+  padding: 0.25rem 0.7rem;
+}
+
+/* "Group by" is only a word, not a button: it is outside the pill that holds the choices. */
+.view-group-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.view-group-wrap .view-label {
+  padding: 0;
+}
+
+.view-label {
+  padding: 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.sort-menu {
+  position: relative;
+}
+
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.sort-button:hover {
+  border-color: var(--muted);
+}
+
+.sort-button .view-label {
+  padding: 0;
+}
+
+.sort-current {
+  font-weight: 600;
+}
+
+.sort-list {
+  position: absolute;
+  inset: calc(100% + 0.35rem) auto auto 0;
+  z-index: 20;
+  display: flex;
+  min-width: 100%;
+  flex-direction: column;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.45);
+}
+
+.sort-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sort-list button:hover {
+  background: var(--accent-soft);
+}
+
+.sort-list button[aria-checked="true"] {
+  color: var(--accent-soft-text);
+  font-weight: 700;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.8rem;
+  color: var(--muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.cards-search {
+  padding-left: 2.5rem;
+}
+
+.filters-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/* The title of a group in the table of cards. */
+.cards .group-head th {
+  padding: 0.9rem 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.group-count {
+  margin-left: 0.5rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+@media (max-width: 40rem) {
+  .cards-view {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-group-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+  }
+
+  .cards-view .view-group button {
+    flex: 1;
+  }
+
+  .sort-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .sort-button .sort-current {
+    flex: 1;
+    text-align: left;
+  }
+
+  .sort-list {
+    right: 0;
+  }
+
+  .filters-toggle {
+    font-weight: 600;
+  }
+}
+
+/* The count of the list is on one line, and "Group by" and the order are under it, at the left. */
+.cards-info-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+/* The count and the chips are on one line, so a chip that appears does not push the cards down. */
+.cards-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  min-height: 2rem;
+}
+
+.list-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.9rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* "Your cards": a compact line for each card, in a rounded box. A click opens it. */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-row {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.card-row.flagged {
+  border-color: var(--accent);
+}
+
+.card-row.hidden-card .card-line {
+  opacity: 0.6;
+}
+
+.card-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  min-width: 0;
+}
+
+.card-main {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-word {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-sentence {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-line .origins {
+  display: flex;
+  flex: none;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  align-items: center;
+  order: 1;
+  width: 10rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.card-line .text-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-line .text-label {
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.card-status {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  align-items: center;
+  order: 3;
+  min-width: 2.1rem;
+  gap: 0.4rem;
+  color: var(--accent-soft-text);
+}
+
+.status-button {
+  display: inline-grid;
+  place-content: center;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.status-button:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.card-chevron {
+  flex: none;
+  order: 4;
+  display: grid;
+  place-content: center;
+  padding: 0.2rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.card-row.open .card-chevron svg {
+  transform: rotate(180deg);
+}
+
+.card-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem 0.9rem 2.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.card-detail .translation-line {
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.card-detail .translation-line > span {
+  flex: none;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.detail-actions button.icon {
+  width: auto;
+  height: auto;
+  min-height: 0;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* The title of a group is a button: a click closes the group, and the line keeps its title and its number of cards. */
+.card-list .group-head {
+  margin-top: 0.4rem;
+}
+
+.card-list .group-head button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-list .group-head button:hover {
+  background: var(--accent-soft);
+}
+
+.card-list .group-head button svg {
+  flex: none;
+  color: var(--muted);
+}
+
+.card-list .group-head button[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+.group-title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-list .group-head .group-count {
+  margin-left: auto;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-size: 0.8rem;
+}
+
+.fold-all {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.fold-all button {
+  padding: 0.15rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent-soft-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.fold-all button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.deck-count {
+  display: inline-flex;
+  flex: none;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  align-items: center;
+  order: 2;
+  width: 2.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.deck-count svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 40rem) {
+  .card-line {
+    flex-wrap: wrap;
+    row-gap: 0.3rem;
+  }
+
+  /* On a phone the word is over the sentence, and a long sentence takes two lines at most. */
+  .card-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.1rem;
+  }
+
+  .card-sentence {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .card-word {
+    max-width: 100%;
+  }
+
+  /* On a phone the number of decks and the text are on a row of their own, under the card. The empty piece after the
+     chevron is what ends the first row. */
+  .card-line::after {
+    content: "";
+    order: 3;
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  .card-status {
+    order: 1;
+    min-width: 0;
+  }
+
+  .card-chevron {
+    order: 2;
+  }
+
+  .deck-count {
+    order: 5;
+    width: auto;
+    padding-left: 2rem;
+  }
+
+  .card-line .origins {
+    order: 5;
+    flex: 1;
+    justify-content: flex-start;
+    width: auto;
+  }
+
+  .card-detail {
+    padding-left: 0.9rem;
+  }
+}
+
+/* The box has its own cross, so the one of the browser is not shown. Rows of cards and decks take the whole width. */
+.cards-search::-webkit-search-cancel-button {
+  appearance: none;
+  display: none;
+}
+
+.search-section > .search-row {
+  width: 100%;
+}
