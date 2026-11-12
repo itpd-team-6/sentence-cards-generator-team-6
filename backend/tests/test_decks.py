@@ -577,3 +577,89 @@ def test_the_answer_count_starts_at_one_for_a_card_that_already_waits() -> None:
     }
 
     assert counts == {1: 1, 2: 0, 3: 0}
+
+
+# --- Changing the decks of cards (FR-020) ----------------------------------------------------------------------------
+
+
+def make_cards_in(client: TestClient, deck_id: int, words: list[str]) -> list[dict]:
+    text_id = add_text(client, words)
+    return ask_for_cards(client, text_id, [deck_id]).json()["cards"]
+
+
+def change_decks(client: TestClient, card_ids: list[int], add=(), remove=()):
+    return client.post(
+        "/api/cards/decks",
+        json={"card_ids": card_ids, "add_deck_ids": list(add), "remove_deck_ids": list(remove)},
+    )
+
+
+def test_cards_are_put_in_decks_and_taken_out_in_one_step(client) -> None:
+    first = make_deck(client, "Trains").json()["id"]
+    second = make_deck(client, "Travel").json()["id"]
+    cards = make_cards_in(client, first, ["Bahnhof", "Zug"])
+    ids = [card["id"] for card in cards]
+
+    response = change_decks(client, ids, add=[second], remove=[first])
+
+    assert response.status_code == 200
+    for card in response.json():
+        assert [deck["id"] for deck in card["decks"]] == [second]
+    counts = {deck["id"]: deck["card_count"] for deck in client.get("/api/decks").json()}
+    assert counts == {first: 0, second: 2}
+
+
+def test_changing_the_decks_of_a_card_keeps_its_sentence_and_its_study_data(client) -> None:
+    first = make_deck(client, "Trains").json()["id"]
+    second = make_deck(client, "Travel").json()["id"]
+    card = make_cards_in(client, first, ["Zug"])[0]
+    client.post(f"/api/cards/{card['id']}/answer", json={"answer": "good"})
+    before = client.get("/api/cards").json()[0]
+
+    after = change_decks(client, [card["id"]], add=[second], remove=[first]).json()[0]
+
+    for key in ("id", "sentence", "translation", "phrase", "due_date", "flagged", "hidden"):
+        assert after[key] == before[key]
+    assert before["due_date"] is not None
+
+
+def test_a_card_taken_out_of_all_its_decks_stays_with_no_deck(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+
+    response = change_decks(client, [card["id"]], remove=[deck])
+
+    assert response.json()[0]["decks"] == []
+    assert len(client.get("/api/cards").json()) == 1
+
+
+def test_a_deck_of_another_language_pair_is_refused_and_nothing_changes(client) -> None:
+    german = make_deck(client, "German").json()["id"]
+    english = make_deck(client, "English", "en", "de").json()["id"]
+    other = make_deck(client, "More German").json()["id"]
+    card = make_cards_in(client, german, ["Zug"])[0]
+
+    response = change_decks(client, [card["id"]], add=[other, english], remove=[german])
+
+    assert response.status_code == 422
+    assert [deck["id"] for deck in client.get("/api/cards").json()[0]["decks"]] == [german]
+
+
+def test_a_card_or_a_deck_that_does_not_exist_changes_nothing(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+
+    assert change_decks(client, [card["id"], 999], remove=[deck]).status_code == 404
+    assert change_decks(client, [card["id"]], add=[999], remove=[deck]).status_code == 404
+    assert [d["id"] for d in client.get("/api/cards").json()[0]["decks"]] == [deck]
+
+
+def test_a_request_with_no_deck_or_with_the_same_deck_to_add_and_to_remove_is_refused(
+    client,
+) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+
+    assert change_decks(client, [card["id"]]).status_code == 422
+    assert change_decks(client, [card["id"]], add=[deck], remove=[deck]).status_code == 422
+    assert change_decks(client, [], add=[deck]).status_code == 422
