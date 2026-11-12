@@ -7,57 +7,22 @@ import {
   newSentence,
   newSentences,
 } from "./api.js";
+import CardEditDialog from "./CardEditDialog.jsx";
+import Icon, { ICON_PATHS } from "./Icon.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
 
 // What each icon of a card does. The legend shows these names, and the buttons are named after them for screen readers.
 const ACTIONS = [
-  { id: "edit", name: "Edit", icon: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" },
-  { id: "review", name: "Mark for review", icon: "M7 4h10v16l-5-4-5 4V4z" },
-  {
-    id: "hide",
-    name: "Hide",
-    icon: "M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4 4l16 16",
-  },
-  {
-    id: "lock",
-    name: "Lock translation",
-    icon: "M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2",
-  },
-  {
-    id: "new",
-    name: "New sentence",
-    icon: "M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5",
-  },
-  {
-    id: "delete",
-    name: "Delete",
-    icon: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v5M14 11v5",
-  },
+  { id: "edit", name: "Edit", icon: ICON_PATHS.edit },
+  { id: "review", name: "Mark for review", icon: ICON_PATHS.review },
+  { id: "hide", name: "Hide", icon: ICON_PATHS.hide },
+  { id: "lock", name: "Lock translation", icon: ICON_PATHS.lock },
+  { id: "new", name: "New sentence", icon: ICON_PATHS.new },
+  { id: "delete", name: "Delete", icon: ICON_PATHS.delete },
 ];
 
-// A small line icon. The text next to it, or the name of the button, says what it means, so the icon is hidden from
-// screen readers.
-function Icon({ path, filled = false, spinning = false }) {
-  return (
-    <svg
-      className={spinning ? "spin" : undefined}
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      aria-hidden="true"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d={path} />
-    </svg>
-  );
-}
-
 // The lock of a translation that is not locked: the shackle is open.
-const OPEN_LOCK = "M7 11V8a5 5 0 0 1 9.6-2M5 11h14v10H5zM12 15v2";
+const OPEN_LOCK = ICON_PATHS.openLock;
 
 const iconOf = (id) => ACTIONS.find((action) => action.id === id).icon;
 
@@ -95,7 +60,7 @@ function Working({ count }) {
 // of the window, acts on them: a new sentence for each, hide them from study or show them again, or delete them after
 // the learner confirms. Without a selection the bar is not there, and the table does not move when it appears.
 export default function CardsTable({ cards, onCardsChange }) {
-  const [editing, setEditing] = useState(null); // { id, phrase, sentence, translation } of the card being edited
+  const [editingId, setEditingId] = useState(null); // the id of the card being edited
   const [editError, setEditError] = useState(""); // the problem with what the learner wrote in the editor
   const [busy, setBusy] = useState(null); // { id, what } while the product answers; every button waits
   const [notes, setNotes] = useState({}); // card id -> the message about that card, or null when it went away
@@ -103,7 +68,6 @@ export default function CardsTable({ cards, onCardsChange }) {
   const [confirming, setConfirming] = useState(false); // asking whether to delete the selected cards
   const [batchNotice, setBatchNotice] = useState(null); // the problem with an action on several cards
   const deleteDialog = useRef(null);
-  const editDialog = useRef(null);
 
   const setNote = (id, message) =>
     setNotes((current) => ({
@@ -172,14 +136,8 @@ export default function CardsTable({ cards, onCardsChange }) {
     if (!asking && dialog.open) dialog.close();
   }, [asking, cards.length]);
 
-  // The editor is a modal box too. It closes when the card goes away, for instance after it was deleted.
-  const editedCard = editing && cards.find((card) => card.id === editing.id);
-  useEffect(() => {
-    const dialog = editDialog.current;
-    if (!dialog) return;
-    if (editedCard && !dialog.open) dialog.showModal();
-    if (!editedCard && dialog.open) dialog.close();
-  }, [editedCard]);
+  // The editor closes when the card goes away, for instance after it was deleted.
+  const editedCard = editingId && cards.find((card) => card.id === editingId);
 
   // Runs an action on the selected cards. Every button waits, as for one card; `what` says which action is running.
   async function actOnChosen(what, work) {
@@ -203,7 +161,7 @@ export default function CardsTable({ cards, onCardsChange }) {
           (card) => answered.find((item) => item.id === card.id) ?? card,
         ),
       );
-      setEditing(null);
+      setEditingId(null);
       // One message for all the cards, with the reason the model gave for the first one, not one message for each.
       const failed = answered.filter((item) => item.error);
       if (failed.length) {
@@ -234,7 +192,7 @@ export default function CardsTable({ cards, onCardsChange }) {
       await deleteCards(ids);
       onCardsChange(cards.filter((card) => !ids.includes(card.id)));
       untick(ids);
-      setEditing(null);
+      setEditingId(null);
     });
     setConfirming(false);
   }
@@ -242,7 +200,7 @@ export default function CardsTable({ cards, onCardsChange }) {
   const askForNewSentence = (card) =>
     act(card, "new", async () => {
       replace(await newSentence(card.id));
-      setEditing(null);
+      setEditingId(null);
     });
 
   const remove = (card) =>
@@ -250,53 +208,21 @@ export default function CardsTable({ cards, onCardsChange }) {
       await deleteCard(card.id);
       onCardsChange(cards.filter((item) => item.id !== card.id));
       untick([card.id]);
-      setEditing(null);
+      setEditingId(null);
     });
 
   const startEditing = (card) => {
     setEditError("");
-    setEditing({
-      id: card.id,
-      phrase: card.phrase ?? "",
-      sentence: card.sentence ?? "",
-      translation: card.translation ?? "",
-    });
+    setEditingId(card.id);
   };
 
-  // The translation follows the sentence unless the learner writes it or locks it: when only the sentence changes, the
-  // product translates the new one; a translation the learner writes is kept as written. The phrase identifies the card
-  // with its word (DEC-013): the product refuses a phrase that another card of the word already has, and the editor
-  // stays open with the reason, so nothing the learner wrote is lost.
-  async function save(card) {
-    const phrase = editing.phrase.trim().split(/\s+/).filter(Boolean).join(" ");
-    const sentence = editing.sentence.trim();
-    const translation = editing.translation.trim();
-    if (card.phrase && !phrase) {
-      setEditError("Write the context phrase.");
-      return;
-    }
-    if (!sentence) {
-      setEditError("Write the sentence.");
-      return;
-    }
-    if (card.translation && !translation) {
-      setEditError("Write the translation.");
-      return;
-    }
-    const fields = {};
-    if (phrase && phrase !== (card.phrase ?? "")) fields.phrase = phrase;
-    if (sentence !== card.sentence) fields.sentence = sentence;
-    if (translation && translation !== card.translation)
-      fields.translation = translation;
-    if (Object.keys(fields).length === 0) {
-      setEditing(null);
-      return;
-    }
+  // Saves what the editor sends: only the fields that changed. A failure leaves the editor open with the reason.
+  async function save(card, fields) {
     setBusy({ id: card.id, what: "save" });
     setEditError("");
     try {
       replace(await changeCard(card.id, fields));
-      setEditing(null);
+      setEditingId(null);
     } catch (error) {
       setEditError(error.message);
     } finally {
@@ -378,91 +304,16 @@ export default function CardsTable({ cards, onCardsChange }) {
           </button>
         </div>
       </dialog>
-      <dialog
-        ref={editDialog}
-        className="modal editor"
-        aria-labelledby="edit-title"
-        onClose={() => setEditing(null)}
-        onClick={(event) =>
-          event.target === event.currentTarget && !busy && setEditing(null)
-        }
-      >
-        {editedCard && (
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              save(editedCard);
-            }}
-          >
-            <h3 id="edit-title">Edit {editedCard.word}</h3>
-            <label className="field-label" htmlFor="edit-phrase">
-              Context phrase
-            </label>
-            <input
-              id="edit-phrase"
-              type="text"
-              autoFocus
-              autoComplete="off"
-              aria-describedby="edit-phrase-hint"
-              value={editing.phrase}
-              placeholder={
-                editedCard.phrase ? undefined : "No context phrase yet"
-              }
-              onChange={(event) =>
-                setEditing({ ...editing, phrase: event.target.value })
-              }
-            />
-            <p id="edit-phrase-hint" className="note">
-              Three or four words that show the meaning {editedCard.word} has on
-              this card. A word has only one card for each context phrase.
-            </p>
-            <label className="field-label" htmlFor="edit-sentence">
-              Sentence
-            </label>
-            <textarea
-              id="edit-sentence"
-              value={editing.sentence}
-              onChange={(event) =>
-                setEditing({ ...editing, sentence: event.target.value })
-              }
-            />
-            <label className="field-label" htmlFor="edit-translation">
-              Translation
-            </label>
-            <textarea
-              id="edit-translation"
-              aria-describedby="edit-translation-hint"
-              value={editing.translation}
-              onChange={(event) =>
-                setEditing({ ...editing, translation: event.target.value })
-              }
-            />
-            <p id="edit-translation-hint" className="note">
-              {editedCard.translation_locked
-                ? "The translation is locked, so it stays when the sentence changes."
-                : "Change only the sentence and the translation is made again when you save."}
-            </p>
-            {editError && (
-              <p className="form-error" role="alert">
-                {editError}
-              </p>
-            )}
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="secondary"
-                disabled={busy}
-                onClick={() => setEditing(null)}
-              >
-                Cancel
-              </button>
-              <button type="submit" className="primary" disabled={busy}>
-                {working(editedCard, "save") ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </form>
-        )}
-      </dialog>
+      {editedCard && (
+        <CardEditDialog
+          key={editedCard.id}
+          card={editedCard}
+          saving={working(editedCard, "save")}
+          error={editError}
+          onSave={(fields) => save(editedCard, fields)}
+          onCancel={() => setEditingId(null)}
+        />
+      )}
       <div
         className="cards-scroll"
         tabIndex={0}

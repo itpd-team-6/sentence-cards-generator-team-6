@@ -27,13 +27,3 @@ export function clearTickedDecks() {
     // Nothing was remembered.
   }
 }
-
-// The order of the cards of a session, mixed. It is a copy: the order saved in the product does not change.
-export function shuffled(items, random = Math.random) {
-  const copy = [...items];
-  for (let place = copy.length - 1; place > 0; place -= 1) {
-    const other = Math.floor(random() * (place + 1));
-    [copy[place], copy[other]] = [copy[other], copy[place]];
-  }
-  return copy;
-}

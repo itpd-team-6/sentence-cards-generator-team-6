@@ -80,6 +80,7 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
         "due_date": "2026-10-16",
         "due_at": "2026-10-16T00:00:00.001000",
         "interval_days": 0,
+        "answers": 0,
     }
 
 
@@ -219,6 +220,7 @@ def test_a_database_made_by_the_released_version_keeps_its_texts_and_cards() -> 
         "due_date": "2026-10-20",
         "due_at": "2026-10-20T00:00:00.001000",
         "interval_days": 4,
+        "answers": 1,
     }
 
 
@@ -332,7 +334,9 @@ def test_a_database_made_by_the_released_version_has_no_hidden_card() -> None:
 def test_a_database_made_before_phrases_keeps_its_cards_and_they_have_no_phrase(
     monkeypatch,
 ) -> None:
-    monkeypatch.setattr(database, "MIGRATIONS", MIGRATIONS[:-1])
+    monkeypatch.setattr(
+        database, "MIGRATIONS", MIGRATIONS[:5]
+    )  # up to the phrases, before the decks
     connection = connect()
     init_db(connection)
     text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"])

@@ -90,6 +90,7 @@ def test_the_session_has_the_sentence_and_the_translation_of_each_card() -> None
                 "sentence": "Der Zug kommt.",
                 "translation": "The train comes.",
                 "due_date": "2026-10-16",
+                "stage": "new",
                 "forecast": {
                     "again": {"interval_days": 0, "due_date": "2026-10-16"},
                     "hard": {"interval_days": 1, "due_date": "2026-10-17"},
@@ -160,6 +161,25 @@ def test_an_again_answer_leaves_the_card_due_today_so_it_comes_back_in_the_sessi
             "interval_days": 0,
         }
         assert [item["word"] for item in client.get("/api/study/due").json()] == ["Zug"]
+
+
+def test_a_card_is_new_until_it_is_answered_forgotten_after_again_and_due_after_a_good_answer() -> (
+    None
+):
+    with study_client() as client:
+        add_cards(card("Zug", TODAY))
+        stage = lambda: client.get("/api/study/due").json()[0]["stage"]  # noqa: E731
+        assert stage() == "new"
+
+        client.post("/api/cards/1/answer", json={"answer": "again"})
+        assert stage() == "forgotten"
+
+        connection = connect()
+        try:
+            update_card(connection, 1, interval_days=4, due_date="2026-10-16")
+        finally:
+            connection.close()
+        assert stage() == "due"
 
 
 def test_each_card_of_the_session_says_when_it_comes_back_for_each_of_the_four_answers() -> None:

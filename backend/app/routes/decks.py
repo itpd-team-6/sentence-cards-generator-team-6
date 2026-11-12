@@ -39,6 +39,7 @@ class DeckResponse(BaseModel):
     text_language: Language
     first_language: Language
     card_count: int
+    learned_percent: int = 0
 
 
 @router.get("/api/decks")

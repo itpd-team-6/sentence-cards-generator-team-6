@@ -1,9 +1,5 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import {
-  readTickedDecks,
-  shuffled,
-  writeTickedDecks,
-} from "./deckSelection.js";
+import { readTickedDecks, writeTickedDecks } from "./deckSelection.js";
 
 beforeEach(() => localStorage.clear());
 
@@ -45,14 +41,4 @@ test("a browser that refuses its storage still works", () => {
 
   refuse.mockRestore();
   refuseWrite.mockRestore();
-});
-
-test("shuffling gives the same cards in another order and leaves the list alone", () => {
-  const cards = [1, 2, 3, 4, 5];
-
-  const mixed = shuffled(cards, () => 0);
-
-  expect(cards).toEqual([1, 2, 3, 4, 5]);
-  expect([...mixed].sort()).toEqual(cards);
-  expect(mixed).not.toEqual(cards);
 });
