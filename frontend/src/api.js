@@ -1,5 +1,8 @@
 import { LIBRARY_HEADER, libraryHeaders } from "./library.js";
 
+// The event the window gets after a call that changed something, so the header can read what there is to study again.
+export const DATA_CHANGED = "sentence-cards:data-changed";
+
 // The calls to the product's API. A failed call throws an Error whose message is safe to show the learner, and whose
 // `status` is the HTTP status of the answer.
 async function call(url, options = {}) {
@@ -11,6 +14,9 @@ async function call(url, options = {}) {
     });
   } catch {
     throw new Error("The product could not be reached. Is it running?");
+  }
+  if (response.ok && options.method && options.method !== "GET") {
+    window.dispatchEvent(new Event(DATA_CHANGED));
   }
   if (response.status === 204) {
     return null;
