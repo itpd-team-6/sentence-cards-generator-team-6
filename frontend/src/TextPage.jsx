@@ -3,50 +3,12 @@ import { createCards, loadTextCards } from "./api.js";
 import { libraryHeaders } from "./library.js";
 import CardsTable from "./CardsTable.jsx";
 import DeckPicker from "./DeckPicker.jsx";
+import LanguagePicker from "./LanguagePicker.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
 import TextCounter, { tooLong } from "./TextCounter.jsx";
 import WordPicker from "./WordPicker.jsx";
 import { markedItems, splitText } from "./words.js";
 import { readTextDraft, writeTextDraft } from "./textDraft.js";
-
-const LANGUAGES = [
-  { code: "ru", name: "Russian" },
-  { code: "en", name: "English" },
-  { code: "de", name: "German" },
-];
-
-// Three languages fit as buttons, so the learner sees them all and picks one with one click.
-// Clicking the chosen language again, or pressing Space on it, clears it.
-// `taken` is the language chosen in the other picker: the text and the cards need two different languages.
-function LanguagePicker({ label, name, value, onChange, taken }) {
-  return (
-    <fieldset className="picker">
-      <legend className="field-label">{label}</legend>
-      <div className="options">
-        {LANGUAGES.map((language) => (
-          <label className="option" key={language.code}>
-            <input
-              type="radio"
-              name={name}
-              value={language.code}
-              checked={value === language.code}
-              disabled={language.code === taken}
-              onChange={() => onChange(language.code)}
-              onClick={() => value === language.code && onChange("")}
-              onKeyDown={(event) => {
-                if (event.key === " " && value === language.code) {
-                  event.preventDefault();
-                  onChange("");
-                }
-              }}
-            />
-            <span>{language.name}</span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
 
 // The form that adds a text. The page stays in the document when the learner goes to another page, so what was typed
 // is still there when they come back. `onTextSaved` is called when a text is saved, so the list of texts under the form

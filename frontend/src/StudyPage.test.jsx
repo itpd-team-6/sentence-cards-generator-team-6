@@ -2,6 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import StudyPage, { forgetLastStudy } from "./StudyPage.jsx";
+import { requestStartNow, writeTickedDecks } from "./deckSelection.js";
 import {
   answerCard,
   changeCard,
@@ -109,6 +110,44 @@ test("skips a card that was deleted while the session was open", async () => {
   expect(container.querySelector(".study-word").textContent).toBe("Baum");
   expect(document.body.textContent).toContain("was deleted");
   expect(container.textContent).toContain("1 card left in this session");
+});
+
+test("a session asked for by the page of a deck starts at once with that deck, and a reload does not start another", async () => {
+  loadDueCards.mockResolvedValue([dueCard(1, "Haus")]);
+  writeTickedDecks([1]);
+  requestStartNow();
+  await show();
+
+  expect(loadDueCards).toHaveBeenCalledWith([1]);
+  expect(container.querySelector(".study-word").textContent).toBe("Haus");
+
+  await act(async () => root.unmount());
+  container.remove();
+  await show();
+  expect(container.querySelector(".study-word")).toBeNull();
+});
+
+test("the arrow of a session asked for by the page of a deck goes back to that deck, and any other session goes back to the Study box", async () => {
+  loadDueCards.mockResolvedValue([dueCard(1, "Haus")]);
+  writeTickedDecks([1]);
+  requestStartNow("#/decks/1");
+  await show();
+
+  const arrow = container.querySelector(".back-button");
+  expect(arrow.getAttribute("aria-label")).toBe("Back to the deck");
+  await act(async () => arrow.click());
+  expect(window.location.hash).toBe("#/decks/1");
+
+  await act(async () => root.unmount());
+  container.remove();
+  window.location.hash = "#/study";
+  await show();
+  await act(async () => button("Start session").click());
+  const own = container.querySelector(".back-button");
+  expect(own.getAttribute("aria-label")).toBe("Back to Study");
+  await act(async () => own.click());
+  expect(window.location.hash).toBe("#/study");
+  expect(container.querySelector(".study-title")).not.toBeNull();
 });
 
 test("no deck is ticked the first time, so a session cannot start", async () => {

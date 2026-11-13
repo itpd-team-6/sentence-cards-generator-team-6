@@ -14,7 +14,8 @@ const stateOf = (deck, cards) => {
 // The box where the learner changes the decks of the chosen cards (FR-020). Each deck of the cards' language pair has a
 // box: ticked when every chosen card is in it, dashed when only some are, empty when none is. Ticking a deck puts all the
 // cards in it, and unticking it takes them all out. Only the cards' link to the decks changes, so they keep their
-// progress. `onSave` gets the decks to add and the decks to remove, and the parent shows a problem through `error`.
+// progress. The deck "Uncategorized" is not offered: a card goes there by itself when it is in no other deck (DEC-065).
+// `onSave` gets the decks to add and the decks to remove, and the parent shows a problem through `error`.
 export default function CardDecksDialog({
   cards,
   decks,
@@ -29,7 +30,9 @@ export default function CardDecksDialog({
   const available =
     pairs.length === 1
       ? decks.filter(
-          (deck) => `${deck.text_language}>${deck.first_language}` === pairs[0],
+          (deck) =>
+            !deck.uncategorized &&
+            `${deck.text_language}>${deck.first_language}` === pairs[0],
         )
       : [];
   const [choice, setChoice] = useState(() =>

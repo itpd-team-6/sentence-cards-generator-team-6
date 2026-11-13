@@ -125,3 +125,18 @@ test("a problem with the decks is shown and the box stays open", async () => {
     "There is no deck with id 7.",
   );
 });
+
+test("the deck Uncategorized is not offered, because a card goes there by itself", async () => {
+  const uncategorized = {
+    id: 9,
+    title: "Uncategorized",
+    uncategorized: true,
+    ...DE_RU,
+  };
+  await show([inTrains], { decks: [trains, travel, uncategorized] });
+
+  const names = [...container.querySelectorAll(".filter-name")].map(
+    (name) => name.textContent,
+  );
+  expect(names).toEqual(["Trains", "Travel"]);
+});

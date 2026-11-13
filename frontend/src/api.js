@@ -65,6 +65,21 @@ export const createDeck = (title, textLanguage, firstLanguage) =>
     }),
   );
 
+// One deck, with how many of its cards are only in it (`cards_only_here`) and how many are also in another deck
+// (`cards_elsewhere`), which is what the learner needs to know before deleting it (DEC-065).
+export const loadDeck = (deckId) => call(`/api/decks/${deckId}`);
+
+// A new title for a deck, with the rules of a new deck's title. The deck "Uncategorized" cannot be renamed.
+export const renameDeck = (deckId, title) =>
+  call(`/api/decks/${deckId}`, json("PATCH", { title }));
+
+// Deletes a deck. `cards` says what happens to the cards that are in no other deck: "delete" deletes them and "keep"
+// puts them in the deck "Uncategorized" of their language pair. A deck with no such card needs no choice.
+export const deleteDeck = (deckId, cards) =>
+  call(`/api/decks/${deckId}${cards ? `?cards=${cards}` : ""}`, {
+    method: "DELETE",
+  });
+
 // A card for each marked word of the text that has none yet, all of them in the decks `deckIds`.
 export const createCards = (textId, deckIds) =>
   call(`/api/texts/${textId}/cards`, json("POST", { deck_ids: deckIds }));

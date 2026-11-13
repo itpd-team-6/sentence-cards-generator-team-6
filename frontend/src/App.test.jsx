@@ -81,13 +81,14 @@ afterEach(async () => {
   container.remove();
 });
 
-test("the product opens on the Study page, and Texts is the second tab and Your cards the third", async () => {
+test("the product opens on the Study page, with Texts, Your cards and Decks after it", async () => {
   await show();
 
   expect(tabs().map((tab) => tab.textContent)).toEqual([
     "Study",
     "Texts",
     "Your cards",
+    "Decks",
   ]);
   expect(current().textContent).toBe("Study");
   expect(container.textContent).toContain("Study page");
@@ -108,6 +109,7 @@ test("the tabs are links to the address of their page", async () => {
     "#/study",
     "#/texts",
     "#/your-cards",
+    "#/decks",
   ]);
 });
 
