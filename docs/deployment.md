@@ -85,7 +85,8 @@ The release candidate goes to staging first, and the same commit then goes to pr
 
    Then create each copy's `.env` from [`.env.example`](../.env.example), with the values of its environment.
 
-4. Update the staging copy to the commit and rebuild it, following [`setup.md`](setup.md#install) for the install and the build:
+4. Update the staging copy to the commit and rebuild it, following [`setup.md`](setup.md#install) for the install and the build.
+   Before the update, copy the staging database file and the folder `libraries` next to it, as the production steps below do, because a migration changes the cards in them ([`DEC-065`](decisions.md#dec-065)).
 
    ```bash
    cd /opt/sentence-cards/staging

@@ -87,3 +87,11 @@ The header shows how many cards are to study today and about how long they take,
 - **Stories:** [US-17](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234)
 - **Behavior:** [FR-021](functional-requirements/fr/FR-021.md)
 - **Decisions:** [DEC-068](decisions.md#dec-068)
+
+## Manage my decks and open the cards of a deck
+
+Open all your decks on their own tab, rename and delete them, choose what happens to the cards that are only in a deleted deck, open a deck to see and change its cards, and study only that deck.
+
+- **Stories:** [US-20](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/253)
+- **Behavior:** [FR-022](functional-requirements/fr/FR-022.md)
+- **Decisions:** [DEC-065](decisions.md#dec-065), [DEC-069](decisions.md#dec-069)

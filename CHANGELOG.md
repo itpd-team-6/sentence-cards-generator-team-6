@@ -16,12 +16,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Your cards has a list of filters by deck, text and status, with the number of cards of each, a search box for cards, texts and decks, and chips that show what is filtered; the learner can group the cards by deck or by text, sort them, and put the selected cards in decks or take them out ([DEC-067](docs/decisions.md#dec-067)).
 - The header shows, on every page but Study, how many cards are to study today and about how long they take, and a panel gives the cards of each kind and of each deck; a click opens the Study page ([DEC-068](docs/decisions.md#dec-068)).
 
+- The Decks tab shows each deck as a tile, in a section for each language pair, with buttons to show only some pairs and, from six decks, a search, and each tile has its cards to study today, its share learned and its cards, with a button that makes a deck; a deck opens on its own page, where you rename it, search and change its cards, add cards to it, study only it, with the arrow of that session going back to the deck, or delete it ([DEC-065](docs/decisions.md#dec-065)).
+- When you delete a deck, you choose to delete the cards that are only in it or to keep them in the deck "Uncategorized"; the cards that are also in another deck are never deleted.
+- The opened card in a list shows its decks as links that open each deck.
+
 ### Removed
 
 - The option to shuffle one study session.
 
 ### Changed
 
+- The list of texts on the Texts page scrolls in a box of its own, like the lists of cards, and the scroll bars of the filters and of the decks have the same look as the other lists.
+- Enter in the search of Your cards takes what was typed even if it is not complete: the decks that have it in the title are ticked when no card has it, or else the texts.
+- "Uncategorized" is now a deck for each language pair, made by a migration for the cards that were in no deck; a card that leaves its last deck goes to it, and it cannot be renamed ([DEC-065](docs/decisions.md#dec-065)).
+- The estimated time of today's cards is in the panel of the header, not in its pill ([DEC-069](docs/decisions.md#dec-069)).
 - The product opens on the Study page, and each page has its own address, so reloading or going back keeps the page.
 - The header is a bar as wide as the window, with the name of the product in smaller type.
 - The page that adds a text is now the Texts tab, "Add cards from a text", and the table of all the cards is on its own tab, "Your cards"; the page of a text shows only the cards of that text.
@@ -63,6 +71,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- "Collapse all" and "Expand all" in Your cards no longer stay off after the cards are grouped another way: they count only the groups on the screen.
+- In the lists of cards, the word of a card shows whole; the sentence is the part that is cut when the line has no room.
 - A card deleted while a study session is open no longer blocks the session: it is skipped with a message and the session goes on with the next card ([DEC-032](docs/decisions.md#dec-032)).
 
 ## [0.2.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.2.0) - 2026-10-25
