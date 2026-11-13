@@ -305,6 +305,7 @@ def test_a_deck_is_made_with_a_clean_title_and_starts_empty(client) -> None:
         "first_language": "en",
         "card_count": 0,
         "learned_percent": 0,
+        "uncategorized": False,
     }
 
 
@@ -623,13 +624,13 @@ def test_changing_the_decks_of_a_card_keeps_its_sentence_and_its_study_data(clie
     assert before["due_date"] is not None
 
 
-def test_a_card_taken_out_of_all_its_decks_stays_with_no_deck(client) -> None:
+def test_a_card_taken_out_of_all_its_decks_goes_to_uncategorized(client) -> None:
     deck = make_deck(client, "Trains").json()["id"]
     card = make_cards_in(client, deck, ["Zug"])[0]
 
     response = change_decks(client, [card["id"]], remove=[deck])
 
-    assert response.json()[0]["decks"] == []
+    assert [d["title"] for d in response.json()[0]["decks"]] == ["Uncategorized"]
     assert len(client.get("/api/cards").json()) == 1
 
 
@@ -663,3 +664,327 @@ def test_a_request_with_no_deck_or_with_the_same_deck_to_add_and_to_remove_is_re
     assert change_decks(client, [card["id"]]).status_code == 422
     assert change_decks(client, [card["id"]], add=[deck], remove=[deck]).status_code == 422
     assert change_decks(client, [], add=[deck]).status_code == 422
+
+
+# --- Managing the decks: rename, delete and the deck "Uncategorized" (DEC-065) -----------------------------------
+
+
+def uncategorized_of(client: TestClient, text_language="de", first_language="en") -> dict | None:
+    for deck in client.get("/api/decks").json():
+        if (
+            deck["uncategorized"]
+            and deck["text_language"] == text_language
+            and deck["first_language"] == first_language
+        ):
+            return deck
+    return None
+
+
+def titles_of(client: TestClient) -> list[str]:
+    return sorted(deck["title"] for deck in client.get("/api/decks").json())
+
+
+def database_before_the_uncategorized_deck() -> sqlite3.Connection:
+    """A database made by the migrations that were on `main` before DEC-065, with two decks and cards in no deck."""
+    database.MIGRATIONS[:] = MIGRATIONS[:8]
+    try:
+        connection = open_database()
+    finally:
+        database.MIGRATIONS[:] = ALL_MIGRATIONS
+    return connection
+
+
+ALL_MIGRATIONS = list(MIGRATIONS)
+
+
+def old_deck(
+    connection: sqlite3.Connection, title: str, text_language="de", first_language="en"
+) -> int:
+    """A deck made the way the database before migration 9 made it."""
+    cursor = connection.execute(
+        "INSERT INTO decks (title, text_language, first_language) VALUES (?, ?, ?)",
+        (title, text_language, first_language),
+    )
+    return cursor.lastrowid
+
+
+def old_card(
+    connection: sqlite3.Connection, word: str, text_language="de", first_language="en", deck_id=None
+) -> int:
+    """A card made the way the database before migration 9 made it, in a deck or in none."""
+    cursor = connection.execute(
+        "INSERT INTO cards (text_language, first_language, word, due_date) VALUES (?, ?, ?, ?)",
+        (text_language, first_language, word, TODAY.isoformat()),
+    )
+    if deck_id is not None:
+        connection.execute(
+            "INSERT INTO card_decks (card_id, deck_id) VALUES (?, ?)", (cursor.lastrowid, deck_id)
+        )
+    return cursor.lastrowid
+
+
+def decks_of_card(connection: sqlite3.Connection, card_id: int) -> list[int]:
+    rows = connection.execute(
+        "SELECT deck_id FROM card_decks WHERE card_id = ? ORDER BY deck_id", (card_id,)
+    ).fetchall()
+    return [row["deck_id"] for row in rows]
+
+
+def test_the_migration_puts_the_cards_that_are_in_no_deck_in_uncategorized_of_their_pair() -> None:
+    connection = database_before_the_uncategorized_deck()
+    trains = old_deck(connection, "Trains")
+    in_deck = old_card(connection, "Zug", deck_id=trains)
+    german = old_card(connection, "Haus")
+    english = old_card(connection, "cat", "en", "de")
+    connection.commit()
+
+    init_db(connection)
+
+    decks = {
+        (d["text_language"], d["first_language"]): d
+        for d in list_decks(connection)
+        if d["uncategorized"]
+    }
+    assert sorted(decks) == [("de", "en"), ("en", "de")]
+    assert {d["title"] for d in decks.values()} == {"Uncategorized"}
+    assert decks_of_card(connection, german) == [decks[("de", "en")]["id"]]
+    assert decks_of_card(connection, english) == [decks[("en", "de")]["id"]]
+    assert decks_of_card(connection, in_deck) == [trains]
+
+
+def test_the_migration_makes_no_uncategorized_deck_when_every_card_is_in_a_deck() -> None:
+    connection = database_before_the_uncategorized_deck()
+    trains = old_deck(connection, "Trains")
+    old_card(connection, "Zug", deck_id=trains)
+    connection.commit()
+
+    init_db(connection)
+
+    decks = list_decks(connection)
+    assert [d["title"] for d in decks] == ["Trains"]
+    assert not decks[0]["uncategorized"]
+
+
+def test_a_deck_the_learner_titled_uncategorized_becomes_the_marked_deck() -> None:
+    connection = database_before_the_uncategorized_deck()
+    own = old_deck(connection, "uncategorized")
+    card = old_card(connection, "Zug")
+    connection.commit()
+
+    init_db(connection)
+
+    decks = list_decks(connection)
+    assert [d["id"] for d in decks] == [own]
+    assert decks[0]["uncategorized"]
+    assert decks_of_card(connection, card) == [own]
+
+
+def test_a_deck_is_renamed_with_the_rules_of_a_new_title(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+
+    response = client.patch(f"/api/decks/{deck}", json={"title": "  Long   trips "})
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Long trips"
+    assert titles_of(client) == ["Long trips"]
+
+
+def test_a_deck_may_change_the_case_of_its_own_title(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+
+    assert client.patch(f"/api/decks/{deck}", json={"title": "TRAINS"}).json()["title"] == "TRAINS"
+
+
+def test_a_title_that_another_deck_of_the_pair_has_is_refused(client) -> None:
+    make_deck(client, "Trains")
+    other = make_deck(client, "Travel").json()["id"]
+    make_deck(client, "Trains", "en", "de")
+
+    assert client.patch(f"/api/decks/{other}", json={"title": "trains"}).status_code == 409
+    assert titles_of(client) == ["Trains", "Trains", "Travel"]
+
+
+@pytest.mark.parametrize("title", ["", "   ", "x" * 61])
+def test_a_title_of_the_wrong_length_is_refused_when_renaming(client, title) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+
+    assert client.patch(f"/api/decks/{deck}", json={"title": title}).status_code == 422
+    assert titles_of(client) == ["Trains"]
+
+
+def test_a_deck_that_does_not_exist_is_not_found(client) -> None:
+    assert client.patch("/api/decks/99", json={"title": "x"}).status_code == 404
+    assert client.get("/api/decks/99").status_code == 404
+    assert client.delete("/api/decks/99").status_code == 404
+
+
+def test_the_deck_uncategorized_cannot_be_renamed(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+    change_decks(client, [card["id"]], remove=[deck])
+    uncategorized = uncategorized_of(client)
+
+    response = client.patch(f"/api/decks/{uncategorized['id']}", json={"title": "Misc"})
+
+    assert response.status_code == 422
+    assert uncategorized_of(client)["title"] == "Uncategorized"
+
+
+def test_a_deck_says_how_many_of_its_cards_are_only_in_it_and_how_many_are_also_elsewhere(
+    client,
+) -> None:
+    first = make_deck(client, "Trains").json()["id"]
+    second = make_deck(client, "Travel").json()["id"]
+    cards = make_cards_in(client, first, ["Bahnhof", "Zug", "Gleis"])
+    change_decks(client, [cards[0]["id"]], add=[second])
+
+    detail = client.get(f"/api/decks/{first}").json()
+
+    assert (detail["card_count"], detail["cards_only_here"], detail["cards_elsewhere"]) == (3, 2, 1)
+
+
+def test_a_deck_whose_cards_are_all_in_other_decks_is_deleted_and_no_card_is_deleted(
+    client,
+) -> None:
+    first = make_deck(client, "Trains").json()["id"]
+    second = make_deck(client, "Travel").json()["id"]
+    cards = make_cards_in(client, first, ["Bahnhof", "Zug"])
+    change_decks(client, [card["id"] for card in cards], add=[second])
+
+    response = client.delete(f"/api/decks/{first}")
+
+    assert response.status_code == 204
+    assert titles_of(client) == ["Travel"]
+    assert len(client.get("/api/cards").json()) == 2
+    assert uncategorized_of(client) is None
+
+
+def test_a_deck_with_cards_that_are_in_no_other_deck_needs_a_choice_and_nothing_changes(
+    client,
+) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    make_cards_in(client, deck, ["Bahnhof", "Zug"])
+
+    for query in ("", "?cards=throw"):
+        assert client.delete(f"/api/decks/{deck}{query}").status_code == 422
+
+    assert titles_of(client) == ["Trains"]
+    assert len(client.get("/api/cards").json()) == 2
+
+
+def test_the_cards_only_in_the_deleted_deck_can_be_kept_in_uncategorized(client) -> None:
+    first = make_deck(client, "Trains").json()["id"]
+    second = make_deck(client, "Travel").json()["id"]
+    cards = make_cards_in(client, first, ["Bahnhof", "Zug"])
+    change_decks(client, [cards[1]["id"]], add=[second])
+
+    response = client.delete(f"/api/decks/{first}?cards=keep")
+
+    assert response.status_code == 204
+    by_word = {card["word"]: card for card in client.get("/api/cards").json()}
+    assert [d["title"] for d in by_word["Bahnhof"]["decks"]] == ["Uncategorized"]
+    assert [d["title"] for d in by_word["Zug"]["decks"]] == ["Travel"]
+    assert titles_of(client) == ["Travel", "Uncategorized"]
+
+
+def test_kept_cards_go_to_the_uncategorized_deck_of_their_own_language_pair(client) -> None:
+    english = make_deck(client, "Cats", "en", "de").json()["id"]
+    german = make_deck(client, "Trains").json()["id"]
+    make_cards_in(client, german, ["Zug"])
+    text_id = client.post(
+        "/api/texts",
+        json={
+            "text": "The cat sleeps.",
+            "text_language": "en",
+            "first_language": "de",
+            "words": ["cat"],
+        },
+    ).json()["id"]
+    ask_for_cards(client, text_id, [english])
+
+    assert client.delete(f"/api/decks/{english}?cards=keep").status_code == 204
+
+    assert uncategorized_of(client, "en", "de")["card_count"] == 1
+    assert uncategorized_of(client, "de", "en") is None
+
+
+def test_the_cards_only_in_the_deleted_deck_can_be_deleted_with_it(client) -> None:
+    first = make_deck(client, "Trains").json()["id"]
+    second = make_deck(client, "Travel").json()["id"]
+    cards = make_cards_in(client, first, ["Bahnhof", "Zug"])
+    change_decks(client, [cards[1]["id"]], add=[second])
+
+    response = client.delete(f"/api/decks/{first}?cards=delete")
+
+    assert response.status_code == 204
+    assert [card["word"] for card in client.get("/api/cards").json()] == ["Zug"]
+    assert titles_of(client) == ["Travel"]
+
+
+def test_the_uncategorized_deck_is_only_deleted_together_with_its_cards(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+    change_decks(client, [card["id"]], remove=[deck])
+    uncategorized = uncategorized_of(client)["id"]
+
+    assert client.delete(f"/api/decks/{uncategorized}").status_code == 422
+    assert client.delete(f"/api/decks/{uncategorized}?cards=keep").status_code == 422
+    assert uncategorized_of(client) is not None
+
+    assert client.delete(f"/api/decks/{uncategorized}?cards=delete").status_code == 204
+    assert uncategorized_of(client) is None
+    assert client.get("/api/cards").json() == []
+
+
+def test_an_empty_uncategorized_deck_is_deleted_without_a_choice(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+    change_decks(client, [card["id"]], remove=[deck])
+    change_decks(client, [card["id"]], add=[make_deck(client, "Travel").json()["id"]])
+    uncategorized = uncategorized_of(client)
+
+    assert uncategorized["card_count"] == 0
+    assert client.delete(f"/api/decks/{uncategorized['id']}").status_code == 204
+
+
+def test_a_card_put_in_another_deck_leaves_uncategorized(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    other = make_deck(client, "Travel").json()["id"]
+    card = make_cards_in(client, deck, ["Zug"])[0]
+    change_decks(client, [card["id"]], remove=[deck])
+
+    response = change_decks(client, [card["id"]], add=[other])
+
+    assert [d["title"] for d in response.json()[0]["decks"]] == ["Travel"]
+    assert uncategorized_of(client)["card_count"] == 0
+
+
+def test_the_deck_uncategorized_is_not_chosen_by_hand(client) -> None:
+    deck = make_deck(client, "Trains").json()["id"]
+    cards = make_cards_in(client, deck, ["Zug", "Haus"])
+    change_decks(client, [cards[0]["id"]], remove=[deck])
+    uncategorized = uncategorized_of(client)["id"]
+
+    assert change_decks(client, [cards[1]["id"]], add=[uncategorized]).status_code == 422
+    text_id = add_text(client, ["Gleis"])
+    assert ask_for_cards(client, text_id, [uncategorized]).status_code == 422
+    assert uncategorized_of(client)["card_count"] == 1
+
+
+def test_a_deck_deleted_with_a_failure_changes_nothing(monkeypatch) -> None:
+    connection = open_database()
+    text_id = make_german_text(connection, ["Zug"])
+    deck = create_deck(connection, "Trains", "de", "en")
+    card = add_card(
+        connection, text_id, "Zug", "Der Zug.", "The train.", TODAY, deck_ids=[deck["id"]]
+    )
+
+    def fails(*args, **kwargs):
+        raise RuntimeError("The database failed.")
+
+    monkeypatch.setattr(database, "uncategorized_deck_id", fails)
+    with pytest.raises(RuntimeError):
+        database.delete_deck(connection, deck["id"], "keep")
+
+    assert [d["id"] for d in list_decks(connection)] == [deck["id"]]
+    assert [d["id"] for d in get_card(connection, card)["decks"]] == [deck["id"]]

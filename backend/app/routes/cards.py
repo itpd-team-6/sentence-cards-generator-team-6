@@ -17,6 +17,7 @@ from pydantic import (
 from app.analytics import Tracker, get_tracker
 from app.database import (
     DeckPairMismatch,
+    UncategorizedDeck,
     UnknownDeck,
     add_card,
     add_cards_to_decks,
@@ -306,6 +307,11 @@ def create_cards(
         deck = get_deck(connection, deck_id)
         if deck is None:
             raise HTTPException(status_code=404, detail=f"There is no deck with id {deck_id}.")
+        if deck["uncategorized"]:
+            raise HTTPException(
+                status_code=422,
+                detail="Choose another deck: a card goes to Uncategorized only when it is in no other deck.",
+            )
         if (deck["text_language"], deck["first_language"]) != pair:
             raise HTTPException(
                 status_code=422, detail="A deck only takes cards of its own language pair."
@@ -433,7 +439,7 @@ def change_decks_of_cards(
         )
     except UnknownDeck as error:
         raise HTTPException(status_code=404, detail=str(error)) from None
-    except DeckPairMismatch as error:
+    except (DeckPairMismatch, UncategorizedDeck) as error:
         raise HTTPException(status_code=422, detail=str(error)) from None
     if not done:
         raise HTTPException(status_code=404, detail="There is no card with one of these ids.")
