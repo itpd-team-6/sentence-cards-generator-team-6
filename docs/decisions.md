@@ -718,6 +718,25 @@ The product keeps the texts the learner saves, as a library of texts that the le
   - The box that edits a card lists the texts it comes from, each with a link to its page. The label of each card in the table "Your cards" that [`DEC-058`](#dec-058) asks for is not part of this decision: it is made with the search and the filters of "Your cards", together with the decks.
     The answer that makes the cards now says how many cards the request made, so that the page does not count the cards the text already had.
 
+## DEC-065
+
+The product has a Decks tab where the learner makes, renames, opens and deletes decks, a page for each deck with its cards, and a deck "Uncategorized" for each language pair that holds the cards that are in no other deck.
+
+- **Status:** Active
+- **Date:** 2026-11-13
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the Customer said, about the decks, "since you mentioned that there is no functionality for inspecting decks, maybe when you implement it we can let the user go to the deck from a card." (Customer, [01:12:29]) and "Maybe we should let the user go to the "animals" deck when they click on "animals"." (Customer, [01:13:09]).
+  nataliamotand asked for "another tab or something like that, so the user doesn't have to know that he can only reach the decks if he goes to the study, goes to the reorder and clicks the deck." ([01:14:10]) and the Customer answered "Yeah, I agree." ([01:14:24]).
+  The Customer also said "maybe it should not be prioritized to be implemented very early, very soon. But yeah, that's up to you right now." ([01:15:45]); the team decided to build it in sprint 7, after the stories the Customer prioritized, as the issues [#253](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/253) and [#258](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/258) say.
+  The team made these choices, which the Customer did not state:
+  - The Decks tab is the fourth page, at `#/decks`, and a deck opens at `#/decks/` and its number. It shows one tile for each deck, with the cards to study today, the share learned and the number of cards, as the Study box does ([`DEC-066`](#dec-066)), in a section for each language pair that has a deck. When there is more than one pair, a button for each pair shows only the chosen ones, and from six decks a search by title narrows the tiles. The page of a deck has its title, the statistics of today for that deck, a button that studies only that deck, the search and the list of its cards, which the learner changes like in "Your cards" ([`DEC-067`](#dec-067)), and a button that adds cards of the same language pair to the deck.
+  - The deck of a card is a link in the card when it is opened, in "Your cards" and in a deck, so that the learner goes from a card to its deck, as the Customer said. The decks are not links in the row of the card, so that the row stays light ([`DEC-067`](#dec-067)).
+  - A deck is renamed with the rules of a new title ([`DEC-020`](#dec-020)): 1 to 60 characters, free for its language pair.
+  - Deleting a deck never deletes a card that is also in another deck. For the cards that are only in the deleted deck the learner chooses, in the box that asks to confirm, to delete them or to keep them in the deck "Uncategorized" of their language pair, which is made if it does not exist. The box says how many cards are only in the deck and how many are also in another one, and a failure changes nothing.
+  - "Uncategorized" is a real deck, one for each language pair that has cards in no other deck, and not an empty filter. A migration (number 9) marks it with a column of the deck, so that its title can change in the product without a change in the code, puts every card that is in no deck in the "Uncategorized" deck of its pair, and takes an existing deck that the learner titled "Uncategorized" as that deck. A card that leaves its last deck goes to "Uncategorized" by itself, and a card put in another deck leaves it. The learner does not choose "Uncategorized" as a deck for new cards or for a change of decks. It cannot be renamed, and it can only be deleted together with its cards. This replaces the item "Uncategorized" for cards in no deck that [`DEC-067`](#dec-067) describes, which stays only for a learner whose database has no such deck.
+  - The migration changes the rows of the learner's cards, so the deployment copies the database file and the folder `libraries` before the update, in staging as in production ([`deployment.md`](deployment.md)).
+
 ## DEC-066
 
 The Study box shows an estimate of the time of a session, counting 30 seconds for each card, and the share of each deck that is learned.
@@ -745,7 +764,7 @@ The page "Your cards" is where the learner finds, searches, groups and organizes
   The team made these choices, which the Customer did not state:
   - Inside one part, the product lists the cards that are in at least one ticked item, because the learner who ticks two decks usually wants the cards of both, and offers "All" for the cards that are in every one of them. Between parts the choices are joined with "and", so ticking a deck and a text narrows the list.
   - The number of an item counts the cards the learner would get by ticking it, with the other choices applied, and an item with no card is dimmed but a ticked item stays, so no choice leads to a list that cannot be undone.
-  - A card in no deck and a card whose text was deleted are items like the others, "Uncategorized" and "No text", so that taking a card out of all its decks does not hide it.
+  - A card in no deck and a card whose text was deleted are items like the others, "Uncategorized" and "No text", so that taking a card out of all its decks does not hide it. [`DEC-065`](#dec-065) later made "Uncategorized" a real deck, so a card is no longer in no deck.
   - The search is one box for the cards, the texts and the decks. The list narrows as the learner types, and a panel under the box says what was found in each kind; a text or a deck of the panel is ticked in the list of filters, because the filters are how the learner chooses a text or a deck.
   - A row shows the text the card came from, only the decks the learner ticked, and how many decks the card is in, not the names of all its decks, so that a row stays light; the names show when the pointer rests on the number, and the box that edits the card lists all its decks.
   - The learner can group the cards by deck or by text. A card that is in two decks shows in both groups and the total counts it once.
@@ -768,4 +787,16 @@ The header is a bar as wide as the window with a pill that says how many cards t
   - The pill is not shown on the Study page, where the Study box already says the same, nor in a session, where the header is hidden.
   - The header is not fixed, so that it takes no room from the page when the learner scrolls.
   - The pill reads the cards with the calls of the Study page and adds no endpoint and no migration, and it reads them again when the learner changes page or something of the learner's data changes.
-  - On a narrow bar the time goes first and then the name of the product.
+  - On a narrow bar the name of the product goes first. The time was first to go in this decision, and [`DEC-069`](#dec-069) moved it to the panel.
+
+## DEC-069
+
+The estimated time of today's cards moves from the pill in the header to the panel under it.
+
+- **Status:** Active
+- **Date:** 2026-11-13
+- **Made by:** Team
+- **Source:** team discussion
+- **Why:** the header gets a fourth tab, "Decks" ([`DEC-065`](#dec-065)), and the bar does not have room for the four tabs, the pill with its count and its time, the state and the library without dropping something. [`DEC-068`](#dec-068) dropped the time on a narrow bar, so a learner on a phone never saw it.
+  The pill keeps the number of cards to study, which is what the learner needs at a glance, and the panel title says the time, "Today — All decks · about 4 min", with the estimate of [`DEC-066`](#dec-066). The panel does not open on a screen that has no pointer, so there a phone shows only the number; the Study page and the page of a deck still say the time.
+  The team made this choice without the Customer, who asked for the statistics at the top of the Study page ([`DEC-066`](#dec-066)) and will see the header at the sprint review.

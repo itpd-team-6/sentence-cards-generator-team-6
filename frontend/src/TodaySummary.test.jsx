@@ -44,14 +44,17 @@ const draw = async (page = "texts") => {
   await act(async () => root.render(<TodaySummary page={page} />));
 };
 
-test("the pill says how many cards are to study and about how long, and opens the Study page", async () => {
+test("the pill says how many cards are to study and opens the Study page, and the time is in the panel, not in the pill", async () => {
   vi.mocked(loadDueCards).mockResolvedValue(due);
   await draw();
 
   const pill = container.querySelector("a.today-pill");
   expect(pill.textContent).toContain("3 to study");
-  expect(pill.textContent).toContain("about 2 min");
+  expect(pill.textContent).not.toContain("min");
   expect(pill.getAttribute("href")).toBe("#/study");
+  expect(container.querySelector(".today-panel h2").textContent).toContain(
+    "about 2 min",
+  );
 });
 
 test("it asks for the cards of all the decks, not of some", async () => {
@@ -66,7 +69,9 @@ test("the panel gives the cards of each kind and of each deck, a card in two dec
   await draw();
 
   const panel = container.querySelector(".today-panel");
-  expect(panel.querySelector("h2").textContent).toBe("Today — All decks");
+  expect(panel.querySelector("h2").textContent).toBe(
+    "Today — All decks · about 2 min",
+  );
   expect(
     [...panel.querySelectorAll(".today-kind")].map((kind) => kind.textContent),
   ).toEqual(["1New", "1Forgotten", "1Review"]);

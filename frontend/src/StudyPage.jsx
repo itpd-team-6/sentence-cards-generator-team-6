@@ -8,7 +8,11 @@ import {
 } from "./api.js";
 import CardEditDialog from "./CardEditDialog.jsx";
 import Icon, { ICON_PATHS } from "./Icon.jsx";
-import { readTickedDecks, writeTickedDecks } from "./deckSelection.js";
+import {
+  readTickedDecks,
+  takeStartNow,
+  writeTickedDecks,
+} from "./deckSelection.js";
 import Notice, { newNotice } from "./Notice.jsx";
 import StudyDecks from "./StudyDecks.jsx";
 import StudyQueue from "./StudyQueue.jsx";
@@ -50,6 +54,8 @@ export default function StudyPage({ onSessionChange }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
   const [feedback, setFeedback] = useState(null);
+  // The page of the deck that asked for this session: the arrow of the session goes back to it.
+  const [returnTo, setReturnTo] = useState("");
   const [decks, setDecks] = useState(lastDecks); // null until the decks are loaded
   const [ticked, setTicked] = useState(readTickedDecks); // the decks of this session, remembered in this browser
   const [due, setDue] = useState(
@@ -128,6 +134,22 @@ export default function StudyPage({ onSessionChange }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  // The page of a deck asked for a session of its cards: it starts now, with the decks that page ticked.
+  useEffect(() => {
+    const asked = takeStartNow();
+    if (asked !== null) {
+      setReturnTo(asked);
+      start();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the page opens
+  }, []);
+
+  // Out of the session: to the deck the learner came from, or else to the Study box.
+  function leave() {
+    if (returnTo) window.location.hash = returnTo;
+    else setQueue(null);
   }
 
   async function answer(choice) {
@@ -345,9 +367,9 @@ export default function StudyPage({ onSessionChange }) {
         <button
           type="button"
           className="back-button"
-          aria-label="Back to Study"
-          title="Back to Study"
-          onClick={() => setQueue(null)}
+          aria-label={returnTo ? "Back to the deck" : "Back to Study"}
+          title={returnTo ? "Back to the deck" : "Back to Study"}
+          onClick={leave}
         >
           <span aria-hidden="true">&larr;</span>
         </button>
@@ -370,12 +392,8 @@ export default function StudyPage({ onSessionChange }) {
             >
               Start another session
             </button>
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => setQueue(null)}
-            >
-              Back to the decks
+            <button type="button" className="secondary" onClick={leave}>
+              {returnTo ? "Back to the deck" : "Back to the decks"}
             </button>
           </div>
         </>

@@ -23,3 +23,4 @@
 | [FR-019](fr/FR-019.md) | Keep The Texts Of The Learner And Edit Them With Their Cards         | `frontend`, `backend`, `database` | Active |
 | [FR-020](fr/FR-020.md) | Find, Search And Organize The Cards In Your Cards                    | `frontend`, `backend`             | Active |
 | [FR-021](fr/FR-021.md) | Show The Cards To Study Today In The Header                          | `frontend`                        | Active |
+| [FR-022](fr/FR-022.md) | Manage The Decks And Open The Cards Of A Deck                        | `frontend`, `backend`, `database` | Active |

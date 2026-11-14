@@ -239,6 +239,28 @@ def add_the_text_titles(connection: sqlite3.Connection) -> None:
         )
 
 
+UNCATEGORIZED_TITLE = "Uncategorized"
+
+
+def add_the_uncategorized_deck(connection: sqlite3.Connection) -> None:
+    """Mark the deck that holds the cards of no other deck (DEC-065), so its name can change without the code.
+
+    Each language pair has at most one such deck, made when it is first needed. Every card that is in no deck goes into
+    the one of its language pair, so from now on a card is always in at least one deck. A deck that the learner already
+    titled "Uncategorized" for the pair becomes that deck.
+    """
+    connection.execute("ALTER TABLE decks ADD COLUMN uncategorized INTEGER NOT NULL DEFAULT 0")
+    orphans = connection.execute(
+        "SELECT id, text_language, first_language FROM cards"
+        " WHERE id NOT IN (SELECT card_id FROM card_decks) ORDER BY id"
+    ).fetchall()
+    for card in orphans:
+        deck_id = uncategorized_deck_id(connection, card["text_language"], card["first_language"])
+        connection.execute(
+            "INSERT INTO card_decks (card_id, deck_id) VALUES (?, ?)", (card["id"], deck_id)
+        )
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
     add_the_due_time,
@@ -248,6 +270,7 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     add_the_decks,
     add_the_answer_count,
     add_the_text_titles,
+    add_the_uncategorized_deck,
 ]
 
 # The card fields a caller may change with `update_card`.
@@ -546,6 +569,14 @@ class DeckPairMismatch(ValueError):
     """A deck is for another language pair than the card (or the text) it is used with."""
 
 
+class UncategorizedDeck(ValueError):
+    """The deck "Uncategorized" cannot be renamed, and a card is put in it only when it is in no other deck."""
+
+
+class DeckNeedsChoice(ValueError):
+    """The deck has cards that are in no other deck, and the learner did not say what to do with them."""
+
+
 DECK_TITLE_LENGTH = 60
 
 
@@ -572,6 +603,47 @@ def find_deck_by_title(
     return None
 
 
+def uncategorized_deck_id(
+    connection: sqlite3.Connection, text_language: str, first_language: str
+) -> int:
+    """The id of the deck "Uncategorized" of a language pair, made when it does not exist, without saving.
+
+    A deck that the learner already titled "Uncategorized" for the pair is the one marked, so no second deck with that
+    title is made.
+    """
+    row = connection.execute(
+        "SELECT id FROM decks WHERE uncategorized = 1 AND text_language = ? AND first_language = ?",
+        (text_language, first_language),
+    ).fetchone()
+    if row:
+        return row["id"]
+    same_title = find_deck_by_title(connection, UNCATEGORIZED_TITLE, text_language, first_language)
+    if same_title:
+        connection.execute("UPDATE decks SET uncategorized = 1 WHERE id = ?", (same_title["id"],))
+        return same_title["id"]
+    cursor = connection.execute(
+        "INSERT INTO decks (title, text_language, first_language, uncategorized) VALUES (?, ?, ?, 1)",
+        (UNCATEGORIZED_TITLE, text_language, first_language),
+    )
+    return cursor.lastrowid
+
+
+def put_cards_in_no_deck_in_uncategorized(
+    connection: sqlite3.Connection, card_ids: list[int]
+) -> None:
+    """Put each of these cards that is in no deck into the deck "Uncategorized" of its language pair, without saving."""
+    for card_id in card_ids:
+        if connection.execute("SELECT 1 FROM card_decks WHERE card_id = ?", (card_id,)).fetchone():
+            continue
+        card = connection.execute(
+            "SELECT text_language, first_language FROM cards WHERE id = ?", (card_id,)
+        ).fetchone()
+        deck_id = uncategorized_deck_id(connection, card["text_language"], card["first_language"])
+        connection.execute(
+            "INSERT INTO card_decks (card_id, deck_id) VALUES (?, ?)", (card_id, deck_id)
+        )
+
+
 def create_deck(
     connection: sqlite3.Connection, title: str, text_language: str, first_language: str
 ) -> dict:
@@ -594,6 +666,85 @@ def get_deck(connection: sqlite3.Connection, deck_id: int) -> dict | None:
         (deck_id,),
     ).fetchone()
     return dict(row) if row else None
+
+
+def deck_only_cards(connection: sqlite3.Connection, deck_id: int) -> list[int]:
+    """The ids of the cards that are in this deck and in no other."""
+    rows = connection.execute(
+        "SELECT card_id FROM card_decks WHERE deck_id = ?"
+        " AND card_id NOT IN (SELECT card_id FROM card_decks WHERE deck_id <> ?) ORDER BY card_id",
+        (deck_id, deck_id),
+    )
+    return [row["card_id"] for row in rows]
+
+
+def get_deck_for_deleting(connection: sqlite3.Connection, deck_id: int) -> dict | None:
+    """The deck with `cards_only_here`, how many of its cards are in no other deck, and `cards_elsewhere`, how many
+    are also in another deck: what the learner needs to know to delete it."""
+    deck = get_deck(connection, deck_id)
+    if deck is None:
+        return None
+    only = len(deck_only_cards(connection, deck_id))
+    return {**deck, "cards_only_here": only, "cards_elsewhere": deck["card_count"] - only}
+
+
+def rename_deck(connection: sqlite3.Connection, deck_id: int, title: str) -> dict | None:
+    """Change the title of a deck, with the rules of a new deck's title. Returns None when the deck does not exist.
+
+    Raises `UncategorizedDeck` for the deck "Uncategorized", `InvalidDeckTitle`, or `DeckExists` when another deck of
+    the language pair has the title (the same deck may change the case of its letters).
+    """
+    deck = get_deck(connection, deck_id)
+    if deck is None:
+        return None
+    if deck["uncategorized"]:
+        raise UncategorizedDeck("The deck Uncategorized cannot be renamed.")
+    cleaned = clean_deck_title(title)
+    other = find_deck_by_title(connection, cleaned, deck["text_language"], deck["first_language"])
+    if other and other["id"] != deck_id:
+        raise DeckExists("There is already a deck with this title for these languages.")
+    connection.execute("UPDATE decks SET title = ? WHERE id = ?", (cleaned, deck_id))
+    connection.commit()
+    return get_deck(connection, deck_id)
+
+
+def delete_deck(connection: sqlite3.Connection, deck_id: int, cards: str | None = None) -> bool:
+    """Delete a deck (DEC-065). Returns False when the deck does not exist.
+
+    The cards that are also in another deck stay in it and are never deleted. The cards that are in no other deck are
+    deleted when `cards` is "delete", or put in the deck "Uncategorized" of their language pair, made if it does not
+    exist, when `cards` is "keep". Raises `DeckNeedsChoice`, and changes nothing, when there are such cards and `cards`
+    is neither. The deck "Uncategorized" can only be deleted together with its cards. When anything fails, nothing is
+    saved.
+    """
+    deck = get_deck(connection, deck_id)
+    if deck is None:
+        return False
+    only = deck_only_cards(connection, deck_id)
+    if only and deck["uncategorized"] and cards != "delete":
+        raise DeckNeedsChoice("The deck Uncategorized can only be deleted together with its cards.")
+    if only and cards not in ("delete", "keep"):
+        raise DeckNeedsChoice(
+            f"{len(only)} cards are only in this deck: choose to delete them or to keep them in Uncategorized."
+        )
+    try:
+        if only and cards == "delete":
+            marks = ", ".join("?" for _ in only)
+            connection.execute(f"DELETE FROM cards WHERE id IN ({marks})", only)
+        elif only:
+            target = uncategorized_deck_id(
+                connection, deck["text_language"], deck["first_language"]
+            )
+            for card_id in only:
+                connection.execute(
+                    "INSERT INTO card_decks (card_id, deck_id) VALUES (?, ?)", (card_id, target)
+                )
+        connection.execute("DELETE FROM decks WHERE id = ?", (deck_id,))
+    except BaseException:
+        connection.rollback()
+        raise
+    connection.commit()
+    return True
 
 
 def list_decks(
@@ -629,12 +780,17 @@ def list_decks(
 def link_to_decks(connection: sqlite3.Connection, card_ids: list[int], deck_ids: list[int]) -> None:
     """Put each card in each deck, without saving. A card that is already in a deck stays there once.
 
-    Raises `UnknownDeck`, or `DeckPairMismatch` when a deck is for another language pair than a card.
+    A card that goes into a deck leaves the deck "Uncategorized". Raises `UnknownDeck`, `UncategorizedDeck` when a deck is
+    the one called "Uncategorized", or `DeckPairMismatch` when a deck is for another language pair than a card.
     """
     for deck_id in dict.fromkeys(deck_ids):
         deck = connection.execute("SELECT * FROM decks WHERE id = ?", (deck_id,)).fetchone()
         if deck is None:
             raise UnknownDeck(f"There is no deck with id {deck_id}.")
+        if deck["uncategorized"]:
+            raise UncategorizedDeck(
+                "A card goes to Uncategorized only when it is in no other deck, so it is not chosen."
+            )
         for card_id in card_ids:
             card = connection.execute(
                 "SELECT text_language, first_language FROM cards WHERE id = ?", (card_id,)
@@ -647,6 +803,11 @@ def link_to_decks(connection: sqlite3.Connection, card_ids: list[int], deck_ids:
             connection.execute(
                 "INSERT OR IGNORE INTO card_decks (card_id, deck_id) VALUES (?, ?)",
                 (card_id, deck_id),
+            )
+            connection.execute(
+                "DELETE FROM card_decks WHERE card_id = ?"
+                " AND deck_id IN (SELECT id FROM decks WHERE uncategorized = 1)",
+                (card_id,),
             )
 
 
@@ -671,8 +832,10 @@ def change_card_decks(
     """Put cards in some decks and take them out of others, in one step. Only the link between a card and a deck changes:
     the card keeps its sentence, its translation and its study data.
 
-    Returns False, and changes nothing, when a card does not exist. Raises `UnknownDeck`, or `DeckPairMismatch` when a deck
-    to add is for another language pair than a card, and then nothing is saved either.
+    Returns False, and changes nothing, when a card does not exist. A card taken out of its last deck goes to the deck
+    "Uncategorized" of its language pair, and a card put in a deck leaves it. Raises `UnknownDeck`, `UncategorizedDeck`
+    when a deck to add is the one called "Uncategorized", or `DeckPairMismatch` when a deck to add is for another language
+    pair than a card, and then nothing is saved either.
     """
     ids = list(dict.fromkeys(card_ids))
     marks = ", ".join("?" for _ in ids)
@@ -693,6 +856,7 @@ def change_card_decks(
                 f"DELETE FROM card_decks WHERE deck_id = ? AND card_id IN ({marks})",
                 [deck_id, *ids],
             )
+        put_cards_in_no_deck_in_uncategorized(connection, ids)
     except BaseException:
         connection.rollback()
         raise

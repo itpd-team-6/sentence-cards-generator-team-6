@@ -93,9 +93,13 @@ export default function CardFilters({
   onClose,
 }) {
   const pairs = [...new Set(cards.map(pairOf))].sort();
+  // A card that leaves its last deck goes to the deck "Uncategorized", which is a deck in the list like the others
+  // (DEC-065). The item for cards in no deck is only for a learner who has no such deck, so it is not shown twice.
   const deckItems = [
     ...decks.map((deck) => ({ id: deck.id, label: deck.title })),
-    { id: NONE, label: "Uncategorized", optional: true },
+    ...(decks.some((deck) => deck.uncategorized)
+      ? []
+      : [{ id: NONE, label: "Uncategorized", optional: true }]),
   ];
   const textItems = [
     ...texts.map((text) => ({ id: text.id, label: text.title })),

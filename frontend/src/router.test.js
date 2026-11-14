@@ -1,15 +1,24 @@
 import { expect, test } from "vitest";
-import { PAGES, hrefOf, hrefOfText, pageOf, textIdOf } from "./router.js";
+import {
+  PAGES,
+  deckIdOf,
+  hrefOf,
+  hrefOfDeck,
+  hrefOfText,
+  pageOf,
+  textIdOf,
+} from "./router.js";
 
 test("the Study page is the first page", () => {
   expect(PAGES[0].id).toBe("study");
 });
 
-test("the pages are Study, Texts and Your cards, in this order", () => {
+test("the pages are Study, Texts, Your cards and Decks, in this order", () => {
   expect(PAGES.map((page) => page.name)).toEqual([
     "Study",
     "Texts",
     "Your cards",
+    "Decks",
   ]);
 });
 
@@ -47,4 +56,13 @@ test("an address that is not a saved text opens no text", () => {
   expect(textIdOf("#/texts/12/more")).toBeNull();
   expect(textIdOf("")).toBeNull();
   expect(pageOf("#/texts/abc")).toBe("study");
+});
+
+test("a deck has an address inside the Decks page", () => {
+  expect(hrefOfDeck(3)).toBe("#/decks/3");
+  expect(pageOf("#/decks/3")).toBe("decks");
+  expect(deckIdOf("#/decks/3")).toBe(3);
+  expect(deckIdOf("#/decks")).toBeNull();
+  expect(deckIdOf("#/decks/abc")).toBeNull();
+  expect(deckIdOf("#/texts/3")).toBeNull();
 });

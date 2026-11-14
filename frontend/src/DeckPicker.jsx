@@ -37,10 +37,18 @@ export default function DeckPicker({
 
   const ofPair = (decks ?? []).filter(
     (deck) =>
+      !deck.uncategorized &&
       deck.text_language === textLanguage &&
       deck.first_language === firstLanguage,
   );
-  const hidden = (decks ?? []).length - ofPair.length;
+  const hidden = (decks ?? []).filter(
+    (deck) =>
+      !deck.uncategorized &&
+      !(
+        deck.text_language === textLanguage &&
+        deck.first_language === firstLanguage
+      ),
+  ).length;
   const wanted = query.trim().toLowerCase();
   const shown = wanted
     ? ofPair.filter((deck) => deck.title.toLowerCase().includes(wanted))

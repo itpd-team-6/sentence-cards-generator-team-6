@@ -223,6 +223,42 @@ test("a group closes when the learner clicks its title, and all of them close or
   expect(rows()).toBe(3);
 });
 
+test("Collapse all and Expand all follow the groups on the screen, also after the cards are grouped another way", async () => {
+  const byDeck = [
+    { key: "deck-1", title: "Deck A", cards: [CARDS[0]] },
+    { key: "deck-2", title: "Deck B", cards: [CARDS[1]] },
+  ];
+  const byText = [
+    { key: "text-1", title: "Text X", cards: [CARDS[0]] },
+    { key: "text-2", title: "Text Y", cards: [CARDS[1]] },
+  ];
+  await show({ groups: byDeck, showTexts: true });
+  const button = (label) =>
+    [...container.querySelectorAll(".fold-all button")].find(
+      (item) => item.textContent === label,
+    );
+
+  await act(async () => button("Collapse all").click());
+  expect(button("Collapse all").disabled).toBe(true);
+  expect(button("Expand all").disabled).toBe(false);
+
+  await act(async () =>
+    root.render(
+      <CardsTable
+        cards={CARDS}
+        onCardsChange={() => {}}
+        groups={byText}
+        showTexts
+      />,
+    ),
+  );
+  expect(button("Collapse all").disabled).toBe(false);
+  expect(button("Expand all").disabled).toBe(true);
+  await act(async () => button("Collapse all").click());
+  expect(container.querySelectorAll(".card-row").length).toBe(0);
+  expect(button("Expand all").disabled).toBe(false);
+});
+
 test("grouped cards show under the title of each group, and a card in two groups shows in both", async () => {
   const groups = [
     { key: "deck-1", title: "Deck A", cards: [CARDS[0]] },
@@ -235,4 +271,18 @@ test("grouped cards show under the title of each group, and a card in two groups
   );
   expect(titles).toEqual(["Deck A1", "Deck B2"]);
   expect(container.querySelectorAll(".card-row").length).toBe(3);
+});
+
+test("an opened card has its decks as links that open each deck", async () => {
+  await show({ showTexts: true });
+
+  const line = container.querySelector(".card-row");
+  await act(async () => line.querySelector(".card-main").click());
+
+  const links = [...line.querySelectorAll(".detail-decks a")];
+  expect(links.map((link) => link.textContent)).toEqual(["Deck A", "Deck B"]);
+  expect(links.map((link) => link.getAttribute("href"))).toEqual([
+    "#/decks/1",
+    "#/decks/2",
+  ]);
 });

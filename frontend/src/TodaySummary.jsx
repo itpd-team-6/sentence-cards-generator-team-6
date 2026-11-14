@@ -24,7 +24,8 @@ function Glyph({ path, className }) {
 }
 
 // What there is to study today, in the header of every page but Study (DEC-068). The pill opens the Study page; while
-// the pointer rests on it, or it has the keyboard focus, a panel under it gives the cards of each kind and of each deck.
+// the pointer rests on it, or it has the keyboard focus, a panel under it gives the cards of each kind and of each deck,
+// and about how long they take (DEC-069: the time moved here from the pill, which has to leave room for the Decks tab).
 // It counts the cards of all the decks, not the ones ticked on the Study page.
 export default function TodaySummary({ page }) {
   const [state, setState] = useState(null); // { summary } or { next } or { empty: true }; null while it is read
@@ -76,10 +77,12 @@ export default function TodaySummary({ page }) {
             <Glyph path={PLAY} />
           </span>
           <span className="today-count">{summary.total} to study</span>
-          <span className="today-time">{summary.minutes}</span>
         </a>
         <div className="today-panel" id="today-panel">
-          <h2>Today — All decks</h2>
+          <h2>
+            Today — All decks{" "}
+            <span className="today-time">· {summary.minutes}</span>
+          </h2>
           <ul className="today-kinds">
             <li className="today-kind new">
               <b>{summary.new}</b>

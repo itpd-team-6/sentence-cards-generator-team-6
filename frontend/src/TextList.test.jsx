@@ -133,3 +133,23 @@ test("a failed read is told to the learner", async () => {
     "could not be loaded",
   );
 });
+
+test("the texts are in a box that scrolls by itself, so the page does not grow with them", async () => {
+  api.loadTexts = () =>
+    Promise.resolve([
+      {
+        id: 1,
+        title: "Mein Tag",
+        text_language: "de",
+        first_language: "en",
+        words: ["Haus"],
+        words_with_cards: ["Haus"],
+        cards: 1,
+      },
+    ]);
+  await show();
+
+  const box = container.querySelector(".texts-scroll");
+  expect(box).not.toBeNull();
+  expect(box.querySelectorAll(".text-row").length).toBe(1);
+});

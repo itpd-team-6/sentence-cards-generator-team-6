@@ -59,7 +59,9 @@ def test_a_saved_text_has_a_title_and_the_title_can_be_given() -> None:
 
 
 def test_a_database_with_earlier_texts_gives_each_one_a_title(monkeypatch) -> None:
-    monkeypatch.setattr(database, "MIGRATIONS", MIGRATIONS[:-1])
+    monkeypatch.setattr(
+        database, "MIGRATIONS", MIGRATIONS[: MIGRATIONS.index(database.add_the_text_titles)]
+    )
     connection = connect()
     init_db(connection)
     connection.execute(

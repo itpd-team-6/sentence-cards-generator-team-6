@@ -44,45 +44,49 @@ export default function TextList({ active = true, reload = 0 }) {
         </p>
       )}
       {texts?.length > 0 && (
-        <ul className="text-list">
-          {texts.map((text) => (
-            <li className="text-row" key={text.id}>
-              <div className="text-main">
-                <strong className="text-title">{text.title}</strong>
-                <p className="meta">
-                  {NAMES[text.text_language]} to {NAMES[text.first_language]}
-                  {" · "}
-                  {plural(text.words.length, "marked word", "marked words")}
-                  {" · "}
-                  {plural(text.cards, "card", "cards")}
-                </p>
-                {text.words.length > 0 && (
-                  <ul className="chips" aria-label="Marked words">
-                    {text.words.slice(0, CHIPS).map((word) => (
-                      <li
-                        key={word}
-                        className={hasCard(text, word) ? undefined : "pending"}
-                      >
-                        {word}
-                        {!hasCard(text, word) && " (no card yet)"}
-                      </li>
-                    ))}
-                    {text.words.length > CHIPS && (
-                      <li className="more">+{text.words.length - CHIPS}</li>
-                    )}
-                  </ul>
-                )}
-              </div>
-              <a
-                className="secondary"
-                href={hrefOfText(text.id)}
-                aria-label={`Open ${text.title}`}
-              >
-                Open
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="texts-scroll">
+          <ul className="text-list">
+            {texts.map((text) => (
+              <li className="text-row" key={text.id}>
+                <div className="text-main">
+                  <strong className="text-title">{text.title}</strong>
+                  <p className="meta">
+                    {NAMES[text.text_language]} to {NAMES[text.first_language]}
+                    {" · "}
+                    {plural(text.words.length, "marked word", "marked words")}
+                    {" · "}
+                    {plural(text.cards, "card", "cards")}
+                  </p>
+                  {text.words.length > 0 && (
+                    <ul className="chips" aria-label="Marked words">
+                      {text.words.slice(0, CHIPS).map((word) => (
+                        <li
+                          key={word}
+                          className={
+                            hasCard(text, word) ? undefined : "pending"
+                          }
+                        >
+                          {word}
+                          {!hasCard(text, word) && " (no card yet)"}
+                        </li>
+                      ))}
+                      {text.words.length > CHIPS && (
+                        <li className="more">+{text.words.length - CHIPS}</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+                <a
+                  className="secondary"
+                  href={hrefOfText(text.id)}
+                  aria-label={`Open ${text.title}`}
+                >
+                  Open
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

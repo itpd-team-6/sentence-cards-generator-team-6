@@ -13,7 +13,7 @@ import CardEditDialog from "./CardEditDialog.jsx";
 import DeckTag from "./DeckTag.jsx";
 import Icon, { ICON_PATHS } from "./Icon.jsx";
 import Notice, { newNotice } from "./Notice.jsx";
-import { hrefOfText } from "./router.js";
+import { hrefOfDeck, hrefOfText } from "./router.js";
 
 // What each icon of a card does. The legend shows these names, and the buttons are named after them for screen readers.
 const ACTIONS = [
@@ -506,6 +506,11 @@ export default function CardsTable({
 
   // "Your cards": one compact line for each card, with its word, its sentence, the text it came from and its state. A click
   // on the line opens it, and then it shows the translation, with its lock, and the buttons that change the card.
+  // Only the keys of the groups on the screen count: the ones left from another way of grouping are not here.
+  const foldedHere = groups
+    ? groups.filter((head) => folded.has(head.key)).length
+    : 0;
+
   const list = (
     <>
       <div className="list-head">
@@ -532,7 +537,7 @@ export default function CardsTable({
               onClick={(event) =>
                 keepPlace(event.currentTarget, () => setFolded(new Set()))
               }
-              disabled={folded.size === 0}
+              disabled={foldedHere === 0}
             >
               Expand all
             </button>
@@ -543,7 +548,7 @@ export default function CardsTable({
                   setFolded(new Set(groups.map((head) => head.key))),
                 )
               }
-              disabled={folded.size === groups.length}
+              disabled={foldedHere === groups.length}
             >
               Collapse all
             </button>
@@ -644,6 +649,16 @@ export default function CardsTable({
               </div>
               {isOpen && (
                 <div className="card-detail" id={detail}>
+                  {card.decks?.length > 0 && (
+                    <p className="detail-decks">
+                      <span>{card.decks.length === 1 ? "Deck" : "Decks"}</span>
+                      {card.decks.map((deck) => (
+                        <a key={deck.id} href={hrefOfDeck(deck.id)}>
+                          {deck.title}
+                        </a>
+                      ))}
+                    </p>
+                  )}
                   {translationLine(card)}
                   <div className="detail-actions">
                     {actionButtons(card, isRegenerating(card), true)}

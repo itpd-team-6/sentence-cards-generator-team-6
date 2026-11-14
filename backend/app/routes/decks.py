@@ -8,10 +8,15 @@ from pydantic import BaseModel, model_validator
 
 from app.database import (
     DeckExists,
+    DeckNeedsChoice,
     InvalidDeckTitle,
+    UncategorizedDeck,
     create_deck,
+    delete_deck,
     get_connection,
+    get_deck_for_deleting,
     list_decks,
+    rename_deck,
 )
 
 router = APIRouter()
@@ -40,6 +45,19 @@ class DeckResponse(BaseModel):
     first_language: Language
     card_count: int
     learned_percent: int = 0
+    # The deck that holds the cards that are in no other deck (DEC-065): it cannot be renamed.
+    uncategorized: bool = False
+
+
+class DeckDetail(DeckResponse):
+    """A deck with what the learner needs to know before deleting it."""
+
+    cards_only_here: int
+    cards_elsewhere: int
+
+
+class DeckChange(BaseModel):
+    title: str
 
 
 @router.get("/api/decks")
@@ -65,3 +83,51 @@ def make_deck(
     except DeckExists as error:
         raise HTTPException(status_code=409, detail=str(error)) from None
     return DeckResponse(**deck)
+
+
+@router.get("/api/decks/{deck_id}")
+def read_deck(
+    deck_id: int, connection: Annotated[sqlite3.Connection, Depends(get_connection)]
+) -> DeckDetail:
+    """One deck, with how many of its cards are only in it and how many are also in another deck (404 when it does not
+    exist)."""
+    deck = get_deck_for_deleting(connection, deck_id)
+    if deck is None:
+        raise HTTPException(status_code=404, detail="There is no deck with this id.")
+    return DeckDetail(**deck)
+
+
+@router.patch("/api/decks/{deck_id}")
+def change_deck(
+    deck_id: int,
+    request: DeckChange,
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+) -> DeckResponse:
+    """Rename a deck with the rules of a new deck's title: 1 to 60 characters (422), free for the language pair whatever
+    the case of the letters (409). The deck Uncategorized cannot be renamed (422), and a deck that does not exist is 404."""
+    try:
+        deck = rename_deck(connection, deck_id, request.title)
+    except (InvalidDeckTitle, UncategorizedDeck) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+    except DeckExists as error:
+        raise HTTPException(status_code=409, detail=str(error)) from None
+    if deck is None:
+        raise HTTPException(status_code=404, detail="There is no deck with this id.")
+    return DeckResponse(**deck)
+
+
+@router.delete("/api/decks/{deck_id}", status_code=204)
+def remove_deck(
+    deck_id: int,
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+    cards: Literal["delete", "keep"] | None = None,
+) -> None:
+    """Delete a deck (DEC-065). The cards that are also in another deck stay in it. The cards only in this deck are
+    deleted with `cards=delete` or kept in the deck Uncategorized of their language pair with `cards=keep`; without a
+    choice, when there are such cards, nothing changes (422). The deck Uncategorized can only be deleted with its cards."""
+    try:
+        deleted = delete_deck(connection, deck_id, cards)
+    except DeckNeedsChoice as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+    if not deleted:
+        raise HTTPException(status_code=404, detail="There is no deck with this id.")

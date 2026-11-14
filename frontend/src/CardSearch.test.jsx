@@ -166,3 +166,49 @@ test("Escape closes the panel", async () => {
 
   expect(container.querySelector(".search-panel")).toBeNull();
 });
+
+const pressEnter = () =>
+  act(async () =>
+    container
+      .querySelector("input")
+      .dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      ),
+  );
+
+test("Enter with a search that no card has ticks the decks that have it, even if it is not complete", async () => {
+  await show("zugr");
+  await pressEnter();
+
+  expect(changes.at(-1).decks).toEqual([1]);
+  expect(changes.at(-1).search).toBe("");
+  expect(container.querySelector(".search-panel")).toBeNull();
+});
+
+test("Enter with a search that no card and no deck has ticks the texts that have it", async () => {
+  await show("hau");
+  await pressEnter();
+
+  expect(changes.at(-1).texts).toEqual([11]);
+  expect(changes.at(-1).search).toBe("");
+});
+
+test("Enter with a search that cards have keeps the search, so the list shows those cards", async () => {
+  await show("zug");
+  await pressEnter();
+
+  expect(changes).toEqual([]);
+  expect(container.querySelector(".search-panel")).toBeNull();
+});
+
+test("Enter with the scope on decks ticks the decks that have the search even if cards have it too", async () => {
+  await show("zug");
+  await act(async () =>
+    [...container.querySelectorAll(".search-head button")]
+      .find((button) => button.textContent === "Decks")
+      .click(),
+  );
+  await pressEnter();
+
+  expect(changes.at(-1).decks).toEqual([1]);
+});

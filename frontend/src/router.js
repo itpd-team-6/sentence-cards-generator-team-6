@@ -5,15 +5,20 @@ export const PAGES = [
   { id: "study", name: "Study", path: "/study" },
   { id: "texts", name: "Texts", path: "/texts" },
   { id: "cards", name: "Your cards", path: "/your-cards" },
+  { id: "decks", name: "Decks", path: "/decks" },
 ];
 
 // A saved text has its own address inside the Texts page: `#/texts/12`.
 const TEXT = /^\/texts\/(\d+)$/;
 
+// A deck has its own address inside the Decks page: `#/decks/3`.
+const DECK = /^\/decks\/(\d+)$/;
+
 // The page an address names. An empty or unknown address names the Study page, which the product opens on.
 export function pageOf(hash) {
   const path = hash.replace(/^#/, "");
   if (TEXT.test(path)) return "texts";
+  if (DECK.test(path)) return "decks";
   const page = PAGES.find((item) => item.path === path);
   return page ? page.id : PAGES[0].id;
 }
@@ -21,6 +26,12 @@ export function pageOf(hash) {
 // The id of the saved text an address opens, or null when it opens no text.
 export function textIdOf(hash) {
   const found = TEXT.exec(hash.replace(/^#/, ""));
+  return found ? Number(found[1]) : null;
+}
+
+// The id of the deck an address opens, or null when it opens no deck.
+export function deckIdOf(hash) {
+  const found = DECK.exec(hash.replace(/^#/, ""));
   return found ? Number(found[1]) : null;
 }
 
@@ -32,6 +43,11 @@ export function hrefOf(id) {
 // The address to put in the link to a saved text.
 export function hrefOfText(textId) {
   return `#/texts/${textId}`;
+}
+
+// The address to put in the link to a deck.
+export function hrefOfDeck(deckId) {
+  return `#/decks/${deckId}`;
 }
 
 function subscribe(listener) {
@@ -49,4 +65,9 @@ export function usePage() {
 // The saved text the address opens now, or null.
 export function useTextId() {
   return textIdOf(useSyncExternalStore(subscribe, currentHash));
+}
+
+// The deck the address opens now, or null.
+export function useDeckId() {
+  return deckIdOf(useSyncExternalStore(subscribe, currentHash));
 }

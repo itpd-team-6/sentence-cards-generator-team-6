@@ -44,7 +44,7 @@ function Section({ name, rows, expanded, onExpand }) {
 
 // The box that searches the cards, the texts and the decks from one place (FR-020). The list under it narrows as the
 // learner types. Under the box a panel says what was found, a section for each kind. A card of the panel puts its word in
-// the search, and a text or a deck of the panel ticks it in the side list. Enter and Escape close the panel.
+// the search, and a text or a deck of the panel ticks it in the side list. Enter takes what was typed, even if it is not complete (see `takeSearch`), and Enter and Escape close the panel.
 export default function CardSearch({ cards, decks, texts, filters, onChange }) {
   const [open, setOpen] = useState(false);
   const input = useRef(null);
@@ -65,14 +65,30 @@ export default function CardSearch({ cards, decks, texts, filters, onChange }) {
     : [];
   const keep = (kind) => scope === "all" || scope === kind;
 
-  const tick = (part, id) =>
+  const tickAll = (part, ids) =>
     onChange({
       ...filters,
-      [part]: filters[part].includes(id)
-        ? filters[part]
-        : [...filters[part], id],
+      [part]: [
+        ...filters[part],
+        ...ids.filter((id) => !filters[part].includes(id)),
+      ],
       search: "",
     });
+  const tick = (part, id) => tickAll(part, [id]);
+
+  // Enter takes what was typed even if it is not complete. With "All", the cards that have it stay listed; when no card
+  // has it, the decks that have it in the title are ticked, or else the texts. With the scope on decks or on texts, those
+  // are ticked.
+  function takeSearch() {
+    const decksWith = deckRows.map((deck) => deck.id);
+    const textsWith = textRows.map((text) => text.id);
+    if (scope === "decks" || (scope === "all" && cardRows.length === 0)) {
+      if (decksWith.length > 0) return tickAll("decks", decksWith);
+    }
+    if (scope === "texts" || (scope === "all" && cardRows.length === 0)) {
+      if (textsWith.length > 0) return tickAll("texts", textsWith);
+    }
+  }
 
   return (
     <div
@@ -109,6 +125,7 @@ export default function CardSearch({ cards, decks, texts, filters, onChange }) {
           onChange({ ...filters, search: event.target.value });
         }}
         onKeyDown={(event) => {
+          if (event.key === "Enter") takeSearch();
           if (event.key === "Escape" || event.key === "Enter") setOpen(false);
         }}
       />
