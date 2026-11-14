@@ -84,10 +84,33 @@ It reports a table with the outcome and the assistance of each task for each par
 It also reports the themes of the notes with the sessions they came from, a severity of `Critical`, `Major` or `Minor` for each finding with its reason, a comparison with the events that were instrumented and what they could not cover, and the limitations.
 No other measure is added after the data.
 
+## Recruitment
+
+The team asks people it knows outside the team, such as students of other courses, by a private message.
+A person can take part when they are 18 or older, study Russian, English or German, have not used the product before, and are not a team member, the Customer, an instructor or course staff.
+The target is at least three participants, and five is the design target.
+A participant who withdraws is replaced under the next free code, and the withdrawn code is not reused.
+
+The message:
+
+> Hi! Our team is testing a web app that helps you remember the words of a text you read in a language you are learning.
+> We are looking for people who are 18 or older and study Russian, English or German.
+> The session is in person, on the campus network, and takes about 30 minutes: you do three short tasks, answer a few questions, and we record the session.
+> The test is of the app, not of you.
+> You can stop at any time, and you decide whether we may use a quote from you.
+> If you want to take part, reply and we will arrange a time and send you the consent text.
+
 ## Schedule
 
-The sessions are arranged in SPRINT-08 and have no fixed dates yet.
+The sessions are arranged in SPRINT-08.
+The dates and the participants are placeholders until real ones exist.
 The results are due with Submission 8 on 2026-11-21.
+
+| Code | Date and time  | Status        |
+| ---- | -------------- | ------------- |
+| P-01 | to be arranged | not recruited |
+| P-02 | to be arranged | not recruited |
+| P-03 | to be arranged | not recruited |
 
 ## Roles
 
