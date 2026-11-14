@@ -800,3 +800,26 @@ The estimated time of today's cards moves from the pill in the header to the pan
 - **Why:** the header gets a fourth tab, "Decks" ([`DEC-065`](#dec-065)), and the bar does not have room for the four tabs, the pill with its count and its time, the state and the library without dropping something. [`DEC-068`](#dec-068) dropped the time on a narrow bar, so a learner on a phone never saw it.
   The pill keeps the number of cards to study, which is what the learner needs at a glance, and the panel title says the time, "Today — All decks · about 4 min", with the estimate of [`DEC-066`](#dec-066). The panel does not open on a screen that has no pointer, so there a phone shows only the number; the Study page and the page of a deck still say the time.
   The team made this choice without the Customer, who asked for the statistics at the top of the Study page ([`DEC-066`](#dec-066)) and will see the header at the sprint review.
+
+## DEC-070
+
+When the language model misjudges and a second card is made for a meaning the learner already has, the product makes the card without asking the learner, who can delete it.
+
+- **Status:** Active
+- **Date:** 2026-11-13
+- **Made by:** Team
+- **Source:** [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165) and [the tests on the model of the virtual machine](research/fr-009-model-test.md)
+- **Why:** the Customer said "we can't fully trust the LLM. So we have to decide what happens if it misclassifies. So if it decides to create a new card although similar cards exist. So either we should ask the user to decide whether they want this new card, or we allow it to just create it and not notify the user. So should we highlight such cards where we are not sure whether they should exist, or should we keep it simple, generate a card, and let the user decide, maybe they notice that they already have such a card?" (Customer, [01:24:39] of the Week 4 meeting) and did not choose ([`DEC-043`](#dec-043)).
+  The team chose the simple way in [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165), because the tests of Week 4 found no misjudgment and the case seemed rare.
+  The test table of the model of the virtual machine ([`fr-009-model-test.md`](research/fr-009-model-test.md)) shows that it is not rare for this model on the team's cases: the question of today made a second card for the same meaning in 14 of 54 cases that expected "exists", in the same four cases in all three runs (a fifth in two of them), and refused a needed card in none of 54.
+  The other way of asking that was tried, the format of the Customer in the team's version of it, made no second card and refused 6 of 18 needed cards, a mistake that the learner cannot repair by deleting a card.
+  On 2026-11-14 the team tried the other suggestions of the Customer on 29 new cases, with a rule written before the tests: a wording is adopted only if it makes fewer second cards than the question of today and refuses no needed card.
+  Longer phrases made 8 second cards against 7 of the question of today, his format with longer phrases made 4 but refused 9 of 30 needed cards, and his meaning records, which he asked for on 2026-11-14 at 16:41, made 12 second cards and refused 1 of 30 needed cards.
+  None met the rule.
+  The team told the Customer the results in the group chat, and he answered "Thanks! Let's keep today's question then" (Customer, group chat, 2026-11-14 18:02).
+  The team keeps the simple way and the question of today, because a second card can be deleted and a refused card is lost.
+- **Consequences:**
+  - A learner can see two cards for one meaning of a word, with two phrases, and deletes the one they do not want, as [`FR-009`](functional-requirements/fr/FR-009.md) says.
+  - The team does not know how often a real learner meets it, because the cases of the test are the team's.
+  - The team told the Customer this decision and the numbers in the group chat on 2026-11-14 at 16:10 and 17:46.
+  - The Customer asked for the test setup (group chat, 2026-11-14 18:07): the scripts are in [`backend/scripts/`](../backend/scripts/) and the results are in [`docs/research/`](research/fr-009-model-test.md).
