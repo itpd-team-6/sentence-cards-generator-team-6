@@ -4,3 +4,5 @@
 ^https://chatgpt\.com
 # github.com/deemp/songs2anki pages intermittently return 503 to the link checker. Links opened manually in a browser on 2026-10-02.
 ^https://github\.com/deemp/songs2anki/
+# The private usability data repository needs authentication, so the link checker gets a 404. Opened manually in a browser, signed in as a member of the organization, on 2026-11-14.
+^https://github\.com/itpd-team-6/sentence-cards-generator-team-6-usability-data
