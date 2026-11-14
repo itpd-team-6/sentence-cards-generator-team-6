@@ -92,10 +92,11 @@ A learner chooses which decks to study in the study queue, with its list of deck
 
 ### SPRINT-07
 
-A learner keeps their texts and marks more words in them later, and finds studying, adding a text and their cards in a few steps, as the Customer ranked the work on texts and the interface first ([DEC-061](decisions.md#dec-061), the Week 6 meeting).
-This goal is provisional until the sprint is planned.
+A learner can revisit saved texts, manage cards and decks, and study through the updated interface, and the team has a UT-01 design ready for sessions on staging.
 
-- **Due:** 2026-11-14
+- **Due:** 2026-11-15
+- **Sprint Backlog:** [the issues scheduled into SPRINT-07](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/5)
+- **Planned Velocity:** 0
 - **Candidate stories (refined, not scheduled):**
   - [US-15](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/232): keep my texts and pick more words from them later (Must Have, 8 points).
   - [US-17](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234): find studying, adding a text and my cards in a few steps (Must Have, 5 points).
@@ -105,10 +106,11 @@ This goal is provisional until the sprint is planned.
 
 ### SPRINT-08
 
-A learner keeps their cards and progress under their own account, on every device, as the Customer ranked login after the work on texts and the interface and before the audio ([DEC-061](decisions.md#dec-061), the Week 6 meeting).
+The team runs UT-01 on staging and analyzes the recorded sessions to report findings and the QR-08 QRT-01 verdict.
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-21
+- **Sprint Backlog:** [the issues scheduled into SPRINT-08](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/6)
 - **Candidate stories (refined, not scheduled):**
   - [US-19](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/236): keep my cards and progress under my own account (Should Have, 8 points).
 
