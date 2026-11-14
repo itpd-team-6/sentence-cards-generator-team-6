@@ -149,3 +149,65 @@ A short name for a [service level indicator](#service-level-indicator).
 A number read from the [signals](#signal) that says how well the product serves a request, such as the request latency of [SLI-01](observability.md#sli-01).
 
 **Defined by:** [the observability plan](observability.md#the-slis) and [QR-07](quality-requirements/qr/QR-07.md).
+
+## Usability Testing
+
+### Usability test
+
+A planned evaluation in which representative learners attempt the tasks of `UT-01` on staging so the team can assess whether they reach the first answered card without help.
+
+**Defined by:** [UT-01](usability-tests/ut-01/README.md) and [QR-08](quality-requirements/qr/QR-08.md).
+
+### Participant
+
+An adult learner of Russian, English or German who matches the profile of `UT-01`, has not used the product before, and is outside the team, the Customer and the course staff.
+
+**Defined by:** [the UT-01 participant profile](usability-tests/ut-01/README.md#participant-profile).
+
+### Usability session
+
+One participant's run of the tasks and surveys of `UT-01` under its protocol, with consent and recording required for the session to count.
+
+**Defined by:** [the UT-01 protocol](usability-tests/ut-01/README.md#protocol) and [the session instructions](usability-tests/ut-01/sessions/README.md).
+
+### Consent
+
+A participant's durable agreement before a session to the participation, recording, sanitized public results and data handling stated in the consent template, with separate optional permission for an anonymized quote.
+
+**Defined by:** [the UT-01 consent template](usability-tests/ut-01/consent.md).
+
+### Recording
+
+The private record of a participant's usability session, kept in the team's cloud folder with instructor access until deletion after grading.
+
+**Defined by:** [the UT-01 consent and data map](usability-tests/ut-01/README.md#consent-and-data) and [the consent template](usability-tests/ut-01/consent.md).
+
+### Measure
+
+A quantity recorded for one participant in one usability session, such as a task outcome, time on task, SEQ answer or SUS score.
+
+**Defined by:** [the UT-01 measures](usability-tests/ut-01/README.md#measures) and [the observation sheet](usability-tests/ut-01/sessions/README.md#observation-sheet).
+
+### Metric
+
+A product-analytics number computed from recorded product events, such as cards studied per active learner per week.
+
+**Defined by:** [the analytics metric definitions and queries](analytics.md#the-value-and-the-metrics).
+
+### Statistic
+
+A summary computed from the recorded values of a usability measure, such as the main task's median SEQ or the SUS mean across the counted sessions.
+
+**Defined by:** [the UT-01 analysis plan](usability-tests/ut-01/README.md#analysis-plan) and [QR-08](quality-requirements/qr/QR-08.md#response-measure).
+
+### SUS
+
+The System Usability Scale, the ten-item questionnaire answered after all `UT-01` tasks and scored from its recorded responses to assess perceived usability.
+
+**Defined by:** [the UT-01 SUS questionnaire and scoring](usability-tests/ut-01/surveys.md#sus-after-all-the-tasks).
+
+### SEQ
+
+The Single Ease Question, asked after each `UT-01` task to record the participant's rating from 1 for very difficult to 7 for very easy.
+
+**Defined by:** [the UT-01 SEQ question](usability-tests/ut-01/surveys.md#seq-after-each-task) and [QR-08](quality-requirements/qr/QR-08.md#response-measure).
