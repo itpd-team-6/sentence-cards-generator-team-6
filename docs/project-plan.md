@@ -134,6 +134,7 @@ This goal is provisional until the sprint is planned.
 | [QR-03](quality-requirements/qr/QR-03.md) | [QRT-01](quality-requirements/qr/QR-03.md#qrt-01) | Not verified | None                    | [SPRINT-07](#sprint-07) | None                                                                                                      |
 | [QR-06](quality-requirements/qr/QR-06.md) | [QRT-01](quality-requirements/qr/QR-06.md#qrt-01) | Not verified | None                    | [SPRINT-07](#sprint-07) | None                                                                                                      |
 | [QR-07](quality-requirements/qr/QR-07.md) | [QRT-01](quality-requirements/qr/QR-07.md#qrt-01) | Passes       | [SPRINT-06](#sprint-06) | [SPRINT-06](#sprint-06) | [QRT-01 evidence](../reports/week-06/qrt-01-evidence.md)                                                  |
+| [QR-08](quality-requirements/qr/QR-08.md) | [QRT-01](quality-requirements/qr/QR-08.md#qrt-01) | Not verified | None                    | [SPRINT-08](#sprint-08) | None                                                                                                      |
 
 ## Progress Monitoring
 
