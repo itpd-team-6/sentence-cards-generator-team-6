@@ -143,3 +143,36 @@ test("the session is kept for the tab, so a reload without the query keeps it", 
     "X-Participant-Code": "P-02",
   });
 });
+
+test("an address that starts a new session replaces the code of the tab, so a second participant never keeps the first code", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-01",
+  );
+  const first = await load();
+  expect(first.eventHeaders()["X-Participant-Code"]).toBe("P-01");
+
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-02",
+  );
+  const second = await load();
+
+  expect(second.eventHeaders()["X-Participant-Code"]).toBe("P-02");
+});
+
+test("a new session address without a code drops the code of the one before", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-01",
+  );
+  await load().then((m) => m.eventHeaders());
+
+  window.history.replaceState(null, "", "/?source=usability-test");
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({ "X-Event-Source": "usability-test" });
+});

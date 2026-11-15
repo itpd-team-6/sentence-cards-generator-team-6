@@ -77,6 +77,7 @@ const readStored = (key) => {
 const store = (key, value) => {
   try {
     if (value) sessionStorage.setItem(key, value);
+    else sessionStorage.removeItem(key);
   } catch {
     // Not kept: the value lives only for this call.
   }
@@ -89,17 +90,19 @@ function readSession() {
   try {
     const params = new URLSearchParams(window.location.search);
     const fromUrlSource = params.get("source");
-    if (!source && SESSION_SOURCES.includes(fromUrlSource)) {
+    const fromUrlParticipant = params.get("participant") ?? "";
+    const code = PARTICIPANT_SHAPE.test(fromUrlParticipant)
+      ? fromUrlParticipant
+      : null;
+    if (SESSION_SOURCES.includes(fromUrlSource)) {
+      // An address that starts a session replaces the session of the tab, so a second participant opened in the
+      // same tab never keeps the code of the first one.
       source = fromUrlSource;
+      participant = code;
       store(SOURCE_KEY, source);
-    }
-    const fromUrlParticipant = params.get("participant");
-    if (
-      !participant &&
-      fromUrlParticipant &&
-      PARTICIPANT_SHAPE.test(fromUrlParticipant)
-    ) {
-      participant = fromUrlParticipant;
+      store(PARTICIPANT_KEY, participant);
+    } else if (code) {
+      participant = code;
       store(PARTICIPANT_KEY, participant);
     }
   } catch {
