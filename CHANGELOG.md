@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.0) - YYYY-MM-DD
+
 ### Added
 
 - A study card tells new, forgotten and review cards apart, and the Study page counts each kind.
