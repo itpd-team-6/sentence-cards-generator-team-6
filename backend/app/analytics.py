@@ -6,6 +6,7 @@ failure to send is dropped: the product works the same without the analytics bac
 """
 
 import hashlib
+import re
 import threading
 from typing import Any
 
@@ -18,6 +19,18 @@ from app.database import LIBRARY_HEADER
 SOURCE_HEADER = "X-Event-Source"
 # What the traffic is: `smoke` is the team's own check of the pipeline, and a metric leaves it out.
 SOURCES = ("web", "usability-test", "smoke")
+
+PARTICIPANT_HEADER = "X-Participant-Code"
+# A usability-test participant code is `P-01`, `P-02` and so on (docs/usability-tests/ut-01). The shape is enforced so a
+# code can never be a name, an e-mail address or any other personal data: a request that sends anything else has none.
+PARTICIPANT_SHAPE = re.compile(r"^P-\d{2}$")
+
+
+def clean_participant(code: str | None) -> str | None:
+    """The participant code of a request, or None. Only a `P-nn` code is kept, so no name or e-mail can get through."""
+    if code is not None and PARTICIPANT_SHAPE.match(code):
+        return code
+    return None
 
 
 def learner_id(code: str | None) -> str:
@@ -47,17 +60,19 @@ def deliver(settings: Settings, row: dict[str, Any]) -> None:
 class Tracker:
     """Records the events of one request, for the learner and the traffic source the request carries."""
 
-    def __init__(self, learner: str, source: str) -> None:
+    def __init__(self, learner: str, source: str, participant: str | None = None) -> None:
         self.learner = learner
         self.source = source
+        self.participant = participant
 
     def record(self, event: str, **fields: Any) -> None:
         settings = get_settings()
         if not settings.analytics_enabled or not settings.analytics_url:
             return
-        deliver(
-            settings, {"event": event, "learner_id": self.learner, "source": self.source, **fields}
-        )
+        row = {"event": event, "learner_id": self.learner, "source": self.source, **fields}
+        if self.participant is not None:
+            row["participant_code"] = self.participant
+        deliver(settings, row)
 
 
 def get_tracker(request: Request) -> Tracker:
@@ -66,4 +81,5 @@ def get_tracker(request: Request) -> Tracker:
     return Tracker(
         learner_id(request.headers.get(LIBRARY_HEADER)),
         source if source in SOURCES else "web",
+        clean_participant(request.headers.get(PARTICIPANT_HEADER)),
     )

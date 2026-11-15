@@ -116,6 +116,10 @@ The focus metric is computed by this query in the dashboard, and not by hand.
 Every event is named `object_action` in snake case.
 Every event carries `learner_id`, a one-way hash of the library code of the learner, and `source`, which is `web`, `usability-test`, or `smoke`.
 `smoke` marks the traffic the team makes to check the pipeline, and a metric leaves it out.
+Real use is `web`.
+A usability-test session is opened with the address `?source=usability-test`, so its events arrive with `source=usability-test`; the frontend keeps it for the tab and sends it with every call in the `X-Event-Source` header.
+Such a session may also carry `?participant=P-01`, kept the same way and sent in the `X-Participant-Code` header, so `participant_code` (`P-01`, `P-02` and so on) is on its events and each session is read from the events it produced.
+The participant code is a `P-nn` code only: the backend drops anything else, so `participant_code` is never a name, an e-mail address or any other personal data, and an event of a session without a code has no `participant_code` field.
 
 | Event               | Fires when                                                                              | Fields                                                                                                                                                                                              | Collected at                      |
 | ------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
@@ -157,6 +161,7 @@ Both dashboard addresses are in the Moodle submission, and the week report links
 ## Collected Data
 
 The events collect the fields in [the events](#the-events): the languages of a text, the number of marked words, the number of cards made and failed, the answer to a card, the way a sentence was replaced, a hash of the library code, and `source`.
+A usability-test session also collects `participant_code`, a `P-nn` code that is never a name, an e-mail address or any other personal data.
 They never collect a text, a word, a sentence, a translation, a name, an e-mail address or any other personal data, and they never collect the library code itself, which opens a library.
 An event identifies a learner by `learner_id`, the first 16 characters of the SHA-256 hash of the library code, which the browser made at random and which is not derived from any personal data, so the identifier cannot be turned back into the code or into a person.
 Collection is switched off with `ANALYTICS_ENABLED=false`.

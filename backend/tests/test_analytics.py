@@ -33,10 +33,12 @@ def http():
     app.dependency_overrides.clear()
 
 
-def headers(source: str | None = None) -> dict[str, str]:
+def headers(source: str | None = None, participant: str | None = None) -> dict[str, str]:
     found = {database.LIBRARY_HEADER: CODE}
     if source:
         found[analytics.SOURCE_HEADER] = source
+    if participant:
+        found[analytics.PARTICIPANT_HEADER] = participant
     return found
 
 
@@ -99,6 +101,26 @@ def test_the_source_is_web_unless_the_request_says_smoke_or_usability_test(sent,
     http.post("/api/texts", json=TEXT, headers=headers("anything else"))
 
     assert [row["source"] for row in sent] == ["web", "smoke", "usability-test", "web"]
+
+
+def test_a_usability_session_keeps_the_participant_code_with_the_events(sent, http) -> None:
+    http.post("/api/texts", json=TEXT, headers=headers("usability-test", "P-01"))
+
+    assert sent[0]["source"] == "usability-test"
+    assert sent[0]["participant_code"] == "P-01"
+
+
+def test_an_event_without_a_participant_code_has_no_such_field(sent, http) -> None:
+    http.post("/api/texts", json=TEXT, headers=headers())
+
+    assert "participant_code" not in sent[0]
+
+
+def test_a_participant_code_that_is_not_the_shape_is_dropped(sent, http) -> None:
+    http.post("/api/texts", json=TEXT, headers=headers("usability-test", "Alice Smith"))
+    http.post("/api/texts", json=TEXT, headers=headers("usability-test", "alice@example.test"))
+
+    assert all("participant_code" not in row for row in sent)
 
 
 def test_asking_for_cards_records_cards_generated_with_the_counts(sent, http) -> None:
