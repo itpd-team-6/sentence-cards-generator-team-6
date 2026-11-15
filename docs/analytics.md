@@ -31,19 +31,19 @@ Each metric's name links to its section.
 
 Rejected as a vanity metric: total cards stored, because it grows with every text pasted even when nobody studies a card, and it never moves when the study queue improves.
 
-The focus metric depends on its input metrics and on real users: until people outside the team use the product it has no value, and the test traffic of the team, tagged `source=smoke`, is not shown as its value.
+The focus metric depends on its input metrics and on real users: until people outside the team use the product it has no value, and the test traffic of the team, tagged `source=smoke`, and the usability-test traffic, tagged `source=usability-test`, are not shown as its value.
 
 ### Cards studied per active learner per week
 
 - **Definition:** A rate: the answers to cards in the week divided by the active learners in that week; an active learner is a learner who answered at least one card in the week, and the unit is answers per learner per week.
 - **Source:** [`card_answered`](#the-events).
-- **Query:** the count of `card_answered` events in the week, excluding `source = 'smoke'`, divided by the count of distinct `learner_id` values in those events:
+- **Query:** the count of `card_answered` events in the week, excluding `source = 'smoke'` and `source = 'usability-test'`, divided by the count of distinct `learner_id` values in those events:
 
   ```sql
   SELECT date_trunc('week', to_timestamp_micros(_timestamp)) AS week,
          count(*) * 1.0 / count(DISTINCT learner_id) AS answers_per_learner
   FROM "events"
-  WHERE event = 'card_answered' AND source != 'smoke'
+  WHERE event = 'card_answered' AND source NOT IN ('smoke', 'usability-test')
   GROUP BY week
   ORDER BY week
   ```
@@ -54,14 +54,14 @@ The focus metric is computed by this query in the dashboard, and not by hand.
 
 - **Definition:** A rate: the sentences the learner replaced in the week, by asking for a new one or by editing it, divided by the answers to cards in that week; the unit is replaced sentences per answer.
 - **Source:** [`sentence_replaced`](#the-events) and [`card_answered`](#the-events).
-- **Query:** the sum of `cards` of the `sentence_replaced` events in the week, excluding `source = 'smoke'`, divided by the count of `card_answered` events in the week:
+- **Query:** the sum of `cards` of the `sentence_replaced` events in the week, excluding `source = 'smoke'` and `source = 'usability-test'`, divided by the count of `card_answered` events in the week:
 
   ```sql
   SELECT date_trunc('week', to_timestamp_micros(_timestamp)) AS week,
          sum(CASE WHEN event = 'sentence_replaced' THEN cards ELSE 0 END) * 1.0
            / NULLIF(sum(CASE WHEN event = 'card_answered' THEN 1 ELSE 0 END), 0) AS replacements_per_answer
   FROM "events"
-  WHERE source != 'smoke'
+  WHERE source NOT IN ('smoke', 'usability-test')
   GROUP BY week
   ORDER BY week
   ```
@@ -70,13 +70,13 @@ The focus metric is computed by this query in the dashboard, and not by hand.
 
 - **Definition:** A rate: the new cards that got a sentence in the week divided by the learners who asked for sentences in that week; the unit is cards per learner per week.
 - **Source:** [`cards_generated`](#the-events).
-- **Query:** the sum of `cards_made` of the `cards_generated` events in the week, excluding `source = 'smoke'`, divided by the count of distinct `learner_id` values in those events:
+- **Query:** the sum of `cards_made` of the `cards_generated` events in the week, excluding `source = 'smoke'` and `source = 'usability-test'`, divided by the count of distinct `learner_id` values in those events:
 
   ```sql
   SELECT date_trunc('week', to_timestamp_micros(_timestamp)) AS week,
          sum(cards_made) * 1.0 / count(DISTINCT learner_id) AS cards_per_learner
   FROM "events"
-  WHERE event = 'cards_generated' AND source != 'smoke'
+  WHERE event = 'cards_generated' AND source NOT IN ('smoke', 'usability-test')
   GROUP BY week
   ORDER BY week
   ```
@@ -85,13 +85,13 @@ The focus metric is computed by this query in the dashboard, and not by hand.
 
 - **Definition:** A rate: the new cards that got a sentence divided by the new cards that were asked for, which are the ones that got a sentence and the ones the language model failed for; the unit is cards per asked card.
 - **Source:** [`cards_generated`](#the-events).
-- **Query:** the sum of `cards_made` of the `cards_generated` events in the week, excluding `source = 'smoke'`, divided by the sum of `cards_made` and `words_failed`:
+- **Query:** the sum of `cards_made` of the `cards_generated` events in the week, excluding `source = 'smoke'` and `source = 'usability-test'`, divided by the sum of `cards_made` and `words_failed`:
 
   ```sql
   SELECT date_trunc('week', to_timestamp_micros(_timestamp)) AS week,
          sum(cards_made) * 1.0 / NULLIF(sum(cards_made) + sum(words_failed), 0) AS success_rate
   FROM "events"
-  WHERE event = 'cards_generated' AND source != 'smoke'
+  WHERE event = 'cards_generated' AND source NOT IN ('smoke', 'usability-test')
   GROUP BY week
   ORDER BY week
   ```
@@ -100,13 +100,13 @@ The focus metric is computed by this query in the dashboard, and not by hand.
 
 - **Definition:** A rate: the texts saved in the week divided by the learners who saved at least one text in that week; the unit is texts per learner per week.
 - **Source:** [`text_saved`](#the-events).
-- **Query:** the count of `text_saved` events in the week, excluding `source = 'smoke'`, divided by the count of distinct `learner_id` values in those events:
+- **Query:** the count of `text_saved` events in the week, excluding `source = 'smoke'` and `source = 'usability-test'`, divided by the count of distinct `learner_id` values in those events:
 
   ```sql
   SELECT date_trunc('week', to_timestamp_micros(_timestamp)) AS week,
          count(*) * 1.0 / count(DISTINCT learner_id) AS texts_per_learner
   FROM "events"
-  WHERE event = 'text_saved' AND source != 'smoke'
+  WHERE event = 'text_saved' AND source NOT IN ('smoke', 'usability-test')
   GROUP BY week
   ORDER BY week
   ```
@@ -115,7 +115,7 @@ The focus metric is computed by this query in the dashboard, and not by hand.
 
 Every event is named `object_action` in snake case.
 Every event carries `learner_id`, a one-way hash of the library code of the learner, and `source`, which is `web`, `usability-test`, or `smoke`.
-`smoke` marks the traffic the team makes to check the pipeline, and a metric leaves it out.
+`smoke` marks the traffic the team makes to check the pipeline, and `usability-test` marks a usability-test session (issue #278); a metric leaves both out, so it counts real use only.
 Real use is `web`.
 A usability-test session is opened with the address `?source=usability-test`, so its events arrive with `source=usability-test`; the frontend keeps it for the tab and sends it with every call in the `X-Event-Source` header.
 Such a session may also carry `?participant=P-01`, kept the same way and sent in the `X-Participant-Code` header, so `participant_code` (`P-01`, `P-02` and so on) is on its events and each session is read from the events it produced.
@@ -147,13 +147,13 @@ The backend and its dashboards are reachable from the university network only, a
 The staging dashboard is `Product analytics (staging)` in the organization `analytics_staging`, and the production dashboard is `Product analytics (production)` in the organization `analytics_production`.
 Each chart is named after its metric and runs the query recorded under that metric's section.
 
-| Chart                              | Environment | What it runs                                                                  |
-| ---------------------------------- | ----------- | ----------------------------------------------------------------------------- |
-| `Cards studied per active learner` | staging     | the focus metric's query, with `source = 'smoke'` excluded                    |
-| `Cards studied per active learner` | production  | the same query, over the production organization's traffic                    |
-| `Cards made per active learner`    | staging     | the L1 input metric's query, which has values before the focus metric does    |
-| `Cards made per active learner`    | production  | the same query, over the production organization's traffic                    |
-| `Recent events`                    | staging     | the list of the last events, which shows the test event tagged `source=smoke` |
+| Chart                              | Environment | What it runs                                                                               |
+| ---------------------------------- | ----------- | ------------------------------------------------------------------------------------------ |
+| `Cards studied per active learner` | staging     | the focus metric's query, with `source = 'smoke'` and `source = 'usability-test'` excluded |
+| `Cards studied per active learner` | production  | the same query, over the production organization's traffic                                 |
+| `Cards made per active learner`    | staging     | the L1 input metric's query, which has values before the focus metric does                 |
+| `Cards made per active learner`    | production  | the same query, over the production organization's traffic                                 |
+| `Recent events`                    | staging     | the list of the last events, which shows the test event tagged `source=smoke`              |
 
 The staging dashboard is checked with a test event tagged `source=smoke`: the event list shows it and the charts leave it out; the production dashboard carries the same charts and queries and receives no test traffic.
 Both dashboard addresses are in the Moodle submission, and the week report links one sanitized screenshot from each environment.
