@@ -5,10 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [0.4.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.0) - YYYY-MM-DD
+## [0.4.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.0) - 2026-11-15
 
 ### Added
 
+- A usability-test session sends `source=usability-test` and an optional `participant_code` with the analytics events, so a test session can be told apart from real use and filtered out of the metrics; real use stays `source=web` and carries no code ([FR-016](docs/functional-requirements/fr/FR-016.md)).
 - A study card tells new, forgotten and review cards apart, and the Study page counts each kind.
 - The Study box shows a ring with the cards to study, a greeting, and about how many minutes the session takes, counting 30 seconds for each card ([DEC-066](docs/decisions.md#dec-066)).
 - Each deck on the Study page shows how much of it is learned, and the list of decks gives it as `learned_percent`.

@@ -104,7 +104,7 @@ A learner can revisit saved texts, manage cards and decks, and study through the
 
 #### REL-07
 
-- **Released:** [v0.4.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.0) on YYYY-MM-DD.
+- **Released:** [v0.4.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.0) on 2026-11-15.
 - **Checked QRs:**
   - [QR-03](quality-requirements/qr/QR-03.md)
 
