@@ -817,9 +817,11 @@ When the language model misjudges and a second card is made for a meaning the le
   Longer phrases made 8 second cards against 7 of the question of today, his format with longer phrases made 4 but refused 9 of 30 needed cards, and his meaning records, which he asked for on 2026-11-14 at 16:41, made 12 second cards and refused 1 of 30 needed cards.
   None met the rule.
   The team told the Customer the results in the group chat, and he answered "Thanks! Let's keep today's question then" (Customer, group chat, 2026-11-14 18:02).
-  The team keeps the simple way and the question of today, because a second card can be deleted and a refused card is lost.
+  At 22:44 the same day the Customer wrote that the test of the records does not implement the approach he had in mind and described six steps (Customer, group chat, 2026-11-14 22:44), so the records are not tested as he described them.
+  The team keeps the simple way and the question of today until the records are tested as he described them, because a second card can be deleted and a refused card is lost.
 - **Consequences:**
   - A learner can see two cards for one meaning of a word, with two phrases, and deletes the one they do not want, as [`FR-009`](functional-requirements/fr/FR-009.md) says.
   - The team does not know how often a real learner meets it, because the cases of the test are the team's.
   - The team told the Customer this decision and the numbers in the group chat on 2026-11-14 at 16:10 and 17:46.
+  - The team plans to adjust the test of the records to the six steps of the Customer, run it, and send him the results in the group chat.
   - The Customer asked for the test setup (group chat, 2026-11-14 18:07): the scripts are in [`backend/scripts/`](../backend/scripts/) and the results are in [`docs/research/`](research/fr-009-model-test.md).

@@ -3,6 +3,7 @@
 This is the evidence for [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165), the action point of the Week 4 meeting ([`DEC-043`](../decisions.md#dec-043)), and for the choice recorded in [`DEC-070`](../decisions.md#dec-070).
 The tests send to the model the question the product sends, and say for each case whether the model made a card or said that the card exists.
 There are three tests: the test table of 2026-11-13, the test of the Customer's two suggestions on new cases of 2026-11-14, and the test of the Customer's meaning records of 2026-11-14.
+The Customer's six steps for the records (2026-11-14 22:44) are not tested yet, see [the section about them](#the-customers-six-steps-for-the-records).
 
 ## What was run
 
@@ -102,6 +103,23 @@ The question of today made 7 second cards again, as in the test of the suggestio
 The records separated well the senses that are very different (bat, spring, лук as a weapon, Birne as a fruit), and in several cases (Decke, Birne, зелёный лук) they marked the same sense as another one.
 The team reads this as a sign that the record of a short or vague sentence is not specific enough, and has not tested it.
 
+## The Customer's six steps for the records
+
+On 2026-11-14 at 22:44 the Customer wrote in the group chat that the test of the records "doesn't implement the approach with records I had in mind", and asked the team to review the logic (Customer, group chat, 2026-11-14 22:44).
+He described six steps:
+
+1. Gather the original context: the word combination (the several words selected for a card) and the sentences where its words appear.
+2. Ask the model for the lemma (the normalized form) of the word combination.
+3. Find all the meaning records keyed by that lemma.
+4. Give the model the word combination, its sentences and all the records found.
+5. Ask the model which record matches the word combination.
+6. If one matches, use it; if none does, create a new meaning record.
+
+The test above does not follow these steps.
+It writes a record for the new sentence first and compares it with the records of the cards in a second question, which is the team's design, and it does not ask for the lemma first.
+So its results say how the team's way of using the records works, not how the Customer's approach works, and the team has not run his approach.
+The team plans to adjust the test to his six steps, run it, and send him the results in the group chat.
+
 ## What it shows
 
 - With the question of today, the model made a second card for the same meaning in 14 of 54 cases that expected "exists", and in the same four cases in all three runs, so these are not chance.
@@ -112,8 +130,9 @@ The team reads this as a sign that the record of a short or vague sentence is no
 - The longer passages did not make the model clearly worse: 8 of 8 in the first run, and 7 of 8 in each of the two later ones (the wrong one is the last case of the table above).
 - The format of the Customer, in the way the team wrote it, was worse in the first run, and its mistakes are the kind that loses a meaning, which the learner cannot repair by deleting a card.
   It made fewer second cards on the new cases, and it refused 9 needed cards.
-- None of the suggestions of the Customer (longer phrases, his format, the meaning records) beat the question of today under the rule the team wrote before the tests, so the team did not change the question of the product.
+- None of the suggestions of the Customer (longer phrases, his format, the meaning records) beat the question of today under the rule the team wrote before the tests, so, as of 2026-11-14 18:02, the team did not change the question of the product.
   The Customer answered the team's results in the group chat: "Thanks! Let's keep today's question then" (Customer, group chat, 2026-11-14 18:02).
+  At 22:44 the same day he wrote that the test of the records does not follow the approach he had in mind, so the team reads this answer as covering the tests above, not his six steps.
 
 ## Limits
 
@@ -121,4 +140,4 @@ The team reads this as a sign that the record of a short or vague sentence is no
 - One model and one day for each test, and one run of `customer` in the first test.
 - One of the 29 new cases is a defect, and the two errors it caused are not counted as wrong answers of any wording.
 - The question of the product was not changed, so there is no "after" to compare with; the results say what the question of today does on this model.
-- The comparison of the records is the team's design, the model was not the one the Customer used for his idea (Qwen), and the `confidence` field was not used, so a different way of using the records could give another result.
+- The comparison of the records is the team's design, and the Customer wrote at 22:44 that it is not the approach he had in mind; the model was not the one the Customer used for his idea (Qwen), and the `confidence` field was not used, so a different way of using the records could give another result.
