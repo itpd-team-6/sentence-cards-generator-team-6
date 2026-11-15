@@ -825,3 +825,88 @@ When the language model misjudges and a second card is made for a meaning the le
   - The team told the Customer this decision and the numbers in the group chat on 2026-11-14 at 16:10 and 17:46.
   - The team plans to adjust the test of the records to the six steps of the Customer, run it, and send him the results in the group chat.
   - The Customer asked for the test setup (group chat, 2026-11-14 18:07): the scripts are in [`backend/scripts/`](../backend/scripts/) and the results are in [`docs/research/`](research/fr-009-model-test.md).
+
+## DEC-071
+
+The Customer accepted `US-17` and `US-18`.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** after the team ran each story against its acceptance criteria and asked whether he accepts it, he said "Yes." for `US-17` (Customer, [00:26:28]) and "Yes." for `US-18` (Customer, [00:29:40]).
+  He also agreed that the usability fixes he raised go to a separate issue ("Yeah, I agree.", Customer, [00:26:18]).
+
+## DEC-072
+
+The Customer accepted `US-15`, and the changes he asked for in the Texts tab go to new, more specific stories.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** when the team suggested leaving the story for the next sprint, he said "Yeah, this is an option, or you can still mark this acceptance criteria and create a new user story, like more specific one." (Customer, [01:37:41]), and when the team asked whether he accepts `US-15` he said "Yeah, yes." (Customer, [01:38:17]).
+
+## DEC-073
+
+In `UT-01` the participant finds a text on the Internet and pastes it, the second task checks "Study this deck" both ways, and the third task asks the participant to get a different sentence in at least two places.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** he said "I think the primary task should be a bit extended so the user finds a text and pastes it." (Customer, [01:44:11]) and "But it would be more realistic to let them find the text on the Internet and paste it." (Customer, [01:46:28]), and suggested "Maybe you can also track how much it takes to find the text, copy it and so on." (Customer, [01:46:38]).
+  For the second task he said "Yes. It would be nice to check both ways." (Customer, [02:00:56]).
+  For the third task he said "I think you should ask the user to regenerate in at least two places, like in your system." (Customer, [01:57:08]) and "If regenerate is too specific, maybe, like, use this simpler wording, like, get a different one." (Customer, [01:57:52]).
+  The team agreed that the participants get no text beforehand.
+
+## DEC-074
+
+The Customer agreed with `QR-08`.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** after the team read the measure and the bar of `QR-08`, he said "Yeah, sounds right." (Customer, [02:02:20]) and "Yeah, I think it's enough." (Customer, [02:02:24]).
+
+## DEC-075
+
+The Texts tab has two sub-tabs, "Add cards from a text" open by default and "Your texts" with active and archived texts, and the language pair is below the text field with an explanation.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** he said "The primary one is add cards from a text and it opens by default." (Customer, [01:03:56]), "Maybe we could use an archive, the archive word instead of hiding." (Customer, [00:45:43]), "So I would suggest to move the settings to below the text input field." (Customer, [01:08:26]) and "And also explain what it's meant for." (Customer, [01:08:36]).
+
+## DEC-076
+
+A card keeps its link to its text while the text exists, and a card whose word is no longer in the text is marked.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** he said "I'm not sure we should delete a card when the text is deleted or the word is unmarked." (Customer, [00:32:09]), "So I would suggest to keep the association between a card and the text as long as the text is still there, it exists." (Customer, [01:32:30]) and "Yeah, maybe show them somehow, like mark them somehow that the word is not inside the text" (Customer, [01:32:47]).
+  It builds on [`DEC-064`](#dec-064), which says a text keeps its cards when it changes.
+
+## DEC-077
+
+The green indicator of the connection is replaced by notifications shown where an error stops the learner, the search of Your cards finds only cards, and the sentence of a card is shown whole.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** he said "Yes, so I think more context-based notifications will be more understandable for a user than this indicator." (Customer, [00:19:32]), "But this is the your cards tab, so I think it should only search for cards here." (Customer, [00:22:31]) and "There is text clipping issue, so I can't see sentences in full." (Customer, [00:23:23]).
+
+## DEC-078
+
+The statistics are shown at the top of the page in a button that opens the Study tab without starting a session.
+
+- **Status:** Active
+- **Date:** 2026-11-15
+- **Made by:** Customer
+- **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
+- **Why:** he said "But this way seems to be better." about the statistics at the top (Customer, [00:04:33]), and about the button he said "I think it should not start the session because the session may need some settings." (Customer, [00:05:10]).
