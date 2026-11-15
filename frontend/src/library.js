@@ -54,3 +54,68 @@ export function setLibraryCode(code) {
 }
 
 export const libraryHeaders = () => ({ [LIBRARY_HEADER]: libraryCode() });
+
+// A usability-test session is marked by the address it is opened with: `?source=usability-test` and, optionally,
+// `?participant=P-01`. Real use carries neither, so its events stay `source=web` on the backend. The values are read
+// once from the address and kept for the tab (sessionStorage), so a reload keeps the session without the query string.
+// The participant code is `P-01`, `P-02` and so on, and never a name or an e-mail: anything else is ignored.
+export const SOURCE_HEADER = "X-Event-Source";
+export const PARTICIPANT_HEADER = "X-Participant-Code";
+const SESSION_SOURCES = ["usability-test", "smoke"];
+const PARTICIPANT_SHAPE = /^P-\d{2}$/;
+const SOURCE_KEY = "sentence-cards.event-source";
+const PARTICIPANT_KEY = "sentence-cards.participant-code";
+
+const readStored = (key) => {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const store = (key, value) => {
+  try {
+    if (value) sessionStorage.setItem(key, value);
+    else sessionStorage.removeItem(key);
+  } catch {
+    // Not kept: the value lives only for this call.
+  }
+};
+
+// Reads `source` and `participant` from the address the first time and keeps them for the tab.
+function readSession() {
+  let source = readStored(SOURCE_KEY);
+  let participant = readStored(PARTICIPANT_KEY);
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const fromUrlSource = params.get("source");
+    const fromUrlParticipant = params.get("participant") ?? "";
+    const code = PARTICIPANT_SHAPE.test(fromUrlParticipant)
+      ? fromUrlParticipant
+      : null;
+    if (SESSION_SOURCES.includes(fromUrlSource)) {
+      // An address that starts a session replaces the session of the tab, so a second participant opened in the
+      // same tab never keeps the code of the first one.
+      source = fromUrlSource;
+      participant = code;
+      store(SOURCE_KEY, source);
+      store(PARTICIPANT_KEY, participant);
+    } else if (code) {
+      participant = code;
+      store(PARTICIPANT_KEY, participant);
+    }
+  } catch {
+    // No address to read: only the stored values, if any, are used.
+  }
+  return { source, participant };
+}
+
+// The event headers of this session. Real use adds none, so its events stay `source=web`.
+export function eventHeaders() {
+  const { source, participant } = readSession();
+  const found = {};
+  if (source) found[SOURCE_HEADER] = source;
+  if (participant) found[PARTICIPANT_HEADER] = participant;
+  return found;
+}

@@ -7,7 +7,7 @@ The tasks and the protocol are in [the record](../README.md), and the questions 
 
 1. Give the participant the next free code, `P-01`, `P-02` and so on.
 2. Check that the participant has consented, including to the recording.
-3. Open a new library on the staging deployment, and start the recording.
+3. Open a new library on the staging deployment with the session address, such as `?source=usability-test&participant=P-01`, so that the events of the session carry the source and the code, and start the recording.
 4. Check that the participant can open a browser to search for a text, and give no text beforehand.
 
 ## Instructions for the facilitator

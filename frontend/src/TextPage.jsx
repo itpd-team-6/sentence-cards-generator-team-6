@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createCards, loadTextCards } from "./api.js";
-import { libraryHeaders } from "./library.js";
+import { eventHeaders, libraryHeaders } from "./library.js";
 import CardsTable from "./CardsTable.jsx";
 import DeckPicker from "./DeckPicker.jsx";
 import LanguagePicker from "./LanguagePicker.jsx";
@@ -70,7 +70,11 @@ export default function TextPage({ onTextSaved = () => {} }) {
     try {
       const response = await fetch("/api/texts", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...libraryHeaders() },
+        headers: {
+          "Content-Type": "application/json",
+          ...libraryHeaders(),
+          ...eventHeaders(),
+        },
         body: JSON.stringify({
           text,
           text_language: textLanguage,

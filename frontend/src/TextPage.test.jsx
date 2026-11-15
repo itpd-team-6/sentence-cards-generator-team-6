@@ -171,3 +171,47 @@ test("a text over the maximum is not sent, and the message gives the maximum", a
     "The text can have at most 10,000 characters.",
   );
 });
+
+async function saveATextAndAsk() {
+  writeTextDraft({
+    text: "Der Zug fährt.",
+    textLanguage: "de",
+    firstLanguage: "en",
+    marked: ["zug"],
+    selections: [],
+  });
+  globalThis.fetch = vi.fn(() =>
+    Promise.resolve({ ok: true, json: () => Promise.resolve({ id: 7 }) }),
+  );
+  vi.mocked(createCards).mockResolvedValue({
+    cards: [],
+    existing: [],
+    made: 0,
+  });
+  await show();
+  await tickADeck();
+  await act(async () => asking().click());
+  return globalThis.fetch.mock.calls[0][1].headers;
+}
+
+test("saving the text in a usability-test session carries the source and the participant code, so text_saved is not read as real use", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-04",
+  );
+
+  const headers = await saveATextAndAsk();
+
+  expect(headers["X-Event-Source"]).toBe("usability-test");
+  expect(headers["X-Participant-Code"]).toBe("P-04");
+});
+
+test("saving the text in real use carries no source and no participant code", async () => {
+  window.history.replaceState(null, "", "/");
+
+  const headers = await saveATextAndAsk();
+
+  expect(headers["X-Event-Source"]).toBeUndefined();
+  expect(headers["X-Participant-Code"]).toBeUndefined();
+});

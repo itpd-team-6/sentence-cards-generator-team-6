@@ -1,4 +1,4 @@
-import { LIBRARY_HEADER, libraryHeaders } from "./library.js";
+import { LIBRARY_HEADER, libraryHeaders, eventHeaders } from "./library.js";
 
 // The event the window gets after a call that changed something, so the header can read what there is to study again.
 export const DATA_CHANGED = "sentence-cards:data-changed";
@@ -10,7 +10,7 @@ async function call(url, options = {}) {
   try {
     response = await fetch(url, {
       ...options,
-      headers: { ...libraryHeaders(), ...options.headers },
+      headers: { ...libraryHeaders(), ...eventHeaders(), ...options.headers },
     });
   } catch {
     throw new Error("The product could not be reached. Is it running?");

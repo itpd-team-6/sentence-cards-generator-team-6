@@ -6,7 +6,11 @@ async function load() {
   return import("./library.js");
 }
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+  window.history.replaceState(null, "", "/");
+});
 
 test("a new code is a version 4 UUID and differs each time", async () => {
   const { newLibraryCode, isLibraryCode } = await load();
@@ -75,4 +79,100 @@ test("the code works without browser storage", async () => {
   expect(isLibraryCode(code)).toBe(true);
   expect(libraryCode()).toBe(code);
   vi.restoreAllMocks();
+});
+
+test("real use sends no event source, so its events stay web", async () => {
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({});
+});
+
+test("a usability-test address sends the source and the participant code", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-01",
+  );
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({
+    "X-Event-Source": "usability-test",
+    "X-Participant-Code": "P-01",
+  });
+});
+
+test("the source is sent without a participant code when none is given", async () => {
+  window.history.replaceState(null, "", "/?source=usability-test");
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({ "X-Event-Source": "usability-test" });
+});
+
+test("a participant code that is not P-nn is ignored, so it is never a name or e-mail", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=alice@example.test",
+  );
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({ "X-Event-Source": "usability-test" });
+});
+
+test("an unknown source is ignored, so stray addresses stay web", async () => {
+  window.history.replaceState(null, "", "/?source=whatever");
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({});
+});
+
+test("the session is kept for the tab, so a reload without the query keeps it", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-02",
+  );
+  const first = await load();
+  first.eventHeaders();
+
+  window.history.replaceState(null, "", "/");
+  const second = await load();
+
+  expect(second.eventHeaders()).toEqual({
+    "X-Event-Source": "usability-test",
+    "X-Participant-Code": "P-02",
+  });
+});
+
+test("an address that starts a new session replaces the code of the tab, so a second participant never keeps the first code", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-01",
+  );
+  const first = await load();
+  expect(first.eventHeaders()["X-Participant-Code"]).toBe("P-01");
+
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-02",
+  );
+  const second = await load();
+
+  expect(second.eventHeaders()["X-Participant-Code"]).toBe("P-02");
+});
+
+test("a new session address without a code drops the code of the one before", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "/?source=usability-test&participant=P-01",
+  );
+  await load().then((m) => m.eventHeaders());
+
+  window.history.replaceState(null, "", "/?source=usability-test");
+  const { eventHeaders } = await load();
+
+  expect(eventHeaders()).toEqual({ "X-Event-Source": "usability-test" });
 });
