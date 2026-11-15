@@ -3,7 +3,7 @@
 ## Tools
 
 - **nataliamotand** used Claude.
-- **AbdelrahmanAbdel-Aal** said he used AI to write documentation, and has not yet said which tool.
+- **AbdelrahmanAbdel-Aal** said he used AI to write documentation.
 - **emapfff** said he used Claude this week.
 
 ## What we used them for
