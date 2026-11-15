@@ -61,6 +61,8 @@ The observer fills in one row for each task.
 | Secondary 1 |                                             |            |              |                 |        |     |
 | Secondary 2 |                                             |            |              |                 |        |     |
 
+In the main task the observer also records the time from the start of the task until the text is copied, and the time until the first card is answered.
+In the second task the observer records the ways the participant used to start the practice, and in the third task the places where the participant got a different sentence.
 The observer also records the SUS answers, the post-test answers, and whether the session was stopped and why.
 
 ## Template of the note
