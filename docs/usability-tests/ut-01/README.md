@@ -8,9 +8,9 @@ A learner who has not used the product before gets from a newly opened library t
 
 ## Research questions
 
-1. Does a participant reach the first answered card without a hint?
+1. Does a participant who finds their own text reach the first answered card without a hint?
 2. Which step makes a participant ask for help?
-3. Can a participant put cards in a group of their own, and replace a sentence they do not like, without help?
+3. Can a participant practise only one group of their cards in two ways, and get a different sentence in at least two places, without help?
 
 ## The Requirement
 
@@ -29,29 +29,32 @@ A dry run with a team member is not a session and is not evidence.
 
 ## The Tasks
 
-The team prepares a short text of similar length in each of Russian, English and German, and the participant uses the text in the language they study.
+The participant gets no text beforehand: they find a short text on the Internet in the language they study and paste it into the product, as `DEC-073` records.
 The tasks are the same for every participant and run in this order.
 The success criterion of each task is `Unaided` when the participant reaches the end state without help, `Assisted` when a hint or help is needed and is recorded, and `Failed` when the end state is not reached within the time limit.
 A hint is pointing at a page or a control, and help is doing a step for the participant; the observer records each one beside the task.
 The facilitator reads each scenario verbatim and answers only questions about the scenario, never about the interface.
 
 1. **Main usability test task: practise the words of a text.**
-   You read a short text today in a language you are learning, and you want to remember some of its words.
-   Get ready to practise them as cards, and answer the first card.
-   Start: the library has just been opened and holds no texts and no cards, and you have the text.
+   You want to remember some words of a text in a language you are learning.
+   Find a short text on the Internet, get ready to practise some of its words as cards, and answer the first card.
+   Start: the library has just been opened and holds no texts and no cards, and you have no text yet.
    End state: the participant has answered the first card of the words they chose.
-   Time limit: 8 minutes.
-2. **Secondary usability test task: group the new cards.**
-   You want your new cards together in a group of your own that you can study later.
-   Start: the library with the cards of the main task.
-   End state: the cards are together in a group the participant made.
-   Time limit: 4 minutes.
-3. **Secondary usability test task: replace a sentence.**
+   Time limit: 10 minutes, including the search for the text.
+2. **Secondary usability test task: practise one group.**
+   You want to practise only the cards of the group your new cards are in.
+   Start practising only those cards.
+   When you have done it, start practising only those cards once more, from a different place in the app.
+   Start: the library with the cards of the main task and the group they are in.
+   End state: the participant has started a practice of only the cards of the group in two different ways.
+   Time limit: 5 minutes.
+3. **Secondary usability test task: get a different sentence.**
    A card shows a sentence you do not like.
    Get a different one.
-   Start: a card of the library is open.
-   End state: the card shows a different sentence.
-   Time limit: 3 minutes.
+   When you have done it, do it once more in a different place in the app.
+   Start: the library with the cards of the main task.
+   End state: the participant has got a different sentence in at least two places of the app.
+   Time limit: 4 minutes.
 
 ## Protocol
 
@@ -64,15 +67,16 @@ The staging address and any credentials are shared for the session and are never
 
 ## Measures
 
-Each session records the pre-test background, the think-aloud observation, the completion and assistance of each task, the time on task, a SEQ after each task, a SUS after all the tasks, and the open-ended post-test.
+Each session records the pre-test background, the think-aloud observation, the completion and assistance of each task, the time on task, the time to find and copy the text in the main task, a SEQ after each task, a SUS after all the tasks, and the open-ended post-test.
 The quality requirement reads the median SEQ of the main task.
 The questions are in `surveys.md`.
 
 ## Instrumentation
 
-The events the product already records cover the main task: `text_saved`, `cards_generated` and `card_answered`, and `sentence_replaced` covers the second secondary task.
+The events the product already records cover the main task from the moment the text is saved: `text_saved`, `cards_generated` and `card_answered`, and `sentence_replaced` covers the third task.
+The time to find and copy the text happens outside the product, so the observer records it.
 During a session they carry `source=usability-test` and the participant code `P-nn`, so each session is read from the events it produced.
-No event covers making a group of cards, so the first secondary task is read from the observation.
+The second task, and the place where each different sentence was got, are read from the observation.
 The instrumentation collects no personal data, runs on the staging deployment and never on production, and its filtered export goes to the private repository.
 It is implemented in issue [#278](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/278).
 It has not been verified yet: the verification is recorded here before the first counted session.
@@ -80,7 +84,7 @@ It has not been verified yet: the verification is recorded here before the first
 ## Analysis Plan
 
 The plan is written before the first session.
-It reports a table with the outcome and the assistance of each task for each participant, the share of participants who reached the end state of the main task and the share who did so unaided, the median time on the main task, the median SEQ of each task, and the SUS mean and median with the number of sessions.
+It reports a table with the outcome and the assistance of each task for each participant, the share of participants who reached the end state of the main task and the share who did so unaided, the median time on the main task, the median time to find and copy the text, the median SEQ of each task, and the SUS mean and median with the number of sessions.
 It also reports the themes of the notes with the sessions they came from, a severity of `Critical`, `Major` or `Minor` for each finding with its reason, a comparison with the events that were instrumented and what they could not cover, and the limitations.
 No other measure is added after the data.
 
