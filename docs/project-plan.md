@@ -97,6 +97,7 @@ A learner can revisit saved texts, manage cards and decks, and study through the
 - **Due:** 2026-11-15
 - **Sprint Backlog:** [the issues scheduled into SPRINT-07](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/5)
 - **Planned Velocity:** 0
+- **Actual Velocity:** 0; `SPRINT-07` was a task sprint, so the work on the learner's pages (the Study page, the texts, Your cards, the header and the decks) counts no story points, and [issue #279](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/279) moved to `SPRINT-08`.
 - **Candidate stories (refined, not scheduled):**
   - [US-15](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/232): keep my texts and pick more words from them later (Must Have, 8 points).
   - [US-17](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234): find studying, adding a text and my cards in a few steps (Must Have, 5 points).
