@@ -819,6 +819,30 @@ def test_a_word_with_a_different_meaning_gets_a_second_card(model) -> None:
         assert len([card for card in client.get("/api/cards").json() if card["word"] == "Zug"]) == 2
 
 
+def test_a_second_card_the_model_misjudges_is_made_without_asking_and_the_learner_can_delete_it(
+    model,
+) -> None:
+    model.phrases = {"Zug": "den Zug nehmen"}
+    with TestClient(app) as client:
+        make_cards(client)
+        # The word has the same meaning, but the model writes another phrase and does not say that the card exists.
+        model.phrases = {"Zug": "auf den Zug warten"}
+        other = add_text(client, "Wir warten auf den Zug nach Berlin.", ["Zug"])
+        calls_before = len(model.calls)
+
+        response = ask_for_cards(client, other).json()
+
+        assert response["existing"] == []
+        assert [card["phrase"] for card in response["cards"]] == ["auf den Zug warten"]
+        # The model was asked once for the word, and the learner was not asked anything.
+        assert len(model.calls) == calls_before + 1
+        duplicate = response["cards"][0]["id"]
+
+        assert client.delete(f"/api/cards/{duplicate}").status_code == 204
+        zug_cards = [card for card in client.get("/api/cards").json() if card["word"] == "Zug"]
+        assert [card["phrase"] for card in zug_cards] == ["den Zug nehmen"]
+
+
 def test_a_phrase_the_model_repeats_makes_no_second_card_even_when_it_does_not_say_so(
     model,
 ) -> None:
