@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.1) - 2026-11-21
+
+### Changed
+
+- No product change: this release adds documentation only, such as the results of the usability test `UT-01` and the records of the Week 8 Sprint Review.
+
 ## [0.4.0](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.0) - 2026-11-15
 
 ### Added
