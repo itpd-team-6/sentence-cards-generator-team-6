@@ -18,8 +18,9 @@ A person outside the team installs and runs the product by following only `docs/
 
 A person outside the team uses the product from a pasted text to studying the cards, by the end of Week 9.
 
-- **Status:** Open
+- **Status:** Achieved
 - **Measure:** one person outside the team, in Week 9, who pastes a text, marks words, gets the cards and studies them, with the day, what they did and where they got stuck written down in the repository.
+- **Outcome:** on 2026-11-20 four people outside the team ran the main task of `UT-01`, from a text to the first answered card, and all four reached the end, one without help, with where they got stuck written in [the results](usability-tests/ut-01/results.md), and the Customer agreed at the Sprint Review on 2026-11-21 that the goal is achieved, per [`DEC-081`](decisions.md#dec-081).
 
 ## TOS-04
 

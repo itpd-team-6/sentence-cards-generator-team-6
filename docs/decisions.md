@@ -910,3 +910,148 @@ The statistics are shown at the top of the page in a button that opens the Study
 - **Made by:** Customer
 - **Source:** [the Week 7 Sprint Review](../reports/week-07/meeting-report.md)
 - **Why:** he said "But this way seems to be better." about the statistics at the top (Customer, [00:04:33]), and about the button he said "I think it should not start the session because the session may need some settings." (Customer, [00:05:10]).
+
+## DEC-079
+
+The four sessions of `UT-01` count as counted sessions, although the recordings of three of them are incomplete.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** after the team asked whether the sessions still count with incomplete recordings, he said "Yeah, of course they do count." (Customer, [00:12:15]) and "Like there is evidence that you conducted this sessions, like the special recordings." (Customer, [00:12:18]).
+
+## DEC-080
+
+The Customer agreed that `QR-08` is met.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** the team said that the median SEQ of the main task was exactly five in four sessions and asked whether he considers the requirement met, and he said "And yeah, I guess it agrees with what's specified here." (Customer, [00:12:43]).
+
+## DEC-081
+
+The Customer agreed that `TOS-03` is achieved, once the notes of the sessions are in the repository.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** the team said that the notes of the sessions would be in the repository by the end of the day (nataliamotand, [00:14:17]), and he said "Then I completely agree that it's achieved." (Customer, [00:14:25]).
+
+## DEC-082
+
+The Customer agreed that the three Major findings of `UT-01` are important problems to address.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** after the team repeated the three Major findings (the cards that are not added to a new deck, where to go after the cards are made, and the shift key) and said it agreed with their severity ([00:57:31]), he said "Yeah, I think this are important problems to address." (Customer, [00:57:38]).
+
+## DEC-083
+
+The action points that the team did not carry out in Week 8 are carried to the next sprint: the test of the meaning records, the stories for the Texts tab and the link between a card and its text, and the time zone scenarios.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** the team said that it prioritized the usability tests and asked whether it could keep the three action points and bring them to the next sprint review (nataliamotand, [00:03:58]), and he said "Yeah, that's okay." (Customer, [00:04:07]).
+
+## DEC-084
+
+The Customer accepted `US-20` and `US-16`.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** the team ran each story against its acceptance criteria and he said "Yes." to each of the three criteria of `US-20` (Customer, [01:05:39], [01:06:56] and [01:09:46]) and of `US-16` (Customer, [01:12:05], [01:13:19] and [01:14:13]).
+  His only comment was "my only comment about this acceptance criteria is that they should be more atomic." (Customer, [01:10:47]).
+
+## DEC-085
+
+The previous text is cleared from the text field automatically, and a short information box tells the learner that more cards can be made from a saved text.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** after the team asked whether it agrees that the text can be cleared, he said "I think yes. Yeah." (Customer, [00:49:44]).
+  About the information box he said "I think, like, in this case, if it's not completely like obvious that they can create cards from a text, like from the previous letter text, then an instruction won't hurt." (Customer, [00:55:23]) and "As long as it's like brief." (Customer, [00:55:40]).
+
+## DEC-086
+
+The text of the "Show translation" button is changed so that it is clearer, and the team proposes the new wording at the next meeting.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** he said "But yeah, probably the phrase on the button should be changed a bit." (Customer, [00:46:53]) and "If you come up with an idea of how to write it, please let me know." (Customer, [00:46:58]), and "Like I would suggest to just make that button text more intuitive, like without extra text." (Customer, [00:53:23]).
+
+## DEC-087
+
+The learner is warned when words that do not make one sentence are selected together, and the way the warning is shown is left to the options that the team brings to the next meeting.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** he said "I like your idea about warning the user when they have selected like too many words." (Customer, [00:37:56]).
+  He proposed that the language model writes the warning and that the text highlights the selection: "use LLM to produce such warnings and show them inside the text" (Customer, [00:38:18]).
+  The team said that it comes with a few options and decides together which to implement (nataliamotand, [00:37:47]).
+
+## DEC-088
+
+The language pair of the decks is shown with the full names of the languages, in a drop-down list or in buttons, and not with two-letter codes.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** he said "No, I think I would prefer like to drop down lists with languages, like to select a pair of languages." (Customer, [01:16:57]) and "Or buttons like here, but with names of languages in full, like English, German, like you use for sections." (Customer, [01:17:08]).
+
+## DEC-089
+
+The icon with layers is removed from the cards.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** he said "Yeah, I think it's not necessary. And right now it takes precious space." (Customer, [01:20:43]), and the team said that it can change this ([01:20:39]).
+
+## DEC-090
+
+The buttons of the bar for the selected cards get icons, like the buttons of a card.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** he said "So maybe, like for consistency, these buttons can also have these icons." (Customer, [01:23:17]).
+
+## DEC-091
+
+The Reorder box gets a number field that selects that many cards for today, the cards due today first and then the later ones, and the number cannot be larger than the number of cards of the selected decks.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** [the Week 8 Sprint Review](../reports/week-08/meeting-report.md)
+- **Why:** the team proposed "So here in this reorder box, maybe we could add like open field here so the user can type the amount of cards he wants to study today." (nataliamotand, [01:40:18]) and that the product does not let the learner enter an invalid number (nataliamotand, [01:43:43]), and he said "Yes, this is a way." (Customer, [01:45:56]).
+
+## DEC-092
+
+The daily limits come before the audio.
+
+- **Status:** Active
+- **Date:** 2026-11-21
+- **Made by:** Customer
+- **Source:** the Customer's answer in the team's group chat, after the Week 8 Sprint Review
+- **Why:** the team asked whether the daily limits come before the audio, because the audio was not discussed in the meeting and the daily limits were, and he answered yes.
+  [`DEC-061`](#dec-061) ordered the texts and the improvements of the interface, then the authentication, then the audio and the mobile version, and does not place the daily limits.

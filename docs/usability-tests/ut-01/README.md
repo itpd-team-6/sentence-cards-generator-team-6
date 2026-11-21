@@ -1,6 +1,6 @@
 # UT-01: Reach The First Answered Card Unaided
 
-- **Status:** Planned
+- **Status:** Completed
 - **Design sprint:** [SPRINT-07](../../project-plan.md#sprint-07)
 - **Run sprint:** [SPRINT-08](../../project-plan.md#sprint-08)
 
@@ -47,7 +47,7 @@ The facilitator reads each scenario verbatim and answers only questions about th
    When you have done it, start practising only those cards once more, from a different place in the app.
    Start: the library with the cards of the main task and the group they are in.
    End state: the participant has started a practice of only the cards of the group in two different ways.
-   Time limit: 5 minutes.
+   Time limit: 10 minutes.
 3. **Secondary usability test task: get a different sentence.**
    A card shows a sentence you do not like.
    Get a different one.
@@ -79,7 +79,7 @@ During a session they carry `source=usability-test` and the participant code `P-
 The second task, and the place where each different sentence was got, are read from the observation.
 The instrumentation collects no personal data, runs on the staging deployment and never on production, and its filtered export goes to the private repository.
 It is implemented in issue [#278](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/278).
-It has not been verified yet: the verification is recorded here before the first counted session.
+It was verified on the staging deployment before the first counted session, and the check is recorded in [the Week 7 instrumentation verification](../../../reports/week-07/instrumentation-verification.md).
 
 ## Analysis Plan
 
