@@ -106,20 +106,21 @@ The message:
 
 ## Schedule
 
-The sessions are arranged in SPRINT-08.
-The dates and the participants are placeholders until real ones exist.
+The four counted sessions ran on 2026-11-20, in SPRINT-08.
+The arranged time is the time agreed with the participant, and the first and the last event are the times that the staging deployment recorded for the participant, so a session started before its first event and ended after its last one.
 The results are due with Submission 8 on 2026-11-21.
 
-| Code | Date and time  | Status        |
-| ---- | -------------- | ------------- |
-| P-01 | to be arranged | not recruited |
-| P-02 | to be arranged | not recruited |
-| P-03 | to be arranged | not recruited |
+| Code | Day        | Arranged time | First and last event (UTC+03:00) | Status  |
+| ---- | ---------- | ------------- | -------------------------------- | ------- |
+| P-01 | 2026-11-20 | 12:30         | 12:49 to 13:15                   | counted |
+| P-02 | 2026-11-20 | 14:00         | 14:07 to 14:30                   | counted |
+| P-03 | 2026-11-20 | 18:00         | 17:55 to 18:14                   | counted |
+| P-04 | 2026-11-20 | 20:00         | 19:51 to 20:00                   | counted |
 
 ## Roles
 
-- **Facilitator:** `nataliamotand`, who runs every counted session.
-- **Observer:** `emapfff`.
+- **Facilitator:** `nataliamotand`, who ran every counted session.
+- **Observer:** `nataliamotand`, who observed the four counted sessions while facilitating them.
 - **Recordings and raw notes:** `nataliamotand`.
 
 ## Environment
