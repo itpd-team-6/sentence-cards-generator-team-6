@@ -1,14 +1,18 @@
 # Risks
 
-| ID                  | Status | Impact | Likelihood | Risk                                                                                                                                                                                                                 |
-| ------------------- | ------ | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [RISK-01](#risk-01) | Open   | High   | High       | The product depends on a free language model from an outside provider, so a refused request may stop sentence generation during a Customer meeting or a test, which would leave the core task unproven.              |
-| [RISK-02](#risk-02) | Open   | High   | Medium     | No audio source is chosen and a free one may not cover Russian, English and German, so `US-07` may not give audio for all three languages, which would leave a story the Customer decided to build only partly done. |
-| [RISK-03](#risk-03) | Open   | High   | Medium     | No person outside the team is found in time, or the product does not run from a clean checkout by following only `docs/setup.md`, so `TOS-02` and `TOS-03` may be missed in Week 9.                                  |
-| [RISK-04](#risk-04) | Open   | High   | Medium     | The usability test needs representative learners available on the university network, so recruitment may fall short of three completed sessions, which would leave QR-08 unverified.                                 |
-| [RISK-05](#risk-05) | Open   | High   | Medium     | A participant may withdraw or refuse the recording, so a session may become unusable as evidence, which would reduce the counted sample for UT-01.                                                                   |
-| [RISK-06](#risk-06) | Open   | High   | Medium     | The raw data repository and recordings folder require private access, so an instructor may be unable to open them, which would prevent review of the usability evidence.                                             |
-| [RISK-07](#risk-07) | Open   | High   | Medium     | The usability sessions have no fixed dates yet, so the test may finish after the Submission 8 deadline, which would leave the planned QR-08 result unavailable for that submission.                                  |
+| ID                  | Status | Impact | Likelihood | Risk                                                                                                                                                                                                                                 |
+| ------------------- | ------ | ------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [RISK-01](#risk-01) | Open   | High   | High       | The product depends on a free language model from an outside provider, so a refused request may stop sentence generation during a Customer meeting or a test, which would leave the core task unproven.                              |
+| [RISK-02](#risk-02) | Open   | High   | Medium     | No audio source is chosen and a free one may not cover Russian, English and German, so `US-07` may not give audio for all three languages, which would leave a story the Customer decided to build only partly done.                 |
+| [RISK-03](#risk-03) | Open   | High   | Medium     | No person outside the team is found in time, or the product does not run from a clean checkout by following only `docs/setup.md`, so `TOS-02` and `TOS-03` may be missed in Week 9.                                                  |
+| [RISK-04](#risk-04) | Open   | High   | Medium     | The usability test needs representative learners available on the university network, so recruitment may fall short of three completed sessions, which would leave QR-08 unverified.                                                 |
+| [RISK-05](#risk-05) | Open   | High   | Medium     | A participant may withdraw or refuse the recording, so a session may become unusable as evidence, which would reduce the counted sample for UT-01.                                                                                   |
+| [RISK-06](#risk-06) | Open   | High   | Medium     | The raw data repository and recordings folder require private access, so an instructor may be unable to open them, which would prevent review of the usability evidence.                                                             |
+| [RISK-07](#risk-07) | Open   | High   | Medium     | The usability sessions have no fixed dates yet, so the test may finish after the Submission 8 deadline, which would leave the planned QR-08 result unavailable for that submission.                                                  |
+| [RISK-08](#risk-08) | Open   | High   | Medium     | The product and telemetry pipelines use private credentials, so an accidental commit of a secret may expose access to an outside reader, which would compromise the affected service and interrupt its use while access is replaced. |
+| [RISK-11](#risk-11) | Open   | High   | Medium     | Staging and production are separate deployments updated by hand, so their code or settings may drift, which would make a staging check unreliable evidence for production.                                                           |
+| [RISK-10](#risk-10) | Open   | Medium | High       | The product and its checks depend on third-party packages and actions, so an incompatible update may leave a dependency that cannot be updated, which would delay maintenance and leave the product on an older dependency version.  |
+| [RISK-09](#risk-09) | Open   | Medium | Medium     | Configuration changes span code, workflows and documentation, so the configuration plan may fall behind a change, which would lead a teammate or agent to rely on an inaccurate inventory.                                           |
 
 ## RISK-01
 
@@ -108,3 +112,59 @@ The usability sessions have no fixed dates yet, so the test may finish after the
 - **Window:** scheduling in [SPRINT-07](project-plan.md#sprint-07) through the end of [SPRINT-08](project-plan.md#sprint-08).
 - **Mitigation:** book sessions early, check the recording and staging setup before each session, and reserve time for replacement sessions and analysis before the results deadline.
 - **Contingency:** move the QR/QRT row to SPRINT-09 with a reason, declare it in the report, and claim no result.
+
+## RISK-08
+
+The product and telemetry pipelines use private credentials, so an accidental commit of a secret may expose access to an outside reader, which would compromise the affected service and interrupt its use while access is replaced.
+
+- **Status:** Open
+- **Impact:** High
+  - [The deployment configuration](deployment.md#configuration) and [telemetry runbook](deployment.md#the-telemetry-pipelines) use private service credentials, so a leak could expose the affected service and require access replacement before generation or telemetry can safely resume.
+- **Likelihood:** Medium
+  - [The deployment runbook](deployment.md#configuration) requires separate environment files populated by hand, so a copied value could enter another tracked file even though [the ignore rules](../.gitignore) exclude `.env` and [the review checklist](../CONTRIBUTING.md#what-the-reviewer-checks) forbids secrets.
+- **Trigger:** a review or repository search finds a real credential in a tracked file, commit or public issue.
+- **Window:** [SPRINT-08](project-plan.md#sprint-08) through the final project defense in Week 11, including the public submission snapshots.
+- **Mitigation:** keep real values in the ignored `.env`, use [the public configuration template](../.env.example), and apply the existing [secret review checklist](../CONTRIBUTING.md#what-the-reviewer-checks) before merging.
+- **Contingency:** revoke or rotate it, tell the instructor, clean the history, and write the account privately.
+
+## RISK-09
+
+Configuration changes span code, workflows and documentation, so the configuration plan may fall behind a change, which would lead a teammate or agent to rely on an inaccurate inventory.
+
+- **Status:** Open
+- **Impact:** Medium
+  - A misleading inventory would increase the effort of locating settings and reviewing changes, but [the setup instructions](setup.md) and [deployment runbook](deployment.md) remain direct references for running the product.
+- **Likelihood:** Medium
+  - [The contribution workflow](../CONTRIBUTING.md#how-a-change-gets-in) uses manual review, and [the repository layout](../AGENTS.md#layout) separates maintained documentation, workflows and application configuration, so a change can require updates in several places.
+- **Trigger:** a pull request changes an inventoried file, setting, owner or connection while the configuration plan still describes its previous state.
+- **Window:** from the configuration plan's first merge in [SPRINT-08](project-plan.md#sprint-08) until the course ends.
+- **Mitigation:** use the existing [task and pull request workflow](../CONTRIBUTING.md#how-a-change-gets-in) and another member's review to compare the changed files with the inventory once the plan exists.
+- **Contingency:** update it in the pull request that records the change, and treat a plan that describes an older repository as a defect.
+
+## RISK-10
+
+The product and its checks depend on third-party packages and actions, so an incompatible update may leave a dependency that cannot be updated, which would delay maintenance and leave the product on an older dependency version.
+
+- **Status:** Open
+- **Impact:** Medium
+  - [Product CI](../.github/workflows/ci.yml) checks update pull requests before merging, and [the contribution workflow](../CONTRIBUTING.md#how-a-change-gets-in) requires review and green checks, so a detected incompatibility delays the upgrade while the working version can remain in use.
+- **Likelihood:** High
+  - As of 2026-11-21, [13 Dependabot pull requests remain open](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pulls?q=is%3Apr+is%3Aopen+author%3Aapp%2Fdependabot), the oldest dating from [2026-10-26](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/144), including major upgrades to [eslint 10](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/196), [@eslint/js 10](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/199), [jsdom 31](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/249) and [markdownlint-cli2-action 25](https://github.com/itpd-team-6/sentence-cards-generator-team-6/pull/195), which increases compatibility work as [Dependabot](../.github/dependabot.yml) checks GitHub Actions, pip and npm weekly.
+- **Trigger:** a dependency update pull request fails the product checks, and the failure is traced to incompatibility with the updated dependency.
+- **Window:** dependency review in [SPRINT-08](project-plan.md#sprint-08), [SPRINT-09](project-plan.md#sprint-09) and maintenance until the course ends.
+- **Mitigation:** review the existing weekly [Dependabot pull requests](../.github/dependabot.yml) against [Product CI](../.github/workflows/ci.yml), preserving the frontend lockfile and the workflow action commit pins during review.
+- **Contingency:** pin the working version, record why, and open the task that removes the need for it.
+
+## RISK-11
+
+Staging and production are separate deployments updated by hand, so their code or settings may drift, which would make a staging check unreliable evidence for production.
+
+- **Status:** Open
+- **Impact:** High
+  - [The deployment sequence](deployment.md#deploy-by-hand) requires the same commit to pass staging before production, so a different production state could break the Customer's core task despite a successful staging check.
+- **Likelihood:** Medium
+  - [The deployment runbook](deployment.md#environments) gives each environment its own code copy, configuration and service, and deployment is manual because CI cannot reach the university network.
+- **Trigger:** production runs a different commit from the one that passed staging, or an environment setting differs from its documented intended value beyond the required separation of secrets and data.
+- **Window:** each deployment in [SPRINT-08](project-plan.md#sprint-08) and [SPRINT-09](project-plan.md#sprint-09), through the final project defense in Week 11.
+- **Mitigation:** follow [the manual deployment sequence](deployment.md#deploy-by-hand), verify staging before production, and use [the deployment verification steps](deployment.md#verify-a-deployment) for both environments.
+- **Contingency:** deploy the commit staging passed, keep the runbook current, and redeploy rather than patch the VM by hand.
