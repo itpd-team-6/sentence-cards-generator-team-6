@@ -126,6 +126,12 @@ The audio of words and sentences and then a mobile interface follow, in the Cust
 
 #### REL-08
 
+- **Released:** [v0.4.1](https://github.com/itpd-team-6/sentence-cards-generator-team-6/releases/tag/v0.4.1) on 2026-11-21.
+- **Checked QRs:**
+  - [QR-08](quality-requirements/qr/QR-08.md)
+
+  The [testing plan](#quality-requirement-testing-plan) carries each test's result.
+
 ### SPRINT-09
 
 The team has a final repository state ready for the code freeze with responses to UT-01 findings and pending action points, a refined product backlog, a 7-minute presentation deck grounded in project evidence, and a reflection on project outcomes and lessons.
