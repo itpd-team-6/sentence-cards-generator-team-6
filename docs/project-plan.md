@@ -113,11 +113,12 @@ A learner can revisit saved texts, manage cards and decks, and study through the
 
 ### SPRINT-08
 
-The team runs UT-01 on staging and analyzes the recorded sessions to report findings and the QR-08 QRT-01 verdict.
-This goal is provisional until the sprint is planned.
+The team runs UT-01 on staging, writes its results and triages the findings into the product backlog, and reviews the configuration of the repository.
 
 - **Due:** 2026-11-21
 - **Sprint Backlog:** [the issues scheduled into SPRINT-08](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/6)
+- **Planned Velocity:** 0
+- **Actual Velocity:** 0; `SPRINT-08` was a task sprint, so the work on the sessions, the results, the configuration review and the Sprint Review counts no story points, and the issues still open at its close moved to `SPRINT-09`.
 - **Candidate stories (refined, not scheduled):**
   - [US-19](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/236): keep my cards and progress under my own account (Should Have, 8 points).
 
@@ -131,6 +132,7 @@ The team has a final repository state ready for the code freeze with responses t
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-28
+- **Sprint Backlog:** [the issues scheduled into SPRINT-09](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/7)
 
 #### REL-09
 
