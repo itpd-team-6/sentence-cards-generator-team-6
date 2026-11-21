@@ -127,7 +127,7 @@ The audio of words and sentences and then a mobile interface follow, in the Cust
 
 ### SPRINT-09
 
-The product is polished and ready for the code freeze, with the result of each threshold goal written down.
+The team has a final repository state ready for the code freeze with responses to UT-01 findings and pending action points, a refined product backlog, a 7-minute presentation deck grounded in project evidence, and a reflection on project outcomes and lessons.
 This goal is provisional until the sprint is planned.
 
 - **Due:** 2026-11-28
