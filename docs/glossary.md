@@ -211,3 +211,63 @@ The System Usability Scale, the ten-item questionnaire answered after all `UT-01
 The Single Ease Question, asked after each `UT-01` task to record the participant's rating from 1 for very difficult to 7 for very easy.
 
 **Defined by:** [the UT-01 SEQ question](usability-tests/ut-01/surveys.md#seq-after-each-task) and [QR-08](quality-requirements/qr/QR-08.md#response-measure).
+
+## Configuration
+
+### Configuration
+
+The files, settings and processes that build, check, store and deliver Sentence Cards Generator artifacts and help a teammate or agent find and understand them.
+
+### Configuration management
+
+The team's control of changes to the product's code, documentation, settings and delivery processes so that they remain consistent and trustworthy as the repository evolves.
+
+### Configuration review
+
+The Week 8 judgement of the team's configuration against the local goals its artifacts serve, including whether a simpler set could serve those goals with acceptable tradeoffs.
+
+### Configuration plan
+
+The maintained inventory in `docs/configuration-plan.md` of the team's configuration items, their purposes, owners, locations, connections and required target states.
+
+### Configuration item
+
+One maintained file, setting, process or dependency the team relies on to build, check, deliver or understand the product, identified as `CFG-nn` when recorded in the configuration plan.
+
+### Configuration evaluation
+
+The Week 8 evidence in `reports/week-08/cm-evaluation.md` that judges the configuration by local goal against an identified baseline and recommends a first change with its tradeoff.
+
+### Baseline
+
+The frozen tag or commit identifying the repository state judged by the team's configuration evaluation, so later changes can be distinguished from the state reviewed.
+
+### Upkeep
+
+The work of keeping the team's maintained documentation, settings and processes accurate when the repository or deployment they describe changes.
+
+### Reproducible build
+
+A build of Sentence Cards Generator that can be repeated from the same commit and dependency versions under the documented toolchain without relying on undocumented local state.
+
+### Dependency pinning
+
+Fixing a dependency to an exact version or commit so the team's builds or checks do not silently use a different release, as the workflow action commit references and frontend lockfile do.
+
+**Defined by:** [the workflow action pins](../.github/workflows/ci.yml) and [the frontend lockfile](../frontend/package-lock.json).
+
+### Secret
+
+A private credential used by the product or its deployment, such as a language-model API key or an OpenObserve password, whose value must never enter the public repository.
+
+**Defined by:** [the configuration template](../.env.example) and [the deployment configuration](deployment.md#configuration).
+
+### Context window
+
+The bounded amount of task instructions, repository content and conversation that a coding agent can use at once while working on Sentence Cards Generator.
+
+### Agent instruction
+
+A rule telling a coding agent how to work in this repository, including its layout, checks, conventions and files it must not edit.
+
+**Defined by:** [the team's agent instructions](../AGENTS.md).
