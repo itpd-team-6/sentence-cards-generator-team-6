@@ -62,6 +62,21 @@ test("the menu is closed until the learner opens it", async () => {
   expect(container.querySelector("#library-code").value).toBe(libraryCode());
 });
 
+test("a press outside the menu closes it, and a press inside does not", async () => {
+  await show();
+  await click("My library");
+  const press = (target) =>
+    act(async () =>
+      target.dispatchEvent(new Event("pointerdown", { bubbles: true })),
+    );
+
+  await press(container.querySelector("#library-code"));
+  expect(container.querySelector("#library-code")).not.toBeNull();
+
+  await press(document.body);
+  expect(container.querySelector("#library-code")).toBeNull();
+});
+
 test("the code can be copied", async () => {
   const writeText = vi.fn().mockResolvedValue();
   Object.defineProperty(navigator, "clipboard", {

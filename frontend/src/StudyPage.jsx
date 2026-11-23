@@ -483,7 +483,7 @@ export default function StudyPage({ onSessionChange }) {
                 className="primary"
                 onClick={() => setRevealed(true)}
               >
-                Show translation
+                Show answer
               </button>
             </div>
           )}

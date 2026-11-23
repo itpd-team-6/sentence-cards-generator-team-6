@@ -64,13 +64,17 @@ afterEach(async () => {
   container.remove();
 });
 
-test("a card shows the text it came from, which opens that text, and how many more texts have its word", async () => {
+test("an opened card shows the texts it came from, which open the text, like its decks, and the line does not", async () => {
   await show({ showTexts: true });
+  const line = container.querySelector(".card-row");
 
-  const label = container.querySelector(".text-label");
-  expect(label.textContent).toBe("Text X");
-  expect(label.getAttribute("href")).toBe("#/texts/10");
-  expect(container.querySelector(".more-texts").textContent).toBe("+1");
+  expect(line.querySelector(".card-line a")).toBeNull();
+  await act(async () => line.querySelector(".card-main").click());
+
+  expect(line.querySelector(".detail-texts span").textContent).toBe("Texts");
+  const links = [...line.querySelectorAll(".detail-texts a")];
+  expect(links.map((link) => link.textContent)).toEqual(["Text X", "Text Y"]);
+  expect(links[0].getAttribute("href")).toBe("#/texts/10");
 });
 
 test("a card shows only the decks the learner ticked", async () => {
@@ -187,13 +191,29 @@ test("the selected cards are put in a deck from the bar, and the decks are read 
   expect(decksChanged).toBe(1);
 });
 
-test("a card shows how many decks it is in", async () => {
+test("a card does not show the deck icon or the number of decks, which only took room", async () => {
   await show({ showTexts: true });
 
-  const counts = [...container.querySelectorAll(".deck-count")]
-    .map((item) => item.textContent)
-    .filter(Boolean);
-  expect(counts).toEqual(["2 decks"]);
+  expect(container.querySelector(".deck-count")).toBeNull();
+});
+
+test("every button of the selection bar has an icon", async () => {
+  await show({ showTexts: true });
+  await act(async () =>
+    container.querySelector("input[aria-label='Select Zug']").click(),
+  );
+
+  const buttons = [...container.querySelectorAll(".bulk-bar button")];
+  expect(buttons.map((button) => button.textContent)).toEqual([
+    "Select all",
+    "Clear selection",
+    "New sentences",
+    "Hide",
+    "Show",
+    "Decks",
+    "Delete",
+  ]);
+  expect(buttons.every((button) => button.querySelector("svg"))).toBe(true);
 });
 
 test("a group closes when the learner clicks its title, and all of them close or open from the buttons", async () => {

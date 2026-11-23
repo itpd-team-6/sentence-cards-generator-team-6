@@ -132,9 +132,9 @@ test("the language pairs are buttons that show only the chosen ones, and none ch
   await draw();
 
   expect(chips().map((chip) => chip.textContent)).toEqual([
-    "EN → DE",
-    "EN → RU",
-    "DE → RU",
+    "English → German",
+    "English → Russian",
+    "German → Russian",
   ]);
   expect(chips()[2].title).toBe("German → Russian");
   expect(

@@ -1,5 +1,5 @@
-// The line icons of the product, drawn on a 24 by 24 grid. They are shared by the list of cards and the study session,
-// so an action looks the same in both.
+// The line icons of the product, drawn on a 24 by 24 grid. They are shared by the list of cards, its selection bar and
+// the study session, so an action looks the same in all of them.
 export const ICON_PATHS = {
   edit: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4",
   review: "M7 4h10v16l-5-4-5 4V4z",
@@ -10,6 +10,9 @@ export const ICON_PATHS = {
   chevron: "M6 9l6 6 6-6",
   stack: "M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4",
   delete: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10 11v5M14 11v5",
+  show: "M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z",
+  selectAll: "M4 5h16v14H4zM8 12l3 3 5-6",
+  clear: "M6 6l12 12M18 6L6 18",
 };
 
 // A small line icon. The text next to it, or the name of the button, says what it means, so the icon is hidden from
