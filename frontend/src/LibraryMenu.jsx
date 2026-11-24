@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { checkLibrary } from "./api.js";
 import { clearTickedDecks } from "./deckSelection.js";
 import { clearTextDraft } from "./textDraft.js";
@@ -33,7 +33,18 @@ export default function LibraryMenu({
   const [found, setFound] = useState(null); // the library the learner typed the code of, when it exists
   const [problem, setProblem] = useState("");
   const codeField = useRef(null);
+  const menu = useRef(null);
   const code = libraryCode();
+
+  // A press anywhere outside the menu closes it.
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOutside = (event) => {
+      if (!menu.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [open]);
 
   async function copy() {
     setCopied(await copyText(code, codeField.current));
@@ -81,7 +92,7 @@ export default function LibraryMenu({
   }
 
   return (
-    <div className="library">
+    <div className="library" ref={menu}>
       <button
         type="button"
         className="secondary"

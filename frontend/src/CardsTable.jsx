@@ -57,45 +57,12 @@ function Working({ count }) {
   );
 }
 
-// How many decks a card is in: a deck icon and the number, with the names of the decks when the pointer rests on it. The
-// words are said to a screen reader. The place is kept when the card is in no deck, so the numbers stay in one column.
-function DeckCount({ card }) {
-  const all = card.decks ?? [];
-  if (all.length === 0) return <span className="deck-count" />;
-  return (
-    <span
-      className="deck-count"
-      title={all.map((deck) => deck.title).join(", ")}
-    >
-      <Icon path={ICON_PATHS.stack} />
-      {all.length}
-      <span className="visually-hidden">
-        {" "}
-        {all.length === 1 ? "deck" : "decks"}
-      </span>
-    </span>
-  );
-}
-
-// Where a card comes from: the text it was made from, which opens that text, with how many more texts have the word, and
-// only the decks the learner ticked that the card is in (FR-020). The place is kept when there is nothing to show, so
-// the texts stay in one column.
+// The decks the learner ticked that the card is in (FR-020). The line leaves its room to the sentence: the texts of the
+// card are in the card when it is opened, like its decks.
 function Origins({ card, tickedDecks }) {
-  const first = card.texts?.[0];
   const decks = (card.decks ?? []).filter((deck) => tickedDecks.has(deck.id));
-  const more = (card.texts?.length ?? 0) - 1;
   return (
     <span className="origins">
-      {first && (
-        <a
-          className="text-label"
-          href={hrefOfText(first.id)}
-          title={first.title}
-        >
-          {first.title}
-        </a>
-      )}
-      {more > 0 && <span className="more-texts">+{more}</span>}
       {decks.map((deck) => (
         <DeckTag key={deck.id} deck={deck} />
       ))}
@@ -609,7 +576,6 @@ export default function CardsTable({
                     )}
                   </span>
                 </button>
-                <DeckCount card={card} />
                 <Origins card={card} tickedDecks={tickedDecks} />
                 <span className="card-status">
                   {card.flagged && (
@@ -655,6 +621,16 @@ export default function CardsTable({
                       {card.decks.map((deck) => (
                         <a key={deck.id} href={hrefOfDeck(deck.id)}>
                           {deck.title}
+                        </a>
+                      ))}
+                    </p>
+                  )}
+                  {showTexts && card.texts?.length > 0 && (
+                    <p className="detail-texts">
+                      <span>{card.texts.length === 1 ? "Text" : "Texts"}</span>
+                      {card.texts.map((text) => (
+                        <a key={text.id} href={hrefOfText(text.id)}>
+                          {text.title}
                         </a>
                       ))}
                     </p>
@@ -879,28 +855,34 @@ export default function CardsTable({
             </span>
             <button
               type="button"
-              className="queue-pill"
+              className="queue-pill with-icon"
               disabled={busy || allTicked}
               onClick={() => setTicked(new Set(cards.map((card) => card.id)))}
             >
+              <Icon path={ICON_PATHS.selectAll} />
               Select all
             </button>
             <button
               type="button"
-              className="queue-pill"
+              className="queue-pill with-icon"
               disabled={busy || chosen.length === 0}
               onClick={() => setTicked(new Set())}
             >
+              <Icon path={ICON_PATHS.clear} />
               Clear selection
             </button>
           </div>
           <div className="bulk-group">
             <button
               type="button"
-              className="secondary"
+              className="secondary with-icon"
               disabled={busy || chosen.length === 0}
               onClick={askForNewSentences}
             >
+              <Icon
+                path={ICON_PATHS.new}
+                spinning={busy?.what === "sentences"}
+              />
               {busy?.what === "sentences" ? (
                 <Working count={chosen.length} />
               ) : (
@@ -909,37 +891,41 @@ export default function CardsTable({
             </button>
             <button
               type="button"
-              className="secondary"
+              className="secondary with-icon"
               disabled={busy || chosen.length === 0}
               onClick={() => hideChosen(true)}
             >
+              <Icon path={ICON_PATHS.hide} />
               Hide
             </button>
             <button
               type="button"
-              className="secondary"
+              className="secondary with-icon"
               disabled={busy || chosen.length === 0}
               onClick={() => hideChosen(false)}
             >
+              <Icon path={ICON_PATHS.show} />
               Show
             </button>
             <button
               type="button"
-              className="secondary"
+              className="secondary with-icon"
               disabled={busy || chosen.length === 0}
               onClick={() => {
                 setDecksError("");
                 setChangingDecks(true);
               }}
             >
+              <Icon path={ICON_PATHS.stack} />
               Decks
             </button>
             <button
               type="button"
-              className="secondary"
+              className="secondary with-icon"
               disabled={busy || chosen.length === 0}
               onClick={() => setConfirming(true)}
             >
+              <Icon path={ICON_PATHS.delete} />
               Delete
             </button>
           </div>

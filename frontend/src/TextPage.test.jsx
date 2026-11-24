@@ -215,3 +215,30 @@ test("saving the text in real use carries no source and no participant code", as
   expect(headers["X-Event-Source"]).toBeUndefined();
   expect(headers["X-Participant-Code"]).toBeUndefined();
 });
+
+test("after the sentences are asked for, the field is empty and an instruction says what to do next", async () => {
+  await saveATextAndAsk();
+
+  expect(container.querySelector("textarea").value).toBe("");
+  expect(container.querySelector(".instruction").textContent).toContain(
+    "Paste another text",
+  );
+});
+
+test("the text stays in the field when it could not be saved", async () => {
+  writeTextDraft({
+    text: "Der Zug f\u00e4hrt.",
+    textLanguage: "de",
+    firstLanguage: "en",
+    marked: ["zug"],
+    selections: [],
+  });
+  globalThis.fetch = vi.fn(() => Promise.resolve({ ok: false }));
+  await show();
+  await tickADeck();
+
+  await act(async () => asking().click());
+
+  expect(container.querySelector("textarea").value).toBe("Der Zug f\u00e4hrt.");
+  expect(container.querySelector(".instruction")).toBeNull();
+});

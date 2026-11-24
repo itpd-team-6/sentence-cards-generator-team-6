@@ -26,6 +26,7 @@ export default function TextPage({ onTextSaved = () => {} }) {
   const [asking, setAsking] = useState(false);
   const [deckIds, setDeckIds] = useState([]); // the decks the new cards go in
   const [decksChanged, setDecksChanged] = useState(0);
+  const [instruction, setInstruction] = useState(null); // what to do next, shown when the text is saved and the field is empty
 
   useEffect(() => {
     writeTextDraft({ text, textLanguage, firstLanguage, marked, selections });
@@ -91,6 +92,13 @@ export default function TextPage({ onTextSaved = () => {} }) {
       const savedText = await response.json();
       const created = await createCards(savedText.id, deckIds);
       setCards(await loadTextCards(savedText.id));
+      // The text is saved, so the field is emptied for the next one; the languages and the decks stay as they were.
+      setText("");
+      setMarked([]);
+      setSelections([]);
+      setInstruction(
+        "Your text is saved in the list of texts below. Paste another text to make more cards.",
+      );
       setDecksChanged((count) => count + 1);
       onTextSaved();
       // When the model has answered, tell how many cards got a sentence, so the learner sees that the work is done.
@@ -169,10 +177,16 @@ export default function TextPage({ onTextSaved = () => {} }) {
               setSaved(null);
               setMessage(null);
               setCards(null);
+              setInstruction(null);
             }}
           />
           <TextCounter text={text} />
         </label>
+        {instruction && (
+          <p className="hint instruction" role="status">
+            {instruction}
+          </p>
+        )}
 
         {text.trim() && (
           <div className="marking">

@@ -104,7 +104,7 @@ test("skips a card that was deleted while the session was open", async () => {
   await click("Start session");
   expect(container.querySelector(".study-word").textContent).toBe("Haus");
 
-  await click("Show translation");
+  await click("Show answer");
   await click("Good");
 
   expect(container.querySelector(".study-word").textContent).toBe("Baum");
@@ -356,7 +356,7 @@ test("a session shows no hint text before the translation, and the translation o
   expect(container.textContent).not.toContain("Do you remember it?");
   expect(container.querySelector(".study-translation")).toBeNull();
 
-  await click("Show translation");
+  await click("Show answer");
   expect(container.querySelector(".study-translation").textContent).toBe(
     "A sentence.",
   );
@@ -425,7 +425,7 @@ test("a new sentence replaces the old one on the same card, and the translation 
   });
   await show();
   await startSession();
-  await click("Show translation");
+  await click("Show answer");
 
   await click("New sentence");
 
@@ -436,7 +436,7 @@ test("a new sentence replaces the old one on the same card, and the translation 
   );
   expect(container.querySelector(".study-translation")).toBeNull();
   expect(container.textContent).toContain("2 cards left");
-  await click("Show translation");
+  await click("Show answer");
   expect(container.querySelector(".study-translation").textContent).toBe(
     "Another house.",
   );
@@ -452,7 +452,7 @@ test("a hidden card leaves the session and does not come back", async () => {
   expect(changeCard).toHaveBeenCalledWith(1, { hidden: true });
   expect(container.querySelector(".study-word").textContent).toBe("Baum");
   expect(container.textContent).toContain("1 card left");
-  await click("Show translation");
+  await click("Show answer");
   await click("Again");
   expect(container.textContent).not.toContain("Haus");
 });

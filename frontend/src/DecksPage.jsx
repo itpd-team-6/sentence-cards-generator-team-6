@@ -83,9 +83,6 @@ function NewDeckForm({ onCreated, onCancel }) {
 
 // The Decks tab (FR-022): one tile for each deck, with the cards to study today, the share the learner has learned and
 // how many cards it has. A tile opens the deck. The deck "Uncategorized" is a deck like the others, shown after them.
-// "de>ru" as "DE → RU", the short form the Study page uses for a pair, so that all the pairs fit in one row.
-const shortPair = (pair) => pair.toUpperCase().replace(">", " → ");
-
 const pairOf = (deck) => `${deck.text_language}>${deck.first_language}`;
 
 // Search shows up only when there are enough decks for it to help.
@@ -186,7 +183,7 @@ function DeckFilter({ pairs, chosen, onToggle, showSearch, search, onSearch }) {
               aria-pressed={chosen.includes(pair)}
               onClick={() => onToggle(pair)}
             >
-              {shortPair(pair)}
+              {pairName(pair)}
             </button>
           ))}
         </div>

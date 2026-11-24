@@ -1,6 +1,6 @@
 const learned = (deck) => deck.learned_percent ?? 0;
 
-const LANGUAGE_CODES = { ru: "RU", en: "EN", de: "DE" };
+const LANGUAGE_NAMES = { ru: "Russian", en: "English", de: "German" };
 
 // The decks to study from, as a row of chips inside the Study box. The ticked decks are filled in blue, and the button
 // ticks every deck, or unticks them all when every deck is ticked.
@@ -58,8 +58,8 @@ export default function StudyDecks({ decks, ticked, onChange }) {
               </span>
               {pairs.size > 1 && (
                 <span className="dchip-pair">
-                  {LANGUAGE_CODES[deck.text_language]} to{" "}
-                  {LANGUAGE_CODES[deck.first_language]}
+                  {LANGUAGE_NAMES[deck.text_language]} to{" "}
+                  {LANGUAGE_NAMES[deck.first_language]}
                 </span>
               )}
             </button>
