@@ -824,6 +824,14 @@ export default function CardsTable({
                           Hidden from study
                         </span>
                       )}
+                      {card.in_text === false && (
+                        <span
+                          className="badge not-marked"
+                          title="The word of this card is no longer marked in the text. The card stays."
+                        >
+                          Not marked in the text
+                        </span>
+                      )}
                     </th>
                     <td data-label="Sentence">
                       {card.sentence ?? (

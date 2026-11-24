@@ -5,6 +5,7 @@ import CardFilters, { pairName } from "./CardFilters.jsx";
 import {
   NONE,
   STATUSES,
+  archivedIdsOf,
   choiceCount,
   describe,
   emptyFilters,
@@ -90,9 +91,11 @@ export default function YourCardsPage() {
     }
   };
 
+  const archived = useMemo(() => archivedIdsOf(texts), [texts]);
   const shown = useMemo(
-    () => (cards ? sortCards(filterCards(cards, filters), view.sort) : []),
-    [cards, filters, view.sort],
+    () =>
+      cards ? sortCards(filterCards(cards, filters, archived), view.sort) : [],
+    [cards, filters, archived, view.sort],
   );
   const groups = useMemo(
     () => groupCards(shown, view.group, decks, texts),
@@ -164,13 +167,7 @@ export default function YourCardsPage() {
   const toolbar = (
     <div className="cards-toolbar">
       <div className="cards-search-row">
-        <CardSearch
-          cards={cards ?? []}
-          decks={decks}
-          texts={texts}
-          filters={filters}
-          onChange={change}
-        />
+        <CardSearch cards={cards ?? []} filters={filters} onChange={change} />
         <button
           type="button"
           className="secondary filters-toggle"

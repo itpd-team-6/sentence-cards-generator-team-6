@@ -11,6 +11,12 @@ import TextPage from "./TextPage.jsx";
 import TodaySummary from "./TodaySummary.jsx";
 import YourCardsPage from "./YourCardsPage.jsx";
 
+// The two sub-tabs of the Texts page.
+const TEXT_TABS = [
+  { id: "add", name: "Add cards from a text" },
+  { id: "list", name: "Your texts" },
+];
+
 // The icon of each page, for the bar at the bottom of a phone. They are drawn on a 24 by 24 grid.
 const ICONS = {
   study: "M8 5.5v13l11-6.5z",
@@ -38,24 +44,22 @@ function PageIcon({ id }) {
 }
 
 export default function App() {
-  const [status, setStatus] = useState("checking");
   const page = usePage();
   const textId = useTextId(); // the saved text the address opens, if any
   const deckId = useDeckId(); // the deck the address opens, if any
   const [textsChanged, setTextsChanged] = useState(0); // counts the texts saved on the form, so the list is read again
   const [inSession, setInSession] = useState(false); // a study session is open: the learner only sees the cards
+  const [textsTab, setTextsTab] = useState("add"); // the sub-tab of the Texts page: "add" or "list"
 
+  // A saved text is opened from the list, so the way back from it goes to the list.
   useEffect(() => {
-    fetch("/api/health")
-      .then((response) => response.json())
-      .then((body) => setStatus(body.status))
-      .catch(() => setStatus("unreachable"));
-  }, []);
+    if (textId !== null) setTextsTab("list");
+  }, [textId]);
 
   return (
     <>
       {/* One bar for the whole product, as wide as the window: the name at the left, the pages in the middle, and at the
-          right what there is to study today, the state and the library. Its content lines up with the page. On a phone
+          right what there is to study today and the library. Its content lines up with the page. On a phone
           the pages move to a bar at the bottom of the screen. */}
       <header className="app-header" hidden={inSession}>
         <div className="app-header-inner">
@@ -78,29 +82,43 @@ export default function App() {
           </nav>
           <div className="app-header-tools">
             <TodaySummary page={page} />
-            <span
-              className={status === "ok" ? "status-dot" : "status-dot problem"}
-              role="status"
-              title={`API status: ${status}`}
-            >
-              <span className="visually-hidden">API status: {status}</span>
-            </span>
             <LibraryMenu />
           </div>
         </div>
       </header>
       <main className={inSession ? "app in-session" : "app"}>
-        {/* The form that adds a text stays in the document, so what the learner typed is still there when they come back.
-          The list of texts is under it; a saved text opens in place of both. */}
+        {/* The Texts page has two sub-tabs: the form that adds cards from a text, open by default, and the list of saved
+          texts. The form stays in the document, so what the learner typed is still there when they come back, and the
+          list is read again each time it is shown. A saved text opens in place of both. */}
         <div hidden={page !== "texts"}>
           <div hidden={textId !== null}>
-            <TextPage
-              onTextSaved={() => setTextsChanged((count) => count + 1)}
-            />
-            <TextList
-              active={page === "texts" && textId === null}
-              reload={textsChanged}
-            />
+            <div className="sub-tabs" role="tablist" aria-label="Texts">
+              {TEXT_TABS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  className="sub-tab"
+                  aria-selected={textsTab === item.id}
+                  onClick={() => setTextsTab(item.id)}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+            <div hidden={textsTab !== "add"}>
+              <TextPage
+                onTextSaved={() => setTextsChanged((count) => count + 1)}
+              />
+            </div>
+            <div hidden={textsTab !== "list"}>
+              <TextList
+                active={
+                  page === "texts" && textId === null && textsTab === "list"
+                }
+                reload={textsChanged}
+              />
+            </div>
           </div>
           {page === "texts" && textId !== null && (
             <SavedText key={textId} textId={textId} />

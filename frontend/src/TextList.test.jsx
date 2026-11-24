@@ -153,3 +153,60 @@ test("the texts are in a box that scrolls by itself, so the page does not grow w
   expect(box).not.toBeNull();
   expect(box.querySelectorAll(".text-row").length).toBe(1);
 });
+
+const text = (id, title, archived) => ({
+  id,
+  title,
+  archived,
+  text_language: "de",
+  first_language: "en",
+  words: [],
+  words_with_cards: [],
+  cards: 0,
+});
+
+const tab = (name) =>
+  [...container.querySelectorAll(".text-views button")].find((button) =>
+    button.textContent.startsWith(name),
+  );
+
+test("the active texts are listed first, and the archived ones are in a tab of their own, each tab with its number", async () => {
+  api.loadTexts = () =>
+    Promise.resolve([
+      text(3, "Mein Tag", false),
+      text(2, "Alte Reise", true),
+      text(1, "Das Haus", false),
+    ]);
+  await show();
+
+  expect(tab("Active").textContent).toBe("Active (2)");
+  expect(tab("Archived").textContent).toBe("Archived (1)");
+  expect(tab("Active").getAttribute("aria-pressed")).toBe("true");
+  expect(
+    [...container.querySelectorAll(".text-title")].map(
+      (item) => item.textContent,
+    ),
+  ).toEqual(["Mein Tag", "Das Haus"]);
+
+  await act(async () => tab("Archived").click());
+
+  expect(tab("Archived").getAttribute("aria-pressed")).toBe("true");
+  expect(
+    [...container.querySelectorAll(".text-title")].map(
+      (item) => item.textContent,
+    ),
+  ).toEqual(["Alte Reise"]);
+  expect(container.querySelector("a.secondary").getAttribute("href")).toBe(
+    "#/texts/2",
+  );
+});
+
+test("without archived texts the Archived tab says so", async () => {
+  api.loadTexts = () => Promise.resolve([text(1, "Das Haus", false)]);
+  await show();
+
+  await act(async () => tab("Archived").click());
+
+  expect(container.textContent).toContain("No archived texts");
+  expect(container.querySelector(".text-row")).toBeNull();
+});

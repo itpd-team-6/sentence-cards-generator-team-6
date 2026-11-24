@@ -110,6 +110,8 @@ class TextResponse(BaseModel):
     words_with_cards: list[str]
     marks: list[MarkedWord]
     cards: int
+    # An archived text is kept out of the list of active texts (DEC-075).
+    archived: bool
 
 
 class TextSummary(BaseModel):
@@ -123,12 +125,14 @@ class TextSummary(BaseModel):
     words_with_cards: list[str]
     marks: list[MarkedWord]
     cards: int
+    archived: bool
 
 
 class TextChange(BaseModel):
     """What the learner changes on a text. Only the fields that are sent change.
 
     `words` is the whole list of marked words the text keeps; it may be empty.
+    `archived` archives the text (true) or brings it back to the active ones (false).
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -136,6 +140,7 @@ class TextChange(BaseModel):
     title: Title | None = None
     text: Body | None = None
     words: list[Word] | None = None
+    archived: bool | None = None
 
     @field_validator("text")
     @classmethod
@@ -149,7 +154,7 @@ class TextChange(BaseModel):
 
 
 class ChangedText(TextResponse):
-    # The marks the new text took away because their words are no longer in it. The cards are untouched.
+    # The marks the new text took away because their words are no longer in it. Their cards stay linked to the text.
     lost_marks: list[str]
 
 
@@ -201,7 +206,7 @@ def change_text(
     change: TextChange,
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
 ) -> ChangedText:
-    """Change the title, the text or the marked words. Cards are never touched (DEC-064)."""
+    """Change the title, the text, the marked words or the archive of a text. Cards are never touched (DEC-064)."""
     try:
         lost = update_text(
             connection,

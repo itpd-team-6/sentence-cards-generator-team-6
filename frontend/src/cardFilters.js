@@ -9,6 +9,13 @@ export const STATUSES = [
   { id: "hidden", name: "Hidden from study" },
   { id: "review", name: "Marked for review" },
   { id: "no-sentence", name: "Without a sentence" },
+  // The cards linked to a text that the learner archived. The item is in the side list only while some card is like that.
+  {
+    id: "archived-text",
+    name: "Archived text",
+    said: "from an archived text",
+    optional: true,
+  },
 ];
 
 export const emptyFilters = () => ({
@@ -68,12 +75,21 @@ export function splitMatch(text, search) {
 
 export const pairOf = (card) => `${card.text_language}>${card.first_language}`;
 
+// The ids of the archived texts. A card only knows the id and the title of its texts, so the list of texts says which are
+// archived (DEC-075).
+export const archivedIdsOf = (texts) =>
+  new Set(texts.filter((text) => text.archived).map((text) => text.id));
+
+const NO_ARCHIVED = new Set();
+
 // The ids a card has in each part.
-function membership(card) {
+function membership(card, archived) {
   const status = [];
   if (card.hidden) status.push("hidden");
   if (card.flagged) status.push("review");
   if (card.sentence == null) status.push("no-sentence");
+  if (card.texts?.some((text) => archived.has(text.id)))
+    status.push("archived-text");
   return {
     decks: card.decks?.length ? card.decks.map((deck) => deck.id) : [NONE],
     texts: card.texts?.length ? card.texts.map((text) => text.id) : [NONE],
@@ -99,8 +115,8 @@ export function matchesSearch(card, search) {
 
 // Whether a card passes the filters, leaving out the parts named in `skip`. The counts of the side list leave out the
 // part they are about, so a deck that is not ticked tells how many cards the learner would get by ticking it.
-export function cardMatches(card, filters, skip = []) {
-  const has = membership(card);
+export function cardMatches(card, filters, skip = [], archived = NO_ARCHIVED) {
+  const has = membership(card, archived);
   const part = (name) =>
     skip.includes(name) ||
     passes(filters[name], filters[`${name}Mode`] ?? "any", has[name]);
@@ -113,15 +129,15 @@ export function cardMatches(card, filters, skip = []) {
   );
 }
 
-export const filterCards = (cards, filters) =>
-  cards.filter((card) => cardMatches(card, filters));
+export const filterCards = (cards, filters, archived = NO_ARCHIVED) =>
+  cards.filter((card) => cardMatches(card, filters, [], archived));
 
 // How many cards each item of a part would give, with the choices of the other parts and the search applied.
-export function countItems(cards, filters, part) {
+export function countItems(cards, filters, part, archived = NO_ARCHIVED) {
   const counts = new Map();
   for (const card of cards) {
-    if (!cardMatches(card, filters, [part])) continue;
-    for (const id of membership(card)[part]) {
+    if (!cardMatches(card, filters, [part], archived)) continue;
+    for (const id of membership(card, archived)[part]) {
       counts.set(id, (counts.get(id) ?? 0) + 1);
     }
   }
@@ -171,9 +187,10 @@ export function describe(count, filters, { decks, texts, pairs }) {
     );
   }
   if (filters.statuses.length) {
-    const names = filters.statuses.map((id) =>
-      STATUSES.find((item) => item.id === id).name.toLowerCase(),
-    );
+    const names = filters.statuses.map((id) => {
+      const status = STATUSES.find((item) => item.id === id);
+      return status.said ?? status.name.toLowerCase();
+    });
     parts.push(join(names, filters.statusesMode));
   }
   if (filters.search.trim()) parts.push(`matching “${filters.search.trim()}”`);

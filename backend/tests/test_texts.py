@@ -22,6 +22,7 @@ def test_a_text_is_saved_with_its_marked_words() -> None:
             "words_with_cards": [],
             "marks": [{"word": word, "card": None} for word in TEXT["words"]],
             "cards": 0,
+            "archived": False,
         }
 
 

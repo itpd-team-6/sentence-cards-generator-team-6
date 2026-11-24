@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import {
   NONE,
+  archivedIdsOf,
   choiceCount,
   countItems,
   describe,
@@ -202,4 +203,28 @@ test("splitMatch marks the part that has the search, without the case and withou
   ).toHaveLength(2);
   expect(splitMatch("Haus", "")).toEqual([{ text: "Haus", match: false }]);
   expect(splitMatch("Haus", "zug")).toEqual([{ text: "Haus", match: false }]);
+});
+
+test("the status Archived text keeps the cards linked to a text that was archived", () => {
+  const archived = archivedIdsOf([
+    { id: 10, title: "Text X", archived: false },
+    { id: 11, title: "Text Y", archived: true },
+  ]);
+  const filters = withFilters({ statuses: ["archived-text"] });
+
+  expect(ids(filterCards(cards, filters, archived))).toEqual([2]);
+  expect(
+    countItems(cards, emptyFilters(), "statuses", archived).get(
+      "archived-text",
+    ),
+  ).toBe(1);
+  expect(describe(1, filters, { decks: [], texts: [], pairs: [] })).toBe(
+    "1 card from an archived text",
+  );
+});
+
+test("without a list of archived texts no card has the status Archived text", () => {
+  const filters = withFilters({ statuses: ["archived-text"] });
+
+  expect(ids(filterCards(cards, filters))).toEqual([]);
 });

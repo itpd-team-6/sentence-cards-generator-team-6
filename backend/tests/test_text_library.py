@@ -79,6 +79,29 @@ def test_a_database_with_earlier_texts_gives_each_one_a_title(monkeypatch) -> No
     assert database.database_version(reopened) == len(MIGRATIONS)
 
 
+def test_a_database_with_earlier_texts_keeps_them_active_and_their_marks_marked(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        database,
+        "MIGRATIONS",
+        MIGRATIONS[: MIGRATIONS.index(database.add_the_archive_and_the_mark_state)],
+    )
+    connection = connect()
+    init_db(connection)
+    text_id = save_text(connection, "Das Haus ist alt.", "de", "en", ["Haus"], "Das Haus")
+    connection.close()
+
+    monkeypatch.setattr(database, "MIGRATIONS", MIGRATIONS)
+    reopened = connect()
+    init_db(reopened)
+
+    text = database.get_text(reopened, text_id)
+    assert text["archived"] is False
+    assert text["words"] == ["Haus"]
+    assert database.database_version(reopened) == len(MIGRATIONS)
+
+
 def test_the_list_shows_each_text_with_its_marked_words_and_cards(db) -> None:
     first = save_text(db, "Ein Zug fährt.", "de", "en", ["Zug", "fährt"], "Der Zug")
     save_text(db, "A walk in the park.", "en", "ru", ["walk"], "A walk")
@@ -107,6 +130,7 @@ def test_the_list_shows_each_text_with_its_marked_words_and_cards(db) -> None:
             {"word": "fährt", "card": None},
         ],
         "cards": 1,
+        "archived": False,
     }
 
 
@@ -137,6 +161,33 @@ def test_a_word_whose_card_was_deleted_is_a_mark_with_no_card(db) -> None:
     db.commit()
 
     assert database.get_text(db, text_id)["marks"] == [{"word": "Zug", "card": None}]
+
+
+def test_a_new_text_is_active_and_can_be_archived_and_restored() -> None:
+    with TestClient(app) as client:
+        created = client.post("/api/texts", json=TEXT).json()
+        url = f"/api/texts/{created['id']}"
+
+        archived = client.patch(url, json={"archived": True})
+        listed = client.get("/api/texts").json()
+        restored = client.patch(url, json={"archived": False})
+
+    assert created["archived"] is False
+    assert archived.status_code == 200
+    assert archived.json()["archived"] is True
+    assert archived.json()["lost_marks"] == []
+    assert archived.json()["words"] == ["Zug", "stimmt zu"]
+    assert [item["archived"] for item in listed] == [True]
+    assert restored.json()["archived"] is False
+
+
+def test_changing_the_title_does_not_change_the_archive(db) -> None:
+    text_id = save_text(db, TEXT["text"], "de", "en", ["Zug"])
+    database.update_text(db, text_id, archived=True)
+
+    database.update_text(db, text_id, title="Meine Reise")
+
+    assert database.get_text(db, text_id)["archived"] is True
 
 
 def test_the_list_has_the_newest_text_first_and_counts_cards_once() -> None:
@@ -179,18 +230,70 @@ def test_editing_the_title_and_the_text_keeps_the_cards_as_they_were(db) -> None
     assert after["texts"] == [{"id": text_id, "title": "Meine Reise"}]
 
 
-def test_a_mark_whose_word_is_no_longer_in_the_text_is_removed_and_told(db) -> None:
+def test_a_mark_whose_word_is_no_longer_in_the_text_is_told_and_its_card_stays_in_the_text(
+    db,
+) -> None:
     text_id = save_text(db, TEXT["text"], "de", "en", ["Zug", "Berlin"])
     add_card(db, text_id, "Zug", "Der Zug ist da.", "The train is here.", TODAY)
     add_card(db, text_id, "Berlin", "Berlin ist groß.", "Berlin is big.", TODAY)
 
     lost = database.update_text(db, text_id, text="Heute fahre ich mit dem Zug nach Hause.")
 
+    saved = database.get_text(db, text_id)
     assert lost == ["Berlin"]
-    assert database.get_text(db, text_id)["words"] == ["Zug"]
+    assert saved["words"] == ["Zug"]
+    assert saved["cards"] == 2
     assert {card["word"] for card in list_all_cards(db)} == {"Zug", "Berlin"}
     berlin = next(card for card in list_all_cards(db) if card["word"] == "Berlin")
-    assert berlin["texts"] == []
+    assert berlin["texts"] == [{"id": text_id, "title": saved["title"]}]
+    in_text = {card["word"]: card["in_text"] for card in database.list_cards(db, text_id)}
+    assert in_text == {"Zug": 1, "Berlin": 0}
+
+
+def test_a_word_taken_off_the_marks_keeps_its_card_in_the_text_and_marked_again_takes_it_back(
+    db,
+) -> None:
+    text_id = save_text(db, TEXT["text"], "de", "en", ["Zug", "Plan"])
+    zug = add_card(db, text_id, "Zug", "Der Zug ist da.", "The train is here.", TODAY)
+
+    database.update_text(db, text_id, words=["Plan"])
+
+    unmarked = database.get_text(db, text_id)
+    assert unmarked["words"] == ["Plan"]
+    assert unmarked["words_with_cards"] == []
+    assert unmarked["cards"] == 1
+    assert [card["in_text"] for card in database.list_cards(db, text_id)] == [0]
+    assert database.text_for_card(db, get_card(db, zug))["text"] == ""
+
+    database.update_text(db, text_id, words=["Plan", "Zug"])
+
+    marked = database.get_text(db, text_id)
+    assert marked["words"] == ["Zug", "Plan"]
+    assert marked["words_with_cards"] == ["Zug"]
+    assert [card["in_text"] for card in database.list_cards(db, text_id)] == [1]
+    assert database.text_for_card(db, get_card(db, zug))["text"] == TEXT["text"]
+
+
+def test_a_mark_with_no_card_is_removed_when_it_is_taken_off_the_marks(db) -> None:
+    text_id = save_text(db, TEXT["text"], "de", "en", ["Zug", "Plan"])
+
+    database.update_text(db, text_id, words=["Zug"])
+
+    assert database.get_text(db, text_id)["words"] == ["Zug"]
+    rows = db.execute("SELECT word FROM marked_words WHERE text_id = ?", (text_id,)).fetchall()
+    assert [row["word"] for row in rows] == ["Zug"]
+
+
+def test_a_card_that_is_deleted_while_its_word_is_not_marked_leaves_no_mark_behind(db) -> None:
+    text_id = save_text(db, TEXT["text"], "de", "en", ["Zug"])
+    card_id = add_card(db, text_id, "Zug", "Der Zug ist da.", "The train is here.", TODAY)
+    database.update_text(db, text_id, words=[])
+
+    database.delete_card(db, card_id)
+    database.update_text(db, text_id, title="Meine Reise")
+
+    assert db.execute("SELECT COUNT(*) FROM marked_words").fetchone()[0] == 0
+    assert database.get_text(db, text_id)["cards"] == 0
 
 
 def test_a_mark_that_stays_keeps_its_card_when_the_case_of_the_letters_changes(db) -> None:
@@ -261,6 +364,7 @@ def test_a_change_names_the_marks_the_new_text_took_away() -> None:
 def test_an_unknown_text_cannot_be_changed_or_deleted() -> None:
     with TestClient(app) as client:
         assert client.patch("/api/texts/99", json={"title": "x"}).status_code == 404
+        assert client.patch("/api/texts/99", json={"archived": True}).status_code == 404
         assert client.delete("/api/texts/99").status_code == 404
 
 
@@ -306,6 +410,29 @@ def test_a_card_shows_each_text_that_still_has_its_word_and_none_when_no_text_ha
 
     database.delete_text(db, first)
     assert get_card(db, card_id)["texts"] == []
+
+
+def test_the_cards_of_a_text_say_whether_their_word_is_still_marked_in_it() -> None:
+    with TestClient(app) as client:
+        text_id = client.post("/api/texts", json=TEXT).json()["id"]
+        connection = connect()
+        add_card(connection, text_id, "Zug", "Der Zug ist da.", "The train is here.", TODAY)
+        add_card(connection, text_id, "stimmt zu", "Sie stimmt zu.", "She agrees.", TODAY)
+
+        before = client.get(f"/api/texts/{text_id}/cards").json()
+        client.patch(f"/api/texts/{text_id}", json={"words": ["Zug"]})
+        after = client.get(f"/api/texts/{text_id}/cards").json()
+        everywhere = client.get("/api/cards").json()
+
+    assert [(card["word"], card["in_text"]) for card in before] == [
+        ("Zug", True),
+        ("stimmt zu", True),
+    ]
+    assert [(card["word"], card["in_text"]) for card in after] == [
+        ("Zug", True),
+        ("stimmt zu", False),
+    ]
+    assert [card["in_text"] for card in everywhere] == [None, None]
 
 
 def test_the_cards_of_the_api_carry_the_texts_they_come_from() -> None:

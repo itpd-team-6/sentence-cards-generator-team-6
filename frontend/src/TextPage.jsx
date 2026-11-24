@@ -97,7 +97,7 @@ export default function TextPage({ onTextSaved = () => {} }) {
       setMarked([]);
       setSelections([]);
       setInstruction(
-        "Your text is saved in the list of texts below. Paste another text to make more cards.",
+        "Your text is saved in Your texts. Paste another text to make more cards.",
       );
       setDecksChanged((count) => count + 1);
       onTextSaved();
@@ -148,23 +148,6 @@ export default function TextPage({ onTextSaved = () => {} }) {
   return (
     <>
       <section className="panel">
-        <h2>Add cards from a text</h2>
-        <div className="fields">
-          <LanguagePicker
-            label="Text language"
-            name="text-language"
-            value={textLanguage}
-            onChange={setTextLanguage}
-            taken={firstLanguage}
-          />
-          <LanguagePicker
-            label="Your first language"
-            name="first-language"
-            value={firstLanguage}
-            onChange={setFirstLanguage}
-            taken={textLanguage}
-          />
-        </div>
         <label className="field">
           <span className="field-label">Paste a text</span>
           <textarea
@@ -187,6 +170,30 @@ export default function TextPage({ onTextSaved = () => {} }) {
             {instruction}
           </p>
         )}
+
+        <div className="languages">
+          <div className="fields">
+            <LanguagePicker
+              label="Text language"
+              name="text-language"
+              value={textLanguage}
+              onChange={setTextLanguage}
+              taken={firstLanguage}
+            />
+            <LanguagePicker
+              label="Your first language"
+              name="first-language"
+              value={firstLanguage}
+              onChange={setFirstLanguage}
+              taken={textLanguage}
+            />
+          </div>
+          <p className="hint">
+            The text language is the language of the text you paste. Your first
+            language is the one you know best. Each new card has a sentence in
+            the text language and its translation in your first language.
+          </p>
+        </div>
 
         {text.trim() && (
           <div className="marking">

@@ -261,6 +261,18 @@ def add_the_uncategorized_deck(connection: sqlite3.Connection) -> None:
         )
 
 
+def add_the_archive_and_the_mark_state(connection: sqlite3.Connection) -> None:
+    """Let a text be archived (DEC-075) and let a card stay linked to its text when its word is no longer marked
+    there (DEC-076).
+
+    `texts.archived` is 1 for an archived text. `marked_words.marked` is 1 while the word is marked in the text and 0
+    when it is not, but the card it points to stays linked to the text. Every text starts active and every mark starts
+    marked.
+    """
+    connection.execute("ALTER TABLE texts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    connection.execute("ALTER TABLE marked_words ADD COLUMN marked INTEGER NOT NULL DEFAULT 1")
+
+
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
     add_the_due_time,
@@ -271,6 +283,7 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     add_the_answer_count,
     add_the_text_titles,
     add_the_uncategorized_deck,
+    add_the_archive_and_the_mark_state,
 ]
 
 # The card fields a caller may change with `update_card`.
@@ -403,9 +416,13 @@ def save_text(
 
 
 def marked_words_of(connection: sqlite3.Connection, text_id: int) -> list[dict]:
-    """The marked words of a text, in the order they were marked, each with the id of its card or None."""
+    """The marks of a text, in the order they were marked, each with the id of its card or None.
+
+    `marked` says whether the word is marked in the text now. A mark that has a card stays when its word is no longer
+    marked, with `marked` 0, so the card stays linked to the text (DEC-076).
+    """
     rows = connection.execute(
-        "SELECT m.word, m.card_id, c.sentence, c.translation FROM marked_words m"
+        "SELECT m.word, m.card_id, m.marked, c.sentence, c.translation FROM marked_words m"
         " LEFT JOIN cards c ON c.id = m.card_id WHERE m.text_id = ? ORDER BY m.id",
         (text_id,),
     ).fetchall()
@@ -413,10 +430,14 @@ def marked_words_of(connection: sqlite3.Connection, text_id: int) -> list[dict]:
 
 
 def text_summary(row: sqlite3.Row, marks: list[dict]) -> dict:
+    """A text with the words that are marked in it, and the number of its cards, which includes the cards whose word is
+    no longer marked (DEC-076)."""
+    current = [mark for mark in marks if mark["marked"]]
     return {
         **dict(row),
-        "words": [mark["word"] for mark in marks],
-        "words_with_cards": [mark["word"] for mark in marks if mark["card_id"] is not None],
+        "archived": bool(row["archived"]),
+        "words": [mark["word"] for mark in current],
+        "words_with_cards": [mark["word"] for mark in current if mark["card_id"] is not None],
         # Each marked word with its card, or with no card (issue #204).
         "marks": [
             {
@@ -429,7 +450,7 @@ def text_summary(row: sqlite3.Row, marks: list[dict]) -> dict:
                     "translation": mark["translation"],
                 },
             }
-            for mark in marks
+            for mark in current
         ],
         "cards": len({mark["card_id"] for mark in marks if mark["card_id"] is not None}),
     }
@@ -492,13 +513,15 @@ def update_text(
     title: str | None = None,
     text: str | None = None,
     words: list[str] | None = None,
+    archived: bool | None = None,
 ) -> list[str]:
-    """Change the title, the text or the marked words of a text, and return the marks the new text took away.
+    """Change the title, the text, the marked words or the archive of a text, and return the marks the new text took
+    away.
 
-    Only what is given changes. A mark whose word is no longer in the text is removed: the learner's edit took the word
-    out. Cards are never touched: a card keeps its sentence, translation and study data (DEC-064). When `words` is
-    given it is the whole list of marks the text keeps, so a word left out loses its mark too. A mark that stays keeps
-    its card.
+    Only what is given changes. A mark whose word is no longer in the text is no longer marked. When `words` is given it
+    is the whole list of marks the text keeps, so a word left out is no longer marked either. A mark that has a card is
+    not removed: its card stays linked to the text and shows as not marked (DEC-076), and the card keeps its sentence,
+    translation and study data (DEC-064). A mark that has no card is removed. A word marked again takes its card back.
     """
     row = connection.execute("SELECT * FROM texts WHERE id = ?", (text_id,)).fetchone()
     if row is None:
@@ -512,31 +535,56 @@ def update_text(
     new_text = row["text"] if text is None else text
     in_text = words_of(new_text)
     marks = marked_words_of(connection, text_id)
-    target = [mark["word"] for mark in marks if mark_is_in(mark["word"], in_text)]
-    lost = [mark["word"] for mark in marks if mark["word"] not in target]
+    current = [mark for mark in marks if mark["marked"]]
+    target = [mark["word"] for mark in current if mark_is_in(mark["word"], in_text)]
+    lost = [mark["word"] for mark in current if mark["word"] not in target]
     if words is not None:
         for word in words:
             if not mark_is_in(word, in_text):
                 raise MarkNotInText(word)
         target = list(words)
     keep = {word.casefold() for word in target}
+    # A mark that is no longer marked and whose card is gone keeps nothing, so it goes.
+    gone = [mark for mark in marks if not mark["marked"] and mark["card_id"] is None]
+    alive = [mark for mark in marks if mark not in gone]
     try:
-        for mark in marks:
-            if mark["word"].casefold() not in keep:
-                connection.execute(
-                    "DELETE FROM marked_words WHERE text_id = ? AND word = ?",
-                    (text_id, mark["word"]),
-                )
-        have = {mark["word"].casefold() for mark in marks}
+        for mark in gone:
+            connection.execute(
+                "DELETE FROM marked_words WHERE text_id = ? AND word = ?", (text_id, mark["word"])
+            )
+        for mark in alive:
+            if mark["marked"] and mark["word"].casefold() not in keep:
+                if mark["card_id"] is None:
+                    connection.execute(
+                        "DELETE FROM marked_words WHERE text_id = ? AND word = ?",
+                        (text_id, mark["word"]),
+                    )
+                else:
+                    connection.execute(
+                        "UPDATE marked_words SET marked = 0 WHERE text_id = ? AND word = ?",
+                        (text_id, mark["word"]),
+                    )
+        have = {mark["word"].casefold(): mark for mark in alive}
         for word in target:
-            if word.casefold() not in have:
+            known = have.get(word.casefold())
+            if known is None:
                 connection.execute(
                     "INSERT OR IGNORE INTO marked_words (text_id, word) VALUES (?, ?)",
                     (text_id, word),
                 )
+            elif not known["marked"]:
+                connection.execute(
+                    "UPDATE marked_words SET marked = 1 WHERE text_id = ? AND word = ?",
+                    (text_id, known["word"]),
+                )
         connection.execute(
-            "UPDATE texts SET title = ?, text = ? WHERE id = ?",
-            (row["title"] if title is None else title, new_text, text_id),
+            "UPDATE texts SET title = ?, text = ?, archived = ? WHERE id = ?",
+            (
+                row["title"] if title is None else title,
+                new_text,
+                row["archived"] if archived is None else int(bool(archived)),
+                text_id,
+            ),
         )
     except BaseException:
         connection.rollback()
@@ -865,8 +913,8 @@ def change_card_decks(
 
 
 def attach_decks(connection: sqlite3.Connection, cards: list[dict]) -> list[dict]:
-    """Add `decks` (id and title, newest deck first) and `texts` (the texts that still have its word, newest first) to
-    each card."""
+    """Add `decks` (id and title, newest deck first) and `texts` (the texts the card is linked to, newest first, also
+    when its word is no longer marked in them, DEC-076) to each card."""
     if not cards:
         return cards
     marks = ", ".join("?" for _ in cards)
@@ -978,7 +1026,7 @@ def text_for_card(connection: sqlite3.Connection, card: dict) -> dict:
     """
     row = connection.execute(
         "SELECT texts.text FROM marked_words JOIN texts ON texts.id = marked_words.text_id"
-        " WHERE marked_words.card_id = ? ORDER BY texts.id DESC LIMIT 1",
+        " WHERE marked_words.card_id = ? AND marked_words.marked = 1 ORDER BY texts.id DESC LIMIT 1",
         (card["id"],),
     ).fetchone()
     return {
@@ -1066,9 +1114,11 @@ def find_card_by_phrase(
 
 
 def list_cards(connection: sqlite3.Connection, text_id: int) -> list[dict]:
-    """The cards of the marked words of a text, in the order the words were marked."""
+    """The cards linked to a text, in the order the words were marked, each with `in_text`: 1 while its word is marked
+    in the text and 0 when it is not (DEC-076)."""
     rows = connection.execute(
-        "SELECT cards.* FROM cards JOIN marked_words ON marked_words.card_id = cards.id"
+        "SELECT cards.*, MAX(marked_words.marked) AS in_text FROM cards"
+        " JOIN marked_words ON marked_words.card_id = cards.id"
         " WHERE marked_words.text_id = ? GROUP BY cards.id ORDER BY MIN(marked_words.id)",
         (text_id,),
     ).fetchall()

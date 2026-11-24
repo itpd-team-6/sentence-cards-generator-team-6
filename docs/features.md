@@ -34,11 +34,11 @@ Use the [study queue](glossary.md#study-queue) to focus on the cards you want to
 
 ## Keep my texts and edit them with their cards
 
-Open the texts you saved, change their title, their words and the marked words, and make cards for new words, while the cards you already have stay.
+Open the texts you saved, change their title, their words and the marked words, archive the ones you do not use now, and make cards for new words, while the cards you already have stay.
 
 - **Stories:** [US-20](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/253)
 - **Behavior:** [FR-019](functional-requirements/fr/FR-019.md)
-- **Decisions:** [DEC-058](decisions.md#dec-058), [DEC-064](decisions.md#dec-064)
+- **Decisions:** [DEC-058](decisions.md#dec-058), [DEC-064](decisions.md#dec-064), [DEC-075](decisions.md#dec-075), [DEC-076](decisions.md#dec-076)
 
 ## Keep cards in decks
 
@@ -75,7 +75,7 @@ Read the [signals](glossary.md#signal) the product emits while it runs as [servi
 
 ## Find, search and organize my cards
 
-Filter all your cards by deck, text and status, search cards, texts and decks from one box, group and sort the list, and put cards in decks or take them out.
+Filter all your cards by deck, text and status, search your cards from one box, group and sort the list, and put cards in decks or take them out.
 
 - **Stories:** [US-17](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/234)
 - **Behavior:** [FR-020](functional-requirements/fr/FR-020.md)

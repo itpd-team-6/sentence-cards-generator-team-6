@@ -15,11 +15,13 @@ const hasCard = (text, word) =>
 
 const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
-// The saved texts, the newest first. `active` is true while the page is shown; the list is read again each time, and
-// when `reload` changes (a text was just saved), so it is the list as it is now.
+// The saved texts, the newest first, in two tabs: the active ones and the archived ones (DEC-075). `active` is true while
+// the page is shown; the list is read again each time, and when `reload` changes (a text was just saved), so it is the
+// list as it is now.
 export default function TextList({ active = true, reload = 0 }) {
   const [texts, setTexts] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [shown, setShown] = useState("active"); // "active" or "archived"
 
   useEffect(() => {
     if (!active) return;
@@ -29,24 +31,48 @@ export default function TextList({ active = true, reload = 0 }) {
       .catch(() => setFailed(true));
   }, [active, reload]);
 
+  const inTab = {
+    active: texts?.filter((text) => !text.archived) ?? [],
+    archived: texts?.filter((text) => text.archived) ?? [],
+  };
+  const listed = inTab[shown];
+
   return (
-    <section className="panel" aria-labelledby="your-texts">
-      <h2 id="your-texts">Your texts</h2>
+    <section className="panel" aria-label="Your texts">
+      {texts !== null && (
+        <div className="filter-mode text-views" role="group" aria-label="Show">
+          {[
+            ["active", "Active"],
+            ["archived", "Archived"],
+          ].map(([id, name]) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={shown === id}
+              onClick={() => setShown(id)}
+            >
+              {name} ({inTab[id].length})
+            </button>
+          ))}
+        </div>
+      )}
       {failed && (
         <p className="hint" role="alert">
           The texts could not be loaded. Is the product running?
         </p>
       )}
       {!failed && texts === null && <p className="hint">Loading...</p>}
-      {texts?.length === 0 && (
+      {texts !== null && listed.length === 0 && (
         <p className="hint">
-          No texts yet. A text you save above is kept here.
+          {shown === "active"
+            ? "No texts yet. A text you save in Add cards from a text is kept here."
+            : "No archived texts. Archive a text on its page to keep it out of the active list."}
         </p>
       )}
-      {texts?.length > 0 && (
+      {listed.length > 0 && (
         <div className="texts-scroll">
           <ul className="text-list">
-            {texts.map((text) => (
+            {listed.map((text) => (
               <li className="text-row" key={text.id}>
                 <div className="text-main">
                   <strong className="text-title">{text.title}</strong>
