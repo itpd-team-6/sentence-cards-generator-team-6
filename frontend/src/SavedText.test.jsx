@@ -53,6 +53,7 @@ const saved = (changes = {}) => ({
     { word: "alt", card: null },
   ],
   cards: 1,
+  archived: false,
   ...changes,
 });
 
@@ -189,20 +190,20 @@ test("taking a mark away changes nothing until the learner saves, and then only 
   expect(container.textContent).not.toContain("Unsaved changes");
 });
 
-test("a card whose mark was taken away leaves the cards of this text when the learner saves", async () => {
+test("a card whose mark was taken away stays in the cards of this text when the learner saves, and the cards are read again", async () => {
   vi.mocked(changeText).mockResolvedValue({
     ...saved({ words: ["alt"], words_with_cards: [] }),
     lost_marks: [],
   });
   await show();
   expect(container.textContent).toContain("Cards table: 1");
+  expect(loadTextCards).toHaveBeenCalledTimes(1);
 
-  vi.mocked(loadTextCards).mockResolvedValue([]);
   await click(word("Haus"));
-  expect(container.textContent).toContain("Cards table: 1");
-
   await click(button("Save changes"));
-  expect(container.textContent).not.toContain("Cards table: 1");
+
+  expect(loadTextCards).toHaveBeenCalledTimes(2);
+  expect(container.textContent).toContain("Cards table: 1");
 });
 
 test("a new title is saved alone", async () => {
@@ -273,6 +274,43 @@ test("making cards saves the changes first and then makes the cards in the ticke
     createCards.mock.invocationCallOrder[0],
   );
   expect(everything()).toContain("Made 1 card in 1 deck.");
+});
+
+test("a text is archived from its page, the button then restores it, and only the flag is sent", async () => {
+  vi.mocked(changeText).mockResolvedValueOnce({
+    ...saved({ archived: true }),
+    lost_marks: [],
+  });
+  vi.mocked(changeText).mockResolvedValueOnce({
+    ...saved({ archived: false }),
+    lost_marks: [],
+  });
+  await show();
+  expect(container.textContent).not.toContain("Archived");
+
+  await click(button("Archive text"));
+  expect(changeText).toHaveBeenLastCalledWith(7, { archived: true });
+  expect(everything()).toContain("Archived. The text is in the Archived tab");
+  expect(container.querySelectorAll(".pair")[1].textContent).toBe("Archived");
+
+  await click(button("Restore text"));
+  expect(changeText).toHaveBeenLastCalledWith(7, { archived: false });
+  expect(everything()).toContain("Restored.");
+  expect(button("Archive text")).toBeDefined();
+});
+
+test("archiving keeps what the learner typed and did not save", async () => {
+  vi.mocked(changeText).mockResolvedValue({
+    ...saved({ archived: true }),
+    lost_marks: [],
+  });
+  await show();
+
+  await type(container.querySelector("input[type=text]"), "My text");
+  await click(button("Archive text"));
+
+  expect(container.querySelector("input[type=text]").value).toBe("My text");
+  expect(container.textContent).toContain("Unsaved changes");
 });
 
 test("a text is deleted only after the learner confirms, and its cards are said to stay", async () => {

@@ -101,7 +101,6 @@ python -m uvicorn app.main:app
 ```
 
 Open `http://localhost:8000`.
-The header shows a green dot when the front end reaches the API, and the tip of the dot reads `API status: ok`.
 Stop the product with `Ctrl+C`.
 
 ### Development mode

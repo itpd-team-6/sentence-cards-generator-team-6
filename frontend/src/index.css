@@ -826,6 +826,54 @@ textarea {
   }
 }
 
+/* The two sub-tabs of the Texts page: the form that adds cards, and the list of texts (DEC-075). */
+.sub-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sub-tab {
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sub-tab:hover {
+  color: var(--text);
+}
+
+.sub-tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent-soft-text);
+}
+
+.sub-tab:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Active and archived texts, and the line that says what the languages of a new text are for. */
+.text-views {
+  margin: 0 0 0.75rem;
+  max-width: 22rem;
+}
+
+.languages {
+  margin: 0.75rem 0 1rem;
+}
+
+/* A card whose word is no longer marked in its text (DEC-076). */
+.not-marked {
+  color: var(--muted);
+}
+
 /* The study session: one card at a time. */
 .study-card {
   position: relative;
@@ -2081,18 +2129,6 @@ textarea {
   gap: 0.75rem;
 }
 
-/* The state of the API as a dot: green when the front end reaches it. The text is for screen readers and the tip. */
-.status-dot {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 50%;
-  background: var(--ok);
-}
-
-.status-dot.problem {
-  background: var(--error-text);
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -2781,32 +2817,6 @@ a.secondary {
   font-size: 0.85rem;
 }
 
-.search-scope {
-  display: flex;
-  gap: 0.9rem;
-}
-
-.search-scope button {
-  padding: 0.15rem 0;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.search-scope button:hover {
-  color: var(--text);
-}
-
-.search-scope button[aria-pressed="true"] {
-  border-bottom-color: var(--accent);
-  color: var(--accent-soft-text);
-  font-weight: 700;
-}
-
 .search-clear {
   position: absolute;
   top: 50%;
@@ -2839,20 +2849,6 @@ a.secondary {
   color: inherit;
 }
 
-.search-section h4 {
-  margin: 0.4rem 0 0.2rem;
-  color: var(--muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.search-row-line {
-  display: flex;
-  align-items: stretch;
-  gap: 0.25rem;
-}
-
 .search-row {
   display: flex;
   flex: 1;
@@ -2874,8 +2870,7 @@ a.secondary {
   background: var(--accent-soft);
 }
 
-.search-section .search-row,
-.search-section .search-row-line {
+.search-section .search-row {
   margin-bottom: 0.3rem;
 }
 
@@ -2894,19 +2889,6 @@ a.secondary {
   font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.search-open {
-  display: grid;
-  place-content: center;
-  width: 2.25rem;
-  border-radius: 8px;
-  color: var(--accent-soft-text);
-  text-decoration: none;
-}
-
-.search-open:hover {
-  background: var(--accent-soft);
 }
 
 .search-more {

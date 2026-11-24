@@ -225,6 +225,22 @@ test("after the sentences are asked for, the field is empty and an instruction s
   );
 });
 
+test("the languages are below the text field, with a line that says what they are for", async () => {
+  await show();
+
+  const field = container.querySelector("textarea");
+  const languages = container.querySelector(".languages");
+  expect(
+    field.compareDocumentPosition(languages) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    languages.querySelectorAll("input[type=radio]").length,
+  ).toBeGreaterThan(0);
+  expect(languages.querySelector(".hint").textContent).toContain(
+    "language of the text you paste",
+  );
+});
+
 test("the text stays in the field when it could not be saved", async () => {
   writeTextDraft({
     text: "Der Zug f\u00e4hrt.",

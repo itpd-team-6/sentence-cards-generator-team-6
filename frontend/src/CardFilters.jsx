@@ -1,6 +1,7 @@
 import {
   NONE,
   STATUSES,
+  archivedIdsOf,
   countItems,
   emptyFilters,
   hasFilters,
@@ -93,6 +94,7 @@ export default function CardFilters({
   onClose,
 }) {
   const pairs = [...new Set(cards.map(pairOf))].sort();
+  const archived = archivedIdsOf(texts);
   // A card that leaves its last deck goes to the deck "Uncategorized", which is a deck in the list like the others
   // (DEC-065). The item for cards in no deck is only for a learner who has no such deck, so it is not shown twice.
   const deckItems = [
@@ -101,8 +103,15 @@ export default function CardFilters({
       ? []
       : [{ id: NONE, label: "Uncategorized", optional: true }]),
   ];
+  // An archived text is not in the list (DEC-075); the cards of archived texts are found with the status "Archived text". A
+  // text that is ticked stays, so the learner can untick it.
   const textItems = [
-    ...texts.map((text) => ({ id: text.id, label: text.title })),
+    ...texts
+      .filter((text) => !text.archived || filters.texts.includes(text.id))
+      .map((text) => ({
+        id: text.id,
+        label: text.archived ? `${text.title} (archived)` : text.title,
+      })),
     { id: NONE, label: "No text", optional: true },
   ];
   const shared = { filters, onChange };
@@ -138,16 +147,16 @@ export default function CardFilters({
         name="Decks"
         part="decks"
         items={deckItems}
-        counts={countItems(cards, filters, "decks")}
-        overall={countItems(cards, emptyFilters(), "decks")}
+        counts={countItems(cards, filters, "decks", archived)}
+        overall={countItems(cards, emptyFilters(), "decks", archived)}
       />
       <Part
         {...shared}
         name="Texts"
         part="texts"
         items={textItems}
-        counts={countItems(cards, filters, "texts")}
-        overall={countItems(cards, emptyFilters(), "texts")}
+        counts={countItems(cards, filters, "texts", archived)}
+        overall={countItems(cards, emptyFilters(), "texts", archived)}
       />
       {pairs.length > 1 && (
         <Part
@@ -155,8 +164,8 @@ export default function CardFilters({
           name="Languages"
           part="pairs"
           items={pairs.map((id) => ({ id, label: pairName(id) }))}
-          counts={countItems(cards, filters, "pairs")}
-          overall={countItems(cards, emptyFilters(), "pairs")}
+          counts={countItems(cards, filters, "pairs", archived)}
+          overall={countItems(cards, emptyFilters(), "pairs", archived)}
         />
       )}
       <Part
@@ -166,9 +175,10 @@ export default function CardFilters({
         items={STATUSES.map((status) => ({
           id: status.id,
           label: status.name,
+          optional: status.optional,
         }))}
-        counts={countItems(cards, filters, "statuses")}
-        overall={countItems(cards, emptyFilters(), "statuses")}
+        counts={countItems(cards, filters, "statuses", archived)}
+        overall={countItems(cards, emptyFilters(), "statuses", archived)}
       />
       <button type="button" className="primary filters-show" onClick={onClose}>
         Show {shown} {shown === 1 ? "card" : "cards"}

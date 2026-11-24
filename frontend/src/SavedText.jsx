@@ -23,7 +23,7 @@ const sameItems = (a, b) =>
 
 // One saved text: its title, its text and its marked words can be changed. What the learner changes is held here and is
 // saved only with "Save changes", so nothing is lost by a click that was a mistake. Unmarking a word takes only the mark
-// away: the card and the text stay (DEC-064). The two languages cannot change on a saved text, because its cards are
+// away: the card stays linked to the text and is shown as not marked (DEC-064, DEC-076). The two languages cannot change on a saved text, because its cards are
 // written for that pair.
 export default function SavedText({ textId }) {
   const [saved, setSaved] = useState(null); // the text as the product has it
@@ -37,7 +37,7 @@ export default function SavedText({ textId }) {
   const [deckIds, setDeckIds] = useState([]);
   const [decksChanged, setDecksChanged] = useState(0);
   const [message, setMessage] = useState(null);
-  const [busy, setBusy] = useState(null); // "save", "cards" or "delete"
+  const [busy, setBusy] = useState(null); // "save", "cards", "archive" or "delete"
   const [confirming, setConfirming] = useState(false);
 
   const pieces = useMemo(() => splitText(text), [text]);
@@ -120,7 +120,7 @@ export default function SavedText({ textId }) {
     if (Object.keys(fields).length === 0) return null;
     const changed = await changeText(textId, fields);
     show(changed);
-    // A mark taken away takes its card out of the cards of this text (the card stays in Your cards), so the box is read again.
+    // A mark taken away leaves its card in the cards of this text, shown as not marked, so the box is read again.
     try {
       setCards(await loadTextCards(textId));
     } catch {
@@ -163,7 +163,7 @@ export default function SavedText({ textId }) {
       setMessage(
         newNotice(
           gone.length > 0
-            ? `Saved. The text no longer has ${gone.join(", ")}, so ${gone.length === 1 ? "its mark was" : "their marks were"} taken away. The cards stay.`
+            ? `Saved. The text no longer has ${gone.join(", ")}, so ${gone.length === 1 ? "its mark was" : "their marks were"} taken away. The cards stay in the cards of this text, shown as not marked.`
             : "Saved.",
           "success",
         ),
@@ -221,6 +221,30 @@ export default function SavedText({ textId }) {
     }
   }
 
+  // An archived text leaves the active list of texts and waits in the archived one (DEC-075). Only this flag changes, so
+  // what the learner typed and has not saved stays as it is.
+  async function onArchive() {
+    const archived = !saved.archived;
+    setMessage(null);
+    setBusy("archive");
+    try {
+      const changed = await changeText(textId, { archived });
+      setSaved((before) => ({ ...before, archived: changed.archived }));
+      setMessage(
+        newNotice(
+          archived
+            ? "Archived. The text is in the Archived tab of Your texts."
+            : "Restored. The text is in the Active tab of Your texts.",
+          "success",
+        ),
+      );
+    } catch (error) {
+      setMessage(problemOf(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function onDelete() {
     setBusy("delete");
     try {
@@ -245,6 +269,7 @@ export default function SavedText({ textId }) {
           <span className="pair" title={pairTitle}>
             {NAMES[saved.text_language]} → {NAMES[saved.first_language]}
           </span>
+          {saved.archived && <span className="pair">Archived</span>}
         </div>
         <h2>Edit text</h2>
         <label className="field">
@@ -357,6 +382,14 @@ export default function SavedText({ textId }) {
             disabled={!dirty || busy !== null}
           >
             {busy === "save" ? "Saving..." : "Save changes"}
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={onArchive}
+            disabled={busy !== null}
+          >
+            {saved.archived ? "Restore text" : "Archive text"}
           </button>
           {!confirming && (
             <button

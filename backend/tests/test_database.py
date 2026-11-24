@@ -78,6 +78,7 @@ def test_a_saved_text_with_its_words_and_cards_survives_a_restart() -> None:
             {"word": "groß", "card": None},
         ],
         "cards": 1,
+        "archived": False,
     }
     assert get_card(reopened, card_id) == {
         "id": card_id,

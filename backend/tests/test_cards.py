@@ -225,7 +225,8 @@ def test_an_unchanged_sentence_does_not_ask_the_model_again(model) -> None:
 
         assert response.status_code == 200
         assert model.translated == []
-        assert response.json() == before[0]
+        # The answer to a change of one card has no in_text, which only the cards of a text carry.
+        assert {**response.json(), "in_text": None} == {**before[0], "in_text": None}
 
 
 def test_when_the_translation_fails_the_card_keeps_its_sentence_and_its_translation(model) -> None:

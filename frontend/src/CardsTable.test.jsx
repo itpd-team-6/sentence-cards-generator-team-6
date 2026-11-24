@@ -135,6 +135,21 @@ test("a card marked for review or hidden shows its state in the line, as a butto
   ).toBe("Show Reise in study");
 });
 
+test("in the table of a text, a card whose word is no longer marked says so beside its word, and a card of a marked word does not", async () => {
+  await show({
+    cards: [
+      { ...CARDS[0], in_text: true },
+      { ...CARDS[1], in_text: false },
+    ],
+  });
+
+  const [first, second] = container.querySelectorAll("tbody th[scope=row]");
+  expect(first.querySelector(".not-marked")).toBeNull();
+  expect(second.querySelector(".not-marked").textContent).toBe(
+    "Not marked in the text",
+  );
+});
+
 test("without the option the card has no label", async () => {
   await show({});
 

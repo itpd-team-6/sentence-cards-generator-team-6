@@ -69,7 +69,7 @@ class DeckRef(BaseModel):
 
 
 class TextRef(BaseModel):
-    """A text that still has the word of a card (DEC-064)."""
+    """A text a card is linked to (DEC-064, DEC-076)."""
 
     id: int
     title: str
@@ -81,7 +81,7 @@ class CardResponse(BaseModel):
     text_language: str
     first_language: str
     decks: list[DeckRef]
-    # The texts that still have the word marked; empty for a card whose texts are gone.
+    # The texts the card is linked to, also when its word is no longer marked in them (DEC-076); none when they are gone.
     texts: list[TextRef] = []
     word: str
     # The context phrase that, with the word, identifies the card (DEC-013); None for a card made before phrases existed.
@@ -92,6 +92,8 @@ class CardResponse(BaseModel):
     flagged: bool
     hidden: bool
     due_date: str
+    # Only for the cards of one text: false when the word of the card is no longer marked in that text (DEC-076).
+    in_text: bool | None = None
     # Set only when cards were just generated and the model gave no sentence for this word.
     error: str | None = None
 
@@ -182,6 +184,7 @@ def card_response(card: dict, error: str | None = None) -> CardResponse:
             "translation_locked": bool(card["translation_locked"]),
             "flagged": bool(card["flagged"]),
             "hidden": bool(card["hidden"]),
+            "in_text": None if card.get("in_text") is None else bool(card["in_text"]),
         },
         error=error,
     )

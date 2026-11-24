@@ -66,14 +66,19 @@ const tabs = () => [...container.querySelectorAll(".tab")];
 const current = () =>
   tabs().find((tab) => tab.getAttribute("aria-current") === "page");
 const textPageBox = () => container.querySelector("div[hidden], main > div");
+const subTabs = () => [...container.querySelectorAll(".sub-tab")];
+const openSubTab = (name) =>
+  act(async () =>
+    subTabs()
+      .find((tab) => tab.textContent === name)
+      .click(),
+  );
 
 beforeEach(() => {
   window.location.hash = "";
   lifecycle.mounted = 0;
   lifecycle.unmounted = 0;
-  globalThis.fetch = vi.fn(() =>
-    Promise.resolve({ json: () => Promise.resolve({ status: "ok" }) }),
-  );
+  globalThis.fetch = vi.fn(() => Promise.reject(new Error("offline")));
 });
 
 afterEach(async () => {
@@ -146,28 +151,14 @@ test("the text page stays in the document when the learner goes to another page 
   expect(container.textContent).toContain("Text page");
 });
 
-test("the header shows the name of the product and the state of the API", async () => {
+test("the header shows the name of the product, and no indicator of the API", async () => {
   await show();
 
   expect(container.querySelector("h1").textContent).toBe(
     "Sentence cards generator",
   );
-  expect(container.querySelector(".status-dot").textContent).toBe(
-    "API status: ok",
-  );
-  expect(container.querySelector(".status-dot").className).not.toContain(
-    "problem",
-  );
-});
-
-test("the dot shows a problem when the API cannot be reached", async () => {
-  globalThis.fetch = vi.fn(() => Promise.reject(new Error("offline")));
-  await show();
-
-  expect(container.querySelector(".status-dot").textContent).toBe(
-    "API status: unreachable",
-  );
-  expect(container.querySelector(".status-dot").className).toContain("problem");
+  expect(container.querySelector(".status-dot")).toBeNull();
+  expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
 test("the header and the tabs step aside while a study session is open", async () => {
@@ -176,7 +167,11 @@ test("the header and the tabs step aside while a study session is open", async (
   expect(header.hidden).toBe(false);
   expect(header.contains(container.querySelector("nav"))).toBe(true);
 
-  await act(async () => container.querySelector("button").click());
+  await act(async () =>
+    [...container.querySelectorAll("button")]
+      .find((button) => button.textContent === "Open a session")
+      .click(),
+  );
 
   expect(header.hidden).toBe(true);
   expect(container.querySelector("main").className).toContain("in-session");
@@ -205,10 +200,40 @@ test("the list of texts is told when it is shown, so that it can read the texts 
   expect(container.textContent).toContain("Text list hidden");
 
   await goTo("#/texts");
+  expect(container.textContent).toContain("Text list hidden");
+
+  await openSubTab("Your texts");
   expect(container.textContent).toContain("Text list shown");
 
   await goTo("#/study");
   expect(container.textContent).toContain("Text list hidden");
+});
+
+test("the Texts page has two sub-tabs, and the one that adds cards from a text is open at first", async () => {
+  window.location.hash = "#/texts";
+  await show();
+
+  expect(subTabs().map((tab) => tab.textContent)).toEqual([
+    "Add cards from a text",
+    "Your texts",
+  ]);
+  expect(subTabs()[0].getAttribute("aria-selected")).toBe("true");
+  expect(subTabs()[1].getAttribute("aria-selected")).toBe("false");
+  expect(container.textContent).toContain("Text list hidden");
+
+  await openSubTab("Your texts");
+  expect(subTabs()[0].getAttribute("aria-selected")).toBe("false");
+  expect(subTabs()[1].getAttribute("aria-selected")).toBe("true");
+});
+
+test("the form stays in the document when the learner opens the list of texts", async () => {
+  await show();
+  await goTo("#/texts");
+  await openSubTab("Your texts");
+  await openSubTab("Add cards from a text");
+
+  expect(lifecycle.mounted).toBe(1);
+  expect(lifecycle.unmounted).toBe(0);
 });
 
 test("the Your cards page is made when the learner goes to it", async () => {
@@ -236,5 +261,6 @@ test("the address of a saved text opens it on the Texts tab and keeps the form i
   await goTo("#/texts");
   expect(container.textContent).not.toContain("Saved text");
   expect(container.textContent).toContain("Text list shown");
+  expect(subTabs()[1].getAttribute("aria-selected")).toBe("true");
   expect(lifecycle.mounted).toBe(1);
 });
