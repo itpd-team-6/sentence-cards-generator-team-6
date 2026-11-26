@@ -10,6 +10,7 @@ Follow the course rules through [the course SKILL.md](https://github.com/inno-it
 - `reports/week-NN/` contains evidence and reports for each course week.
 - `.github/workflows/` contains CI workflows; `.github/` also contains pull request and issue templates.
 - `docs/setup.md` provides the supported local setup, run, and test instructions.
+- [`docs/configuration-plan.md`](docs/configuration-plan.md) is the inventory of the repository's configuration: its items, their owners, and what breaks when one changes.
 
 ## Checks
 
