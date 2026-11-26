@@ -12,9 +12,12 @@ from app.database import (
     InvalidMove,
     QueueOutOfDate,
     get_connection,
+    get_study_limits,
+    list_cards_ahead,
     list_due_cards,
     list_queue,
     reorder_queue,
+    set_study_limits,
 )
 from app.routes.cards import DeckRef, get_today
 from app.scheduler import Answer, answer_card, forecast, stage
@@ -63,6 +66,13 @@ class QueueOrder(BaseModel):
     deck_ids: list[int] | None = None
 
 
+class StudyLimits(BaseModel):
+    """The cards of each day: how many new cards and how many review cards. None is no limit."""
+
+    new_cards: int | None = Field(default=None, ge=0, le=1000)
+    review_cards: int | None = Field(default=None, ge=0, le=1000)
+
+
 class AnswerBody(BaseModel):
     answer: Answer
 
@@ -74,15 +84,43 @@ class AnsweredCard(BaseModel):
     interval_days: int
 
 
+@router.get("/api/study/limits")
+def study_limits(
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+) -> StudyLimits:
+    """The daily limits of this library: they are settings, and they never keep a due card out of a session."""
+    return StudyLimits(**get_study_limits(connection))
+
+
+@router.put("/api/study/limits")
+def save_study_limits(
+    limits: StudyLimits,
+    connection: Annotated[sqlite3.Connection, Depends(get_connection)],
+) -> StudyLimits:
+    """Save the daily limits of this library: how many new cards and how many review cards a day. None is no limit."""
+    return StudyLimits(**set_study_limits(connection, limits.new_cards, limits.review_cards))
+
+
 @router.get("/api/study/due")
 def due_cards(
     connection: Annotated[sqlite3.Connection, Depends(get_connection)],
     today: Annotated[date, Depends(get_today)],
     deck_ids: Annotated[list[int] | None, Query()] = None,
+    target: Annotated[int | None, Query(ge=1, le=1000)] = None,
 ) -> list[DueCard]:
     """The cards due today or earlier, in the order they are studied, each with the wait that every answer would give
     it. The list is empty when nothing is due. With `deck_ids`, only the cards in at least one of those decks are
-    listed, each once."""
+    listed, each once.
+
+    The daily limits never keep a due card out of the list.
+
+    With `target`, the learner asks for that many cards: every card due today or earlier stays in the list, even
+    when they are more than the target, and when they are fewer the earliest cards due later follow them until the
+    list has `target` cards. The cards asked for ahead of their day keep their due dates.
+    """
+    cards = list_due_cards(connection, today, deck_ids)
+    if target is not None and target > len(cards):
+        cards += list_cards_ahead(connection, today, target - len(cards), deck_ids)
     return [
         DueCard(
             **card,
@@ -92,7 +130,7 @@ def due_cards(
                 for answer, (interval, due) in forecast(card["interval_days"], today).items()
             },
         )
-        for card in list_due_cards(connection, today, deck_ids)
+        for card in cards
     ]
 
 

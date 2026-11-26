@@ -17,6 +17,7 @@ import Notice, { newNotice } from "./Notice.jsx";
 import StudyDecks from "./StudyDecks.jsx";
 import StudyQueue from "./StudyQueue.jsx";
 import StudyRing from "./StudyRing.jsx";
+import StudySettings from "./StudySettings.jsx";
 import { estimate, greeting } from "./studyTexts.js";
 import { splitAtWords } from "./words.js";
 
@@ -69,6 +70,10 @@ export default function StudyPage({ onSessionChange }) {
   const [decksFailed, setDecksFailed] = useState(false); // the decks could not be loaded
   const [editing, setEditing] = useState(false); // the editor of the card in front of the learner is open
   const [editError, setEditError] = useState(""); // why the editor could not save
+  const [target, setTarget] = useState(""); // the Reorder number: how many cards the learner asks for
+  const wanted = /^[1-9][0-9]{0,2}$/.test(target.trim())
+    ? Number(target)
+    : null;
 
   useEffect(() => {
     loadDecks()
@@ -125,7 +130,9 @@ export default function StudyPage({ onSessionChange }) {
     setMessage(null);
     setFeedback(null);
     try {
-      const cards = await loadDueCards(ticked);
+      const cards = wanted
+        ? await loadDueCards(ticked, wanted)
+        : await loadDueCards(ticked);
       setQueue(cards);
       setReviewed(0);
       setRevealed(false);
@@ -328,7 +335,9 @@ export default function StudyPage({ onSessionChange }) {
                   type="button"
                   className="primary study-start"
                   onClick={start}
-                  disabled={busy || due.length === 0}
+                  disabled={
+                    busy || ticked.length === 0 || (due.length === 0 && !wanted)
+                  }
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M7 4.5v15l13-7.5z" />
@@ -344,6 +353,7 @@ export default function StudyPage({ onSessionChange }) {
             </div>
           </div>
           <StudyDecks decks={decks} ticked={ticked} onChange={tick} />
+          <StudySettings target={target} onTarget={setTarget} />
         </section>
         <section className="panel reorder-panel" aria-label="Reorder">
           <div className="pane-head">

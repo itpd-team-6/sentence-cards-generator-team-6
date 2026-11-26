@@ -2,7 +2,16 @@ from datetime import date, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
-from app.database import add_card, connect, get_card, save_text, times_between, update_card
+from app.database import (
+    add_card,
+    connect,
+    create_deck,
+    get_card,
+    link_to_decks,
+    save_text,
+    times_between,
+    update_card,
+)
 from app.main import app
 from app.routes.cards import get_today
 
@@ -576,3 +585,164 @@ def test_a_card_that_changed_from_today_to_later_without_being_named_as_moved_is
         assert save_order(client, [1, 2, 3], moved=[1], today_count=1).status_code == 422
         assert save_order(client, [1, 2, 3], moved=[1], today_count=4).status_code == 422
         assert [item["due_today"] for item in study_queue(client)] == [True, True, False]
+
+
+def put_in_decks(card_ids: list[int], *titles: str) -> list[int]:
+    """Make a deck for each title (German to English), put the cards in each of them, and return the deck ids."""
+    connection = connect()
+    try:
+        deck_ids = [create_deck(connection, title, "de", "en")["id"] for title in titles]
+        link_to_decks(connection, card_ids, deck_ids)
+        connection.commit()
+        return deck_ids
+    finally:
+        connection.close()
+
+
+def test_a_card_due_later_is_offered_ahead_of_its_day_when_the_learner_asks_for_cards() -> None:
+    with study_client() as client:
+        ids = add_cards(
+            card("Zug", TODAY + timedelta(days=2)),
+            card("Haus", TODAY + timedelta(days=1)),
+        )
+
+        assert client.get("/api/study/due").json() == []
+        ahead = client.get("/api/study/due", params={"target": 2})
+
+        assert ahead.status_code == 200
+        assert [item["word"] for item in ahead.json()] == ["Haus", "Zug"]
+        assert due_dates(*ids) == [
+            (TODAY + timedelta(days=2)).isoformat(),
+            (TODAY + timedelta(days=1)).isoformat(),
+        ]
+
+
+def test_asking_for_one_card_ahead_gives_the_card_due_next() -> None:
+    with study_client() as client:
+        add_cards(
+            card("Zug", TODAY + timedelta(days=2)),
+            card("Haus", TODAY + timedelta(days=1)),
+        )
+
+        ahead = client.get("/api/study/due", params={"target": 1})
+
+        assert [item["word"] for item in ahead.json()] == ["Haus"]
+
+
+def test_a_card_that_is_answered_ahead_of_its_day_gets_the_due_date_of_the_scheduler() -> None:
+    with study_client() as client:
+        ids = add_cards(
+            card("Haus", TODAY + timedelta(days=1)),
+            card("Zug", TODAY + timedelta(days=2)),
+        )
+        client.get("/api/study/due", params={"target": 2})
+
+        answered = client.post(f"/api/cards/{ids[0]}/answer", json={"answer": "good"})
+
+        assert answered.json()["due_date"] == (TODAY + timedelta(days=2)).isoformat()
+        assert due_dates(*ids[1:]) == [(TODAY + timedelta(days=2)).isoformat()]
+
+
+def test_a_target_fills_the_session_with_the_earliest_later_cards_of_the_ticked_decks_once() -> (
+    None
+):
+    with study_client() as client:
+        ids = add_cards(
+            card("Alt", TODAY - timedelta(days=1)),
+            card("Bahnhof", TODAY),
+            card("Zug", TODAY),
+            card("Haus", TODAY + timedelta(days=2)),
+            card("Baum", TODAY + timedelta(days=5)),
+            card("Fenster", TODAY + timedelta(days=1)),
+        )
+        travel = put_in_decks(ids[:3], "Travel")[0]
+        # `Bahnhof` is in two ticked decks, so it must be offered once; `Fenster` is only in a deck that is not ticked.
+        home = put_in_decks([ids[1], ids[3], ids[4]], "Home")[0]
+        put_in_decks([ids[5]], "Unticked")
+        params = {"deck_ids": [travel, home]}
+
+        four = [
+            item["word"]
+            for item in client.get("/api/study/due", params={**params, "target": 4}).json()
+        ]
+        ten = [
+            item["word"]
+            for item in client.get("/api/study/due", params={**params, "target": 10}).json()
+        ]
+
+        assert sorted(four[:3]) == ["Alt", "Bahnhof", "Zug"]
+        assert four[3:] == ["Haus"]
+        assert sorted(ten[:3]) == ["Alt", "Bahnhof", "Zug"]
+        assert ten[3:] == ["Haus", "Baum"]
+        assert len(ten) == 5
+        assert due_dates(*ids) == [
+            (TODAY - timedelta(days=1)).isoformat(),
+            TODAY.isoformat(),
+            TODAY.isoformat(),
+            (TODAY + timedelta(days=2)).isoformat(),
+            (TODAY + timedelta(days=5)).isoformat(),
+            (TODAY + timedelta(days=1)).isoformat(),
+        ]
+
+
+def test_a_target_lower_than_the_cards_due_today_does_not_withhold_any_of_them() -> None:
+    with study_client() as client:
+        add_cards(
+            card("Alt", TODAY - timedelta(days=1)),
+            card("Bahnhof", TODAY),
+            card("Zug", TODAY),
+            card("Haus", TODAY + timedelta(days=1)),
+        )
+
+        one = client.get("/api/study/due", params={"target": 1})
+
+        assert sorted(item["word"] for item in one.json()) == ["Alt", "Bahnhof", "Zug"]
+
+
+def test_a_target_below_one_is_refused() -> None:
+    with study_client() as client:
+        assert client.get("/api/study/due", params={"target": 0}).status_code == 422
+
+
+def add_due_cards_of_three_stages() -> list[int]:
+    """Three new cards and four review cards, all due today; return their ids."""
+    ids = add_cards(
+        *[card(f"Neu{n}", TODAY) for n in range(3)], *[card(f"Alt{n}", TODAY) for n in range(4)]
+    )
+    connection = connect()
+    try:
+        for card_id in ids[3:]:
+            update_card(connection, card_id, answers=1, interval_days=5)
+    finally:
+        connection.close()
+    return ids
+
+
+def test_the_limits_start_as_not_set() -> None:
+    with study_client() as client:
+        assert client.get("/api/study/limits").json() == {"new_cards": None, "review_cards": None}
+
+
+def test_the_limits_are_saved_separately_and_read_again() -> None:
+    with study_client() as client:
+        saved = client.put("/api/study/limits", json={"new_cards": 1, "review_cards": 2})
+
+        assert saved.json() == {"new_cards": 1, "review_cards": 2}
+        assert client.get("/api/study/limits").json() == {"new_cards": 1, "review_cards": 2}
+
+
+def test_a_limit_below_zero_is_refused() -> None:
+    with study_client() as client:
+        assert client.put("/api/study/limits", json={"new_cards": -1}).status_code == 422
+
+
+def test_the_limits_keep_no_due_card_out_of_the_session_and_change_no_due_date() -> None:
+    with study_client() as client:
+        ids = add_due_cards_of_three_stages()
+        client.put("/api/study/limits", json={"new_cards": 1, "review_cards": 2})
+
+        due = client.get("/api/study/due").json()
+
+        assert len(due) == 7
+        assert sorted(item["stage"] for item in due) == ["due"] * 4 + ["new"] * 3
+        assert due_dates(*ids) == [TODAY.isoformat()] * 7
