@@ -273,19 +273,6 @@ def add_the_archive_and_the_mark_state(connection: sqlite3.Connection) -> None:
     connection.execute("ALTER TABLE marked_words ADD COLUMN marked INTEGER NOT NULL DEFAULT 1")
 
 
-def add_the_daily_limits(connection: sqlite3.Connection) -> None:
-    """Let the learner set how many new cards and how many review cards they want each day (DEC-019).
-
-    `study_limits` has one row; a limit that is NULL is not set. The limits are the learner's settings: they never
-    keep back a card that is due.
-    """
-    connection.execute(
-        "CREATE TABLE study_limits ("
-        " id INTEGER PRIMARY KEY CHECK (id = 1), new_cards INTEGER, review_cards INTEGER)"
-    )
-    connection.execute("INSERT INTO study_limits (id) VALUES (1)")
-
-
 MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     create_the_first_tables,
     add_the_due_time,
@@ -297,7 +284,6 @@ MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [
     add_the_text_titles,
     add_the_uncategorized_deck,
     add_the_archive_and_the_mark_state,
-    add_the_daily_limits,
 ]
 
 # The card fields a caller may change with `update_card`.
@@ -500,7 +486,7 @@ class MarkNotInText(ValueError):
 
 
 _LETTER = r"(?:[^\W\d_]|[\u0300-\u036f])"
-_WORD = re.compile(rf"{_LETTER}+(?:['ÔÇÖ-]{_LETTER}+)*")
+_WORD = re.compile(rf"{_LETTER}+(?:['’-]{_LETTER}+)*")
 
 
 def words_of(text: str) -> list[str]:
@@ -1165,27 +1151,6 @@ def list_due_cards(
     return attach_decks(connection, [dict(row) for row in rows])
 
 
-def list_cards_ahead(
-    connection: sqlite3.Connection,
-    today: date,
-    limit: int,
-    deck_ids: list[int] | None = None,
-) -> list[dict]:
-    """The earliest cards that are due after `today`: not hidden, and with a sentence and a translation to show.
-
-    They come in the order of the study queue, the earliest due time first, and there are `limit` of them at most. With
-    `deck_ids`, only the cards in at least one of those decks are listed, each once. The cards are not changed: asking
-    for a card ahead of its day leaves its due date as it was.
-    """
-    where, values = deck_filter(deck_ids)
-    rows = connection.execute(
-        "SELECT * FROM cards WHERE due_date > ? AND hidden = 0 AND sentence IS NOT NULL AND translation IS NOT NULL"
-        f"{where} ORDER BY due_at, id LIMIT ?",
-        (today.isoformat(), *values, limit),
-    ).fetchall()
-    return attach_decks(connection, [dict(row) for row in rows])
-
-
 def list_queue(connection: sqlite3.Connection, deck_ids: list[int] | None = None) -> list[dict]:
     """The study queue: every card that is not hidden and has a sentence and a translation to show, in study order.
 
@@ -1216,26 +1181,6 @@ def update_card(connection: sqlite3.Connection, card_id: int, **fields) -> bool:
     )
     connection.commit()
     return cursor.rowcount == 1
-
-
-def get_study_limits(connection: sqlite3.Connection) -> dict[str, int | None]:
-    """The daily limits of new cards and of review cards; None is no limit."""
-    row = connection.execute(
-        "SELECT new_cards, review_cards FROM study_limits WHERE id = 1"
-    ).fetchone()
-    return {"new_cards": row["new_cards"], "review_cards": row["review_cards"]}
-
-
-def set_study_limits(
-    connection: sqlite3.Connection, new_cards: int | None, review_cards: int | None
-) -> dict[str, int | None]:
-    """Save the daily limits and return them."""
-    connection.execute(
-        "UPDATE study_limits SET new_cards = ?, review_cards = ? WHERE id = 1",
-        (new_cards, review_cards),
-    )
-    connection.commit()
-    return get_study_limits(connection)
 
 
 class QueueOutOfDate(ValueError):

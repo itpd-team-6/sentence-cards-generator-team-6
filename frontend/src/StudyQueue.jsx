@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { loadQueue, saveQueueOrder } from "./api.js";
 import Notice, { newNotice } from "./Notice.jsx";
 import DeckTag from "./DeckTag.jsx";
+import StudyAhead from "./StudyAhead.jsx";
 import { splitAtWords } from "./words.js";
 
 // The line between the cards due today and the cards due later. It is an item of the list, so a card is due today when
@@ -207,6 +208,13 @@ export default function StudyQueue({ deckIds, onSaved }) {
   const today = entries.filter(({ index }) => index < dividerAt);
   const later = entries.filter(({ index }) => index > dividerAt);
 
+  // "Study ahead": the cards that are due soonest of the later ones go to the end of the cards due today, as if the
+  // learner had dragged them over the line, so the order is saved the same way and the session has them.
+  function bringToToday(count) {
+    const group = later.slice(0, count).map(({ item }) => item.id);
+    move(placeGroup(list, group, dividerAt), group);
+  }
+
   function renderCard({ item: card, index }, number) {
     const dropLine = drag?.over === index ? "drop-before" : "";
     return (
@@ -309,9 +317,12 @@ export default function StudyQueue({ deckIds, onSaved }) {
         </div>
       </div>
       <div className="queue-group">
-        <h3 className="queue-heading">
-          Later <span>{later.length}</span>
-        </h3>
+        <div className="queue-headrow">
+          <h3 className="queue-heading">
+            Later <span>{later.length}</span>
+          </h3>
+          <StudyAhead max={later.length} busy={saving} onAdd={bringToToday} />
+        </div>
         <div
           className="queue-scroll"
           tabIndex={0}

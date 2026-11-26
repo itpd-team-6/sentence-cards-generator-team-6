@@ -8,9 +8,7 @@ import {
   changeCard,
   loadDecks,
   loadDueCards,
-  loadStudyLimits,
   newSentence,
-  saveStudyLimits,
 } from "./api.js";
 
 // The API is replaced by stand-ins, so the test needs no running product.
@@ -19,9 +17,7 @@ vi.mock("./api.js", () => ({
   changeCard: vi.fn(),
   loadDecks: vi.fn(),
   loadDueCards: vi.fn(),
-  loadStudyLimits: vi.fn(),
   newSentence: vi.fn(),
-  saveStudyLimits: vi.fn(),
 }));
 
 // The queue in the Reorder box is not what these tests are about.
@@ -90,9 +86,6 @@ beforeEach(() => {
   loadDecks.mockResolvedValue([deck(1, "Trains"), deck(2, "Travel")]);
   loadDueCards.mockReset();
   loadDueCards.mockResolvedValue([]);
-  loadStudyLimits.mockReset();
-  loadStudyLimits.mockResolvedValue({ new_cards: null, review_cards: null });
-  saveStudyLimits.mockReset();
 });
 
 afterEach(async () => {
@@ -462,92 +455,4 @@ test("a hidden card leaves the session and does not come back", async () => {
   await click("Show answer");
   await click("Again");
   expect(container.textContent).not.toContain("Haus");
-});
-
-// Types a value into a number field the way a learner does.
-async function type(label, value) {
-  const field = [...container.querySelectorAll("label")]
-    .find((item) => item.textContent === label)
-    .querySelector("input");
-  await act(async () => {
-    const set = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    ).set;
-    set.call(field, value);
-    field.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-}
-
-const field = (label) =>
-  [...container.querySelectorAll("label")]
-    .find((item) => item.textContent === label)
-    .querySelector("input").value;
-
-test("the daily limits of new and review cards are two settings that are saved and shown again", async () => {
-  loadStudyLimits.mockResolvedValue({ new_cards: 1, review_cards: 2 });
-  saveStudyLimits.mockResolvedValue({ new_cards: 3, review_cards: 4 });
-  await show();
-
-  expect(field("New cards per day")).toBe("1");
-  expect(field("Review cards per day")).toBe("2");
-
-  await type("New cards per day", "3");
-  await type("Review cards per day", "4");
-  await click("Save limits");
-
-  expect(saveStudyLimits).toHaveBeenCalledWith(3, 4);
-  expect(container.textContent).toContain("Limits saved.");
-});
-
-test("a limit that is not a whole number is not saved", async () => {
-  await show();
-
-  await type("New cards per day", "2.5");
-  await click("Save limits");
-
-  expect(saveStudyLimits).not.toHaveBeenCalled();
-  expect(container.textContent).toContain("A limit is a whole number");
-});
-
-test("the limits do not keep a due card out of the session", async () => {
-  loadStudyLimits.mockResolvedValue({ new_cards: 1, review_cards: 2 });
-  const cards = [1, 2, 3].map((id) => dueCard(id, `Neu${id}`));
-  loadDueCards.mockResolvedValue([
-    ...cards,
-    ...[4, 5, 6, 7].map((id) => dueCard(id, `Alt${id}`, [TRAINS], "due")),
-  ]);
-  await show();
-  await click("Trains");
-  await click("Start session");
-
-  expect(container.textContent).toContain("7 cards left in this session");
-});
-
-test("the Reorder number asks for that many cards, and it can start a session when nothing is due", async () => {
-  loadDueCards.mockImplementation(async (decks, target) =>
-    target ? [dueCard(1, "Haus"), dueCard(2, "Baum")] : [],
-  );
-  await show();
-  await click("Trains");
-  expect(button("Start session").disabled).toBe(true);
-
-  await type("Reorder number", "4");
-  expect(button("Start session").disabled).toBe(false);
-  await click("Start session");
-
-  expect(loadDueCards).toHaveBeenCalledWith([1], 4);
-  expect(container.textContent).toContain("2 cards left in this session");
-});
-
-test("a Reorder number that is not a whole number above zero is not sent", async () => {
-  loadDueCards.mockResolvedValue([dueCard(1, "Haus")]);
-  await show();
-  await click("Trains");
-
-  await type("Reorder number", "0");
-  await click("Start session");
-
-  expect(container.querySelector(".study-word")).not.toBeNull();
-  expect(loadDueCards.mock.calls.every((call) => call.length === 1)).toBe(true);
 });

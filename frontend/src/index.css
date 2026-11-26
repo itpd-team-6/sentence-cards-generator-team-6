@@ -1078,6 +1078,99 @@ textarea {
   border-top: 1px solid var(--border);
 }
 
+/* The title of a group and, for "Later", the control that brings cards to today, on one line. */
+.queue-headrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.75rem;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.queue-box .queue-headrow .queue-heading {
+  flex: 1;
+  min-width: 8rem;
+  margin: 0;
+}
+
+/* "Study ahead": quiet, like the line it sits on. A number that goes from 1 to the cards due later, and the word that brings them. */
+.ahead {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ahead-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  height: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ahead-stepper button,
+.ahead-stepper input {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.ahead-stepper button {
+  width: 1.75rem;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.ahead-stepper button:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.ahead-stepper button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ahead-stepper input {
+  width: 2.5rem;
+  padding: 0;
+  border-inline: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* The ring is drawn inside the box, so the box does not cut it. */
+.ahead-stepper :focus-visible {
+  outline-offset: -3px;
+}
+
+.ahead-go {
+  padding: 0.25rem 0.1rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent-soft-text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ahead-go:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.ahead-go:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .queue li.queue-end {
   display: flex;
   align-items: center;

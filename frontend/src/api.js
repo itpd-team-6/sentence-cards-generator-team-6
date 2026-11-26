@@ -137,23 +137,9 @@ export const changeCardDecks = (cardIds, addDeckIds, removeDeckIds) =>
 export const newSentences = (cardIds) =>
   call("/api/cards/new-sentences", json("POST", { card_ids: cardIds }));
 
-// The cards due today or earlier, with a sentence to show, from the decks `deckIds`. Empty when nothing is due. With a
-// `target`, the cards are that many: the cards due come first, and the earliest cards due later fill what is missing.
-export const loadDueCards = (deckIds, target) =>
-  call(
-    `/api/study/due${deckQuery(deckIds)}${
-      target ? `${deckIds?.length ? "&" : "?"}target=${target}` : ""
-    }`,
-  );
-
-// The daily limits of new cards and of review cards; a limit that is not set is null. They never keep a due card out.
-export const loadStudyLimits = () => call("/api/study/limits");
-
-export const saveStudyLimits = (newCards, reviewCards) =>
-  call(
-    "/api/study/limits",
-    json("PUT", { new_cards: newCards, review_cards: reviewCards }),
-  );
+// The cards due today or earlier, with a sentence to show, from the decks `deckIds`. Empty when nothing is due.
+export const loadDueCards = (deckIds) =>
+  call(`/api/study/due${deckQuery(deckIds)}`);
 
 // The learner's answer to a card, one of "again", "hard", "good" and "easy"; the answer has the card's next due date.
 export const answerCard = (cardId, answer) =>
