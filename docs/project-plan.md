@@ -134,13 +134,21 @@ The audio of words and sentences and then a mobile interface follow, in the Cust
 
 ### SPRINT-09
 
-The team has a final repository state ready for the code freeze with responses to UT-01 findings and pending action points, a refined product backlog, a 7-minute presentation deck grounded in project evidence, and a reflection on project outcomes and lessons.
-This goal is provisional until the sprint is planned.
+A learner can set a daily limit of new and review cards and ask for more cards when none is due, and the Customer checks three journeys on the university VM and says what is expected at the handoff.
 
-- **Due:** 2026-11-28
+- **Due:** 2026-11-29
 - **Sprint Backlog:** [the issues scheduled into SPRINT-09](https://github.com/itpd-team-6/sentence-cards-generator-team-6/milestone/7)
+- **Planned Velocity:** 8
 
 #### REL-09
+
+### SPRINT-10
+
+Provisional goal: The Customer takes over the deployed product on a tagged release, with the handoff package.
+
+- **Due:** 2026-12-06
+
+#### REL-10
 
 ## Quality Requirement Testing Plan
 
