@@ -1,9 +1,9 @@
 # FR-009 tests on the model of the virtual machine
 
 This is the evidence for [issue #165](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/165), the action point of the Week 4 meeting ([`DEC-043`](../decisions.md#dec-043)), and for the choice recorded in [`DEC-070`](../decisions.md#dec-070).
+It is also the evidence for [issue #293](https://github.com/itpd-team-6/sentence-cards-generator-team-6/issues/293), the test of the six steps of the Customer.
 The tests send to the model the question the product sends, and say for each case whether the model made a card or said that the card exists.
-There are three tests: the test table of 2026-11-13, the test of the Customer's two suggestions on new cases of 2026-11-14, and the test of the Customer's meaning records of 2026-11-14.
-The Customer's six steps for the records (2026-11-14 22:44) are not tested yet, see [the section about them](#the-customers-six-steps-for-the-records).
+There are four tests: the test table of 2026-11-13, the test of the Customer's two suggestions on new cases of 2026-11-14, the test of the Customer's meaning records of 2026-11-14, and the test of the Customer's six steps for the records of 2026-11-27.
 
 ## What was run
 
@@ -117,8 +117,50 @@ He described six steps:
 
 The test above does not follow these steps.
 It writes a record for the new sentence first and compares it with the records of the cards in a second question, which is the team's design, and it does not ask for the lemma first.
-So its results say how the team's way of using the records works, not how the Customer's approach works, and the team has not run his approach.
-The team plans to adjust the test to his six steps, run it, and send him the results in the group chat.
+So the team adjusted the test to his six steps and ran it on 2026-11-27 at 20:11 UTC.
+
+- **Script:** [`backend/scripts/eval_fr009_sixsteps.py`](../../backend/scripts/eval_fr009_sixsteps.py).
+  The results, with every case and the first prompt of each kind, are in [`fr-009-sixsteps-results.md`](fr-009-sixsteps-results.md).
+- **Model:** `@cf/mistralai/mistral-small-3.1-24b-instruct`, read from the `.env` of production; the results name it.
+- **Cases:** the 29 cases of the test of the Customer's suggestions, with 2 runs of `current` (the question of today, run on the same day for comparison) and of `sixsteps`, and 193 requests in all, retries included.
+- **How a case runs:** the case gives the word the learner selected and the sentence of the text.
+  One request asks the model for the lemma.
+  The records of that lemma, in the language of the text, are looked up in a store that lives in the script and is empty at the start of each run.
+  When there are records, one request gives the model the word, the sentence and the numbered records, and asks which one matches.
+  When one matches, no card is made.
+  When none matches, the model writes a new record from the sentence, with the prompt of the Customer, the record is stored, and a card is made.
+- **What is the team's and not the Customer's:** the questions of the lemma and of the match are the team's wording of his steps 2 and 5.
+  The prompt of the record is the one of the test of the records above, with the same three changes.
+  The store is keyed by the language of the text and the lemma, ignoring capital letters.
+  The script does not write the sentence of the card, because what the six steps decide is whether a card is made.
+- **What was changed after a short run:** a first run of 8 cases (Leiter and Birne) at 20:03 UTC, in [`fr-009-sixsteps-smoke.md`](fr-009-sixsteps-smoke.md), showed the model answering "die Birne" as the lemma of "Birne", which split the records of one word.
+  The team added "without an article" to the question of the lemma and ran the full test.
+  The 8 cases of the short run are also in the full test.
+- **The rule written before the run:** `sixsteps` is adopted only if, over the runs, it makes fewer second cards than `current` and refuses no needed card.
+
+| Wording    | As expected | Second cards made (of 28) | Needed cards refused (of 30) | Errors |
+| ---------- | ----------- | ------------------------- | ---------------------------- | ------ |
+| `current`  | 52 of 58    | 4                         | 0                            | 2      |
+| `sixsteps` | 55 of 58    | 3                         | 0                            | 0      |
+
+The script printed "NOT DECIDED" because two requests of `current` failed.
+They are the case "Дед косил траву острой косой." of the word `коса`, in both runs: the defect of the case described above, because the word is written in another form and the product refuses a phrase that does not contain it.
+The six steps write no phrase for the card, so the case did not fail there, and the lemma step gave `коса` for it.
+Without those two errors the rule is met by one card, 3 second cards against 4, and no needed card was refused.
+The rule says what a wording must do at least to be adopted; it does not say that a wording that does it must be adopted.
+
+The question of today made 7 second cards of 28 on 2026-11-14 and 4 of 28 on 2026-11-27, on the same cases.
+So a difference of one card is smaller than the difference between two days of the same question.
+The lemma step gave the word of the case in all 58 cases of `sixsteps`.
+
+### The cases the second test got wrong
+
+| Wording    | Word and passage                                        | What happened                                                                                                                                                                                                      | Runs wrong |
+| ---------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `current`  | лук: "На рынке мы купили зелёный лук."                  | A second card was made for the vegetable.                                                                                                                                                                          | 2 of 2     |
+| `current`  | коса: "Косарь наточил косу перед работой."              | A second card was made for the tool.                                                                                                                                                                               | 2 of 2     |
+| `sixsteps` | Leiter: "Die Leiter lehnte an der Hauswand."            | The model answered that no record matched, although record 1 was the ladder of the first case, and a new record was made.                                                                                          | 2 of 2     |
+| `sixsteps` | Birne: "Ich muss eine neue Birne für die Lampe kaufen." | In this run the record written for "Die Birne in der Küche ist durchgebrannt." said "ein elektrisches Gerät, das zum Erhitzen von Speisen verwendet wird", so the later sentence about the lamp matched no record. | 1 of 2     |
 
 ## What it shows
 
@@ -126,13 +168,17 @@ The team plans to adjust the test to his six steps, run it, and send him the res
   A learner can meet this.
   The line "The tests run so far found no misjudgment, so the case is rare" of issue #165 was true for the model of Week 4 (the 45 requests of the earlier table passed, [`reports/week-05/meeting-report.md`](../../reports/week-05/meeting-report.md)) and does not hold for this model on these cases.
   Two of the 15 cases of the Week 4 script are wrong now, in each of the three runs, and the earlier model passed all 45 requests of it.
-  On the new cases of 2026-11-14 the question of today made 7 second cards of 28 in both tests, and refused no needed card of 30.
+  On the new cases of 2026-11-14 the question of today made 7 second cards of 28 in both tests, and 4 of 28 on 2026-11-27, and refused no needed card of 30 in any of them.
 - The longer passages did not make the model clearly worse: 8 of 8 in the first run, and 7 of 8 in each of the two later ones (the wrong one is the last case of the table above).
 - The format of the Customer, in the way the team wrote it, was worse in the first run, and its mistakes are the kind that loses a meaning, which the learner cannot repair by deleting a card.
   It made fewer second cards on the new cases, and it refused 9 needed cards.
 - None of the suggestions of the Customer (longer phrases, his format, the meaning records) beat the question of today under the rule the team wrote before the tests, so, as of 2026-11-14 18:02, the team did not change the question of the product.
   The Customer answered the team's results in the group chat: "Thanks! Let's keep today's question then" (Customer, group chat, 2026-11-14 18:02).
   At 22:44 the same day he wrote that the test of the records does not follow the approach he had in mind, so the team reads this answer as covering the tests above, not his six steps.
+- With the six steps of the Customer, on 2026-11-27, the model made 3 second cards of 28 and refused none of the 30 needed cards, and the question of today made 4 and none on the same day.
+  The difference is one card, the same cases were wrong in both runs, and the question of today made 7 and then 4 second cards on the same cases on two days, so the team does not read it as a gain of the six steps.
+- A record that the model writes badly in step 6 stays in the store, and a later sentence of the same meaning does not match it (Birne, second run).
+- The test of the six steps did not change the question of the product.
 
 ## Limits
 
@@ -140,4 +186,10 @@ The team plans to adjust the test to his six steps, run it, and send him the res
 - One model and one day for each test, and one run of `customer` in the first test.
 - One of the 29 new cases is a defect, and the two errors it caused are not counted as wrong answers of any wording.
 - The question of the product was not changed, so there is no "after" to compare with; the results say what the question of today does on this model.
-- The comparison of the records is the team's design, and the Customer wrote at 22:44 that it is not the approach he had in mind; the model was not the one the Customer used for his idea (Qwen), and the `confidence` field was not used, so a different way of using the records could give another result.
+- In the test of the records of 2026-11-14 the comparison of the records is the team's design, and the Customer wrote at 22:44 that it is not the approach he had in mind; the model was not the one the Customer used for his idea (Qwen), and the `confidence` field was not used, so a different way of using the records could give another result.
+- The test of the six steps uses one sentence for each case, where the Customer wrote "sentences", and one selected word, not several.
+- The store of the records lives in the script and is empty at the start of each run, so the records are the ones the model wrote in the same run.
+- The questions of the lemma and of the match are the team's wording of his steps 2 and 5.
+- The two runs of each wording repeat nearly the same wrong cases, so they are close to one measurement of 29 cases.
+- The question of the lemma was changed after the short run of 8 cases, and those cases are also in the full test.
+- The script does not write the sentence of the card, so the error of `current` on the case of `коса` could not happen in `sixsteps`.
